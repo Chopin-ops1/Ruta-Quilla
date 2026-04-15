@@ -21,7 +21,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/UserModel');
 
 // Cargar secreto JWT desde variables de entorno
-const JWT_SECRET = process.env.JWT_SECRET || 'rutaquilla_secret_key_barranquilla_2024';
+const crypto = require('crypto');
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
 
 /**
  * Middleware: Verificar Token JWT

@@ -14,7 +14,8 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/UserModel');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'rutaquilla_secret_key_barranquilla_2024';
+const crypto = require('crypto');
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 /**
