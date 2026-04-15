@@ -1,0 +1,265 @@
+/**
+ * ============================================
+ * RutaQuilla - App Principal v2
+ * ============================================
+ *
+ * Orquesta la navegación tipo Google Maps:
+ * - Mapa limpio al iniciar (sin rutas visibles)
+ * - Estado de navegación (origen → destino)
+ * - Pin-drop mode para marcar puntos en el mapa
+ * - Listado de rutas para exploración individual
+ */
+
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from './context/AuthContext';
+import { routesAPI, mapsAPI } from './services/api';
+import { getCurrentPosition } from './services/gpsService';
+import Header from './components/Header';
+import Sidebar from './components/Sidebar';
+import MapComponent from './components/MapComponent';
+import GPSTracker from './components/GPSTracker';
+import LoginModal from './components/LoginModal';
+
+export default function App() {
+  // ---- UI state ----
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+
+  // ---- Routes data (for the list, loaded on-demand) ----
+  const [routes, setRoutes] = useState([]);
+  const [sponsoredLocations, setSponsoredLocations] = useState([]);
+  const [selectedRoute, setSelectedRoute] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // ---- Navigation state ----
+  const [navigationResult, setNavigationResult] = useState(null);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [selectedOptionIdx, setSelectedOptionIdx] = useState(0);
+
+  // ---- Pin-drop mode ----
+  const [pinMode, setPinMode] = useState(null); // 'origin' | 'destination' | null
+  const [originFromMap, setOriginFromMap] = useState(null);
+  const [destFromMap, setDestFromMap] = useState(null);
+
+  // ---- Map layer visibility ----
+  const [layerVisibility, setLayerVisibility] = useState({
+    official: true,
+    community: true,
+  });
+
+  // ---- GPS capture state ----
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [userPosition, setUserPosition] = useState(null);
+  const [gpsTrack, setGpsTrack] = useState([]);
+
+  const { isPremium, isAuthenticated } = useAuth();
+
+  /**
+   * Load routes list (for the Rutas tab - lazy, doesn't render on map).
+   */
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true);
+        const response = await routesAPI.getAll();
+        setRoutes(response.data || []);
+      } catch (err) {
+        console.error('Error cargando rutas:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  /**
+   * Load sponsored locations (only for free users).
+   */
+  useEffect(() => {
+    async function loadSponsors() {
+      if (isPremium) { setSponsoredLocations([]); return; }
+      try {
+        const response = await mapsAPI.getSponsored();
+        setSponsoredLocations(response.data || []);
+      } catch (err) {
+        console.error('Error cargando sponsors:', err);
+      }
+    }
+    loadSponsors();
+  }, [isPremium]);
+
+  /**
+   * Navigate: search for route options between origin and destination.
+   */
+  const handleNavigate = useCallback(async (origin, destination) => {
+    try {
+      setIsNavigating(true);
+      setSelectedRoute(null); // Clear single route preview
+
+      const response = await routesAPI.navigate(origin, destination);
+      setNavigationResult(response);
+      setSelectedOptionIdx(0);
+
+      // Close sidebar on mobile
+      setMenuOpen(false);
+    } catch (err) {
+      console.error('Error en navegación:', err);
+      alert('Error al buscar rutas. Intenta de nuevo.');
+    } finally {
+      setIsNavigating(false);
+    }
+  }, []);
+
+  /**
+   * Select a route option idx — updates the map display.
+   */
+  const handleSelectOptionIdx = useCallback((idx) => {
+    setSelectedOptionIdx(idx);
+  }, []);
+
+  /**
+   * Clear navigation results.
+   */
+  const handleClearNavigation = useCallback(() => {
+    setNavigationResult(null);
+    setSelectedOptionIdx(0);
+    setOriginFromMap(null);
+    setDestFromMap(null);
+    setPinMode(null);
+  }, []);
+
+  /**
+   * Handle map click for pin-drop.
+   */
+  const handleMapClick = useCallback((coords) => {
+    if (pinMode === 'origin') {
+      setOriginFromMap({ ...coords });
+      setPinMode(null);
+    } else if (pinMode === 'destination') {
+      setDestFromMap({ ...coords });
+      setPinMode(null);
+    }
+  }, [pinMode]);
+
+  /**
+   * Select a route from the list (preview only that route on map).
+   */
+  const handleRouteSelect = useCallback((route) => {
+    // Clear navigation when viewing individual routes
+    setNavigationResult(null);
+    setSelectedRoute(prev => prev?._id === route._id ? null : route);
+    setMenuOpen(false);
+  }, []);
+
+  const handleToggleLayer = useCallback((layer) => {
+    setLayerVisibility(prev => ({ ...prev, [layer]: !prev[layer] }));
+  }, []);
+
+  const handleCaptureToggle = useCallback((capturing) => {
+    setIsCapturing(capturing);
+    if (!capturing) setGpsTrack([]);
+  }, []);
+
+  const handlePositionUpdate = useCallback((position) => {
+    setUserPosition(position);
+  }, []);
+
+  const handleTrackUpdate = useCallback((track) => {
+    setGpsTrack(track);
+  }, []);
+
+  const handleStartCapture = useCallback(() => {
+    if (isCapturing) {
+      handleCaptureToggle(false);
+    } else {
+      setIsCapturing(true);
+    }
+  }, [isCapturing, handleCaptureToggle]);
+
+  return (
+    <div className="w-full h-full flex flex-col" style={{ background: 'var(--bg-dark)' }}>
+      <Header
+        onLoginClick={() => setShowLogin(true)}
+        onMenuToggle={() => setMenuOpen(!menuOpen)}
+        menuOpen={menuOpen}
+      />
+
+      <div className="flex-1 flex relative" style={{ marginTop: 56 }}>
+        <Sidebar
+          routes={routes}
+          isOpen={menuOpen}
+          onRouteSelect={handleRouteSelect}
+          selectedRoute={selectedRoute}
+          onToggleLayer={handleToggleLayer}
+          layerVisibility={layerVisibility}
+          onStartCapture={handleStartCapture}
+          isCapturing={isCapturing}
+          // Navigation props
+          onNavigate={handleNavigate}
+          onClearNavigation={handleClearNavigation}
+          navigationResult={navigationResult}
+          isNavigating={isNavigating}
+          selectedOptionIdx={selectedOptionIdx}
+          onSelectOptionIdx={handleSelectOptionIdx}
+          onSetOriginFromMap={originFromMap}
+          onSetDestinationFromMap={destFromMap}
+          pinMode={pinMode}
+          onPinModeChange={setPinMode}
+        />
+
+        <main className="flex-1 relative md:ml-80">
+          {loading ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-center animate-fade-in">
+                <div className="w-12 h-12 mx-auto rounded-xl flex items-center justify-center mb-3"
+                  style={{
+                    background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+                    animation: 'spin-slow 2s linear infinite',
+                  }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2">
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                  </svg>
+                </div>
+                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  Cargando RutaQuilla...
+                </p>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                  Conectando con el servidor
+                </p>
+              </div>
+            </div>
+          ) : (
+            <MapComponent
+              navigationResult={navigationResult}
+              selectedRoute={selectedRoute}
+              selectedOptionIdx={selectedOptionIdx}
+              sponsoredLocations={sponsoredLocations}
+              gpsTrack={gpsTrack}
+              userPosition={userPosition}
+              isCapturing={isCapturing}
+              pinMode={pinMode}
+              onMapClick={handleMapClick}
+              onSetOrigin={(coords) => {
+                setOriginFromMap(coords);
+                setMenuOpen(true); // Open sidebar if closed
+              }}
+              onSetDestination={(coords) => {
+                setDestFromMap(coords);
+                setMenuOpen(true); // Open sidebar if closed
+              }}
+            />
+          )}
+        </main>
+      </div>
+
+      <GPSTracker
+        isCapturing={isCapturing}
+        onCaptureToggle={handleCaptureToggle}
+        onPositionUpdate={handlePositionUpdate}
+        onTrackUpdate={handleTrackUpdate}
+      />
+
+      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
+    </div>
+  );
+}

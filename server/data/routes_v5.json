@@ -1,0 +1,4895 @@
+[
+  {
+    "nombre": "Zona Franca – Cra 38 – Riomar – Vía 40",
+    "codigo": "COOL-ZF",
+    "operador": "Coolitoral",
+    "origen": "Taller de Herrería – Sur Orient (Barranquilla)",
+    "destino": "Olímpica Outlet – Vía 40 (Riomar)",
+    "barriosCubiertos": [
+      "Sur Orient",
+      "Suroccidente",
+      "Carrera 38",
+      "Riomar",
+      "Sabanilla Montecarmelo",
+      "Vía 40"
+    ],
+    "recorridoTextual": {
+      "ida": "Taller de Herrería (Sur Orient) → Cl. 70b #382 (Suroccidente) → Cl 79A #28A-51 (Suroccidente) → Cra. 53 #94 (Riomar) → Grupo Inmobiliario Costa (Sabanilla) → Cra. 64e #86-11 (Riomar) → Olímpica Outlet Vía 40",
+      "regreso": "Olímpica Outlet Vía 40 → Cra. 64e #86-11 → Grupo Inmobiliario Costa → Cra. 53 #94 (Riomar) → Cl 79A #28A-51 → Cl. 70b #382 → Taller de Herrería (Sur Orient)"
+    },
+    "color": "#06B6D4",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "fare": 2600,
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Taller de Herrería – Sur Orient",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [-74.7746857, 10.9673337]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Olímpica Outlet – Vía 40",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [-74.8036069, 11.0257223]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [-74.7746857, 10.9673337],
+          [-74.7780000, 10.9700000],
+          [-74.7850000, 10.9730000],
+          [-74.7920000, 10.9760000],
+          [-74.8000000, 10.9790000],
+          [-74.8090393, 10.9846017],
+          [-74.8150000, 10.9830000],
+          [-74.8186051, 10.9821730],
+          [-74.8200000, 10.9880000],
+          [-74.8210000, 10.9950000],
+          [-74.8231697, 11.0124807],
+          [-74.8300000, 11.0150000],
+          [-74.8400000, 11.0180000],
+          [-74.8500000, 11.0190000],
+          [-74.8600000, 11.0195000],
+          [-74.8706580, 11.0201210],
+          [-74.8600000, 11.0195000],
+          [-74.8500000, 11.0185000],
+          [-74.8400000, 11.0175000],
+          [-74.8300000, 11.0170000],
+          [-74.8133014, 11.0164264],
+          [-74.8100000, 11.0200000],
+          [-74.8080000, 11.0230000],
+          [-74.8036069, 11.0257223]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Olímpica Outlet – Vía 40",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [-74.8036069, 11.0257223]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Pollo Bonito – Sur Orient (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [-74.7748198, 10.9676348]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [-74.8036069, 11.0257223],
+          [-74.8080000, 11.0230000],
+          [-74.8100000, 11.0200000],
+          [-74.8133014, 11.0164264],
+          [-74.8300000, 11.0170000],
+          [-74.8400000, 11.0175000],
+          [-74.8500000, 11.0185000],
+          [-74.8600000, 11.0195000],
+          [-74.8706580, 11.0201210],
+          [-74.8600000, 11.0190000],
+          [-74.8500000, 11.0180000],
+          [-74.8400000, 11.0160000],
+          [-74.8231697, 11.0124807],
+          [-74.8210000, 10.9950000],
+          [-74.8200000, 10.9880000],
+          [-74.8186051, 10.9821730],
+          [-74.8150000, 10.9830000],
+          [-74.8090393, 10.9846017],
+          [-74.8000000, 10.9790000],
+          [-74.7920000, 10.9760000],
+          [-74.7850000, 10.9730000],
+          [-74.7780000, 10.9700000],
+          [-74.7748198, 10.9676348]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": true,
+      "observaciones": "Ruta verificada desde Google Maps – trazado real Zona Franca/Cra38/Riomar/Vía40"
+    },
+    "fuente": "google_maps_verified"
+  },
+  {
+    "nombre": "Calle 72 Tcherassi",
+    "codigo": "C20",
+    "operador": "Cooasoatlán",
+    "origen": "Nevada Ciudad Salitre (Soledad)",
+    "destino": "Calle 72 / Vía 40 (Barranquilla)",
+    "barriosCubiertos": [
+      "Ciudad Salitre",
+      "Soledad",
+      "Carrizal",
+      "El Tamarindo",
+      "Calancalá",
+      "Modelo",
+      "San Francisco",
+      "Calle 72"
+    ],
+    "recorridoTextual": {
+      "ida": "Nevada Ciudad Salitre → Calle 66 → Tv 1 → Calle 68A → Caoba → Calle 67 → Av. Murillo → Carrera 18 → Calle 56 → Carrera 24 → Av. Circunvalar → Calle 47 → Carrera 1A → Paso Carrizal → Calle 46 → Carrera 7 → Calle 51B → El Tamarindo → Calle 45D → Carrera 16 → Calle 53D → Carrera 27 → Calle 51 → Cementerio Calancalá → Carrera 38 → Calle 72 → Vía 40 → Calle 72 → Carrera 41",
+      "regreso": "Carrera 41 → Calle 71 → Carrera 38 → Calle 54 → Carrera 31 → Calle 51B → Calle 50 → Cementerio Calancalá → Calle 51 → Carrera 27 → Calle 53D → Carrera 16 → El Tamarindo → Calle 50 → Carrera 7 → Calle 46 → Paso Carrizal → Carrera 4B → Calle 49 → Carrera 1A → Calle 47 → Av. Circunvalar → Puente 7 de Abril → Av. Circunvalar → Calle 58B → Carrera 24 → Calle 56 → Carrera 18 → Av. Murillo → Nevada Ciudad Salitre"
+    },
+    "color": "#F97316",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Nevada Ciudad Salitre (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8009364,
+            10.9211632
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Calle 72 / Vía 40 (Barranquilla)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8019731,
+            11.0243762
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8009364,
+            10.9211632
+          ],
+          [
+            -74.8011823,
+            10.8913005
+          ],
+          [
+            -74.8028396,
+            10.9205097
+          ],
+          [
+            -74.8015273,
+            10.9207607
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7981073,
+            10.9587927
+          ],
+          [
+            -74.7894392,
+            10.9982232
+          ],
+          [
+            -74.7760429,
+            10.9618181
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.7862314,
+            10.9871869
+          ],
+          [
+            -74.8139022,
+            10.9326266
+          ],
+          [
+            -74.8076592,
+            10.9362721
+          ],
+          [
+            -74.7839063,
+            10.9913738
+          ],
+          [
+            -74.8230111,
+            10.9487828
+          ],
+          [
+            -74.8130779,
+            10.9305261
+          ],
+          [
+            -74.7979126,
+            10.9580469
+          ],
+          [
+            -74.8025905,
+            10.9609865
+          ],
+          [
+            -74.8019871,
+            10.9648817
+          ],
+          [
+            -74.7863762,
+            10.9680728
+          ],
+          [
+            -74.7952774,
+            10.9694539
+          ],
+          [
+            -74.8366279,
+            10.9825615
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Calle 72 / Vía 40 (Barranquilla)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.808152,
+            10.9881681
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Nevada Ciudad Salitre (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.799286,
+            10.9204449
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.808152,
+            10.9881681
+          ],
+          [
+            -74.8366279,
+            10.9825615
+          ],
+          [
+            -74.7908302,
+            10.9899504
+          ],
+          [
+            -74.8097828,
+            10.9803826
+          ],
+          [
+            -74.8130779,
+            10.9305261
+          ],
+          [
+            -74.7881095,
+            10.9877146
+          ],
+          [
+            -74.7952774,
+            10.9694539
+          ],
+          [
+            -74.7863762,
+            10.9680728
+          ],
+          [
+            -74.8019871,
+            10.9648817
+          ],
+          [
+            -74.8025905,
+            10.9609865
+          ],
+          [
+            -74.7881095,
+            10.9877146
+          ],
+          [
+            -74.8230111,
+            10.9487828
+          ],
+          [
+            -74.7839063,
+            10.9913738
+          ],
+          [
+            -74.8252708,
+            10.9416372
+          ],
+          [
+            -74.8029995,
+            10.9363122
+          ],
+          [
+            -74.8139022,
+            10.9326266
+          ],
+          [
+            -74.7862314,
+            10.9871869
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.7940749,
+            10.923925
+          ],
+          [
+            -74.7966224,
+            10.9214252
+          ],
+          [
+            -74.7931982,
+            10.9297484
+          ],
+          [
+            -74.7644464,
+            10.9149263
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Calle 84 Tcherassi",
+    "codigo": "C21",
+    "operador": "Cooasoatlán",
+    "origen": "Nevada (Soledad)",
+    "destino": "Calle 84 / Tcherassi",
+    "barriosCubiertos": [
+      "Soledad",
+      "Los Andes",
+      "Buenavista",
+      "Calle 72",
+      "Calle 80",
+      "Calle 84"
+    ],
+    "recorridoTextual": {
+      "ida": "Nevada Soledad → Av. Murillo → Av. Circunvalar → Calle 72 → Corredor universitario → Carrera 54 → Calle 77 → Vía 40 → Calle 80 → Calle 84",
+      "regreso": "Calle 84 → Calle 80 → Vía 40 → Calle 77 → Carrera 54 → Calle 72 → Av. Circunvalar → Av. Murillo → Nevada"
+    },
+    "color": "#F97316",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Nevada (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.795935,
+            10.9227142
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Calle 84 / Tcherassi",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.829316,
+            10.9808768
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.795935,
+            10.9227142
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.8016621,
+            11.0063266
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.8126932,
+            11.003358
+          ],
+          [
+            -74.829316,
+            10.9808768
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Calle 84 / Tcherassi",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.829316,
+            10.9808768
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Nevada (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.795935,
+            10.9227142
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.829316,
+            10.9808768
+          ],
+          [
+            -74.8126932,
+            11.003358
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.8016621,
+            11.0063266
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.795935,
+            10.9227142
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Calle 84 Cordialidad",
+    "codigo": "C22",
+    "operador": "Cooasoatlán",
+    "origen": "Nevada (Soledad)",
+    "destino": "Calle 84 vía Cordialidad",
+    "barriosCubiertos": [
+      "Soledad",
+      "Cordialidad",
+      "San Felipe",
+      "Barrio Abajo",
+      "Calle 72",
+      "Calle 84"
+    ],
+    "recorridoTextual": {
+      "ida": "Nevada → Av. Murillo → Cordialidad → Carrera 38 → Calle 72 → Vía 40 → Calle 80 → Calle 84",
+      "regreso": "Calle 84 → Calle 80 → Vía 40 → Calle 72 → Carrera 38 → Cordialidad → Av. Murillo → Nevada"
+    },
+    "color": "#F97316",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Nevada (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.795935,
+            10.9227142
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Calle 84 vía Cordialidad",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.829316,
+            10.9808768
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.795935,
+            10.9227142
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7937873,
+            10.963615
+          ],
+          [
+            -74.8366279,
+            10.9825615
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.8126932,
+            11.003358
+          ],
+          [
+            -74.829316,
+            10.9808768
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Calle 84 vía Cordialidad",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.829316,
+            10.9808768
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Nevada (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.795935,
+            10.9227142
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.829316,
+            10.9808768
+          ],
+          [
+            -74.8126932,
+            11.003358
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8366279,
+            10.9825615
+          ],
+          [
+            -74.7937873,
+            10.963615
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.795935,
+            10.9227142
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "K-14 Américas",
+    "codigo": "C4",
+    "operador": "Coochofal",
+    "origen": "Granabastos (Soledad)",
+    "destino": "Américas / Carrera 14",
+    "barriosCubiertos": [
+      "Granabastos",
+      "Soledad",
+      "Las Palmas",
+      "Cevillar",
+      "Carrera 14",
+      "Las Américas"
+    ],
+    "recorridoTextual": {
+      "ida": "Granabastos → Av. Murillo → Calle 30 → Carrera 14 → Calle 54 → Carrera 14 → Calle 72 → Las Américas",
+      "regreso": "Las Américas → Calle 72 → Carrera 14 → Calle 30 → Av. Murillo → Granabastos"
+    },
+    "color": "#14B8A6",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Granabastos (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7991488,
+            10.8875043
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Américas / Carrera 14",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8128353,
+            10.9421003
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7991488,
+            10.8875043
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.826184,
+            10.9666881
+          ],
+          [
+            -74.7908302,
+            10.9899504
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8128353,
+            10.9421003
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Américas / Carrera 14",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8128353,
+            10.9421003
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Granabastos (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7991488,
+            10.8875043
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8128353,
+            10.9421003
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.826184,
+            10.9666881
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7991488,
+            10.8875043
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "K-8 Carrizal",
+    "codigo": "C8",
+    "operador": "Coochofal",
+    "origen": "Granabastos (Soledad)",
+    "destino": "Carrizal / Carrera 8",
+    "barriosCubiertos": [
+      "Granabastos",
+      "La Victoria",
+      "Cevillar",
+      "Carrizal",
+      "Las Nieves"
+    ],
+    "recorridoTextual": {
+      "ida": "Granabastos → Av. Murillo → Calle 30 → Carrera 8 → Calle 50 → Carrizal",
+      "regreso": "Carrizal → Calle 50 → Carrera 8 → Calle 30 → Av. Murillo → Granabastos"
+    },
+    "color": "#14B8A6",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Granabastos (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7991488,
+            10.8875043
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Carrizal / Carrera 8",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8076592,
+            10.9362721
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7991488,
+            10.8875043
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.7940943,
+            10.9458274
+          ],
+          [
+            -74.7881095,
+            10.9877146
+          ],
+          [
+            -74.8076592,
+            10.9362721
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Carrizal / Carrera 8",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8076592,
+            10.9362721
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Granabastos (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7991488,
+            10.8875043
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8076592,
+            10.9362721
+          ],
+          [
+            -74.7881095,
+            10.9877146
+          ],
+          [
+            -74.7940943,
+            10.9458274
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7991488,
+            10.8875043
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Circular C9",
+    "codigo": "C9",
+    "operador": "Coochofal",
+    "origen": "Centro de Barranquilla",
+    "destino": "Circular (regresa al origen)",
+    "barriosCubiertos": [
+      "Centro",
+      "Barlovento",
+      "San Francisco",
+      "Modelo",
+      "Zona Industrial Vía 40"
+    ],
+    "recorridoTextual": {
+      "ida": "Paseo Bolívar → Carrera 44 → Calle 45 → Carrera 54 → Calle 72 → Vía 40 → Calle 30 → Paseo Bolívar",
+      "regreso": "Paseo Bolívar → Calle 30 → Vía 40 → Calle 72 → Carrera 54 → Calle 45 → Carrera 44 → Paseo Bolívar"
+    },
+    "color": "#14B8A6",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Centro de Barranquilla",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7775292,
+            10.9833247
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Circular (regresa al origen)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7775292,
+            10.9833247
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7775292,
+            10.9833247
+          ],
+          [
+            -74.8107894,
+            10.9952477
+          ],
+          [
+            -74.7993354,
+            10.9341019
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.7775292,
+            10.9833247
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Circular (regresa al origen)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7775292,
+            10.9833247
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Centro de Barranquilla",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7775292,
+            10.9833247
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7775292,
+            10.9833247
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.7993354,
+            10.9341019
+          ],
+          [
+            -74.8107894,
+            10.9952477
+          ],
+          [
+            -74.7775292,
+            10.9833247
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "B1 Calle 72 Centro Pueblo (Cra 38)",
+    "codigo": "B1",
+    "operador": "Coolitoral",
+    "origen": "Vía 40 / Calle 72",
+    "destino": "Centro / Barlovento",
+    "barriosCubiertos": [
+      "Modelo",
+      "San Francisco",
+      "Bellavista",
+      "Prado",
+      "Las Delicias",
+      "Olaya",
+      "El Silencio",
+      "San Felipe",
+      "Los Andes",
+      "San Isidro",
+      "Atlántico",
+      "Montes",
+      "Chiquinquirá",
+      "Centro",
+      "Barlovento"
+    ],
+    "recorridoTextual": {
+      "ida": "Vía 40 → Calle 72 → Carrera 35B → Calle 71 → Carrera 33 El Silencio → Carrera 27 → Calle 64 → Carrera 24 → Av. Cordialidad → Calle 39 → Carrera 30 → Calle 38 → Carrera 44 → Calle 30 → Vía 40",
+      "regreso": "Vía 40 → Calle 30 → Carrera 44 → Calle 38 → Carrera 30 → Calle 39 → Av. Cordialidad → Carrera 24 → Calle 64 → Carrera 27 → El Silencio → Calle 71 → Carrera 35B → Calle 72 → Vía 40"
+    },
+    "color": "#06B6D4",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Vía 40 / Calle 72",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7930699,
+            11.0064664
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Centro / Barlovento",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8019731,
+            11.0243762
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.833212,
+            10.9801384
+          ],
+          [
+            -74.808152,
+            10.9881681
+          ],
+          [
+            -74.7814922,
+            10.9725055
+          ],
+          [
+            -74.8160287,
+            10.9778834
+          ],
+          [
+            -74.7863762,
+            10.9680728
+          ],
+          [
+            -74.7990484,
+            10.9880459
+          ],
+          [
+            -74.7760429,
+            10.9618181
+          ],
+          [
+            -74.7937873,
+            10.963615
+          ],
+          [
+            -74.781323,
+            10.9820578
+          ],
+          [
+            -74.7915778,
+            10.9727032
+          ],
+          [
+            -74.7796562,
+            10.9873267
+          ],
+          [
+            -74.8107894,
+            10.9952477
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Centro / Barlovento",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8019731,
+            11.0243762
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Vía 40 / Calle 72",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7930699,
+            11.0064664
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.8107894,
+            10.9952477
+          ],
+          [
+            -74.7796562,
+            10.9873267
+          ],
+          [
+            -74.7915778,
+            10.9727032
+          ],
+          [
+            -74.781323,
+            10.9820578
+          ],
+          [
+            -74.7937873,
+            10.963615
+          ],
+          [
+            -74.7760429,
+            10.9618181
+          ],
+          [
+            -74.7990484,
+            10.9880459
+          ],
+          [
+            -74.7863762,
+            10.9680728
+          ],
+          [
+            -74.8160287,
+            10.9778834
+          ],
+          [
+            -74.808152,
+            10.9881681
+          ],
+          [
+            -74.833212,
+            10.9801384
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "B2 Manuela Beltrán Calle 72",
+    "codigo": "B2",
+    "operador": "Coolitoral",
+    "origen": "Manuela Beltrán (Soledad)",
+    "destino": "Calle 72 / Uninorte",
+    "barriosCubiertos": [
+      "Manuela Beltrán",
+      "Soledad",
+      "Las Palmas",
+      "Cevillar",
+      "El Carmen",
+      "Loma Fresca",
+      "Los Andes",
+      "Olaya",
+      "Las Delicias",
+      "Prado",
+      "Bellavista",
+      "San Francisco"
+    ],
+    "recorridoTextual": {
+      "ida": "Manuela Beltrán → Av. Murillo → Calle 30 → Carrera 30 → Arboleda → Calle 45 → Carrera 24 → Calle 53D → Carrera 25 → Calle 57 → Carrera 27 → Calle 71 → Carrera 35B → Calle 72 → Uninorte",
+      "regreso": "Uninorte → Calle 72 → Carrera 35B → Calle 71 → Carrera 27 → Calle 57 → Carrera 25 → Calle 53D → Carrera 24 → Arboleda → Carrera 30 → Calle 30 → Av. Murillo → Manuela Beltrán"
+    },
+    "color": "#06B6D4",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Manuela Beltrán (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7795086,
+            10.9053146
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Calle 72 / Uninorte",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8515324,
+            11.0221483
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7795086,
+            10.9053146
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.7915778,
+            10.9727032
+          ],
+          [
+            -74.7818677,
+            10.9261287
+          ],
+          [
+            -74.7993354,
+            10.9341019
+          ],
+          [
+            -74.7760429,
+            10.9618181
+          ],
+          [
+            -74.8019871,
+            10.9648817
+          ],
+          [
+            -74.7933226,
+            10.9680939
+          ],
+          [
+            -74.8014051,
+            10.9685893
+          ],
+          [
+            -74.7863762,
+            10.9680728
+          ],
+          [
+            -74.808152,
+            10.9881681
+          ],
+          [
+            -74.833212,
+            10.9801384
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8515324,
+            11.0221483
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Calle 72 / Uninorte",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8515324,
+            11.0221483
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Manuela Beltrán (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7795086,
+            10.9053146
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8515324,
+            11.0221483
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.833212,
+            10.9801384
+          ],
+          [
+            -74.808152,
+            10.9881681
+          ],
+          [
+            -74.7863762,
+            10.9680728
+          ],
+          [
+            -74.8014051,
+            10.9685893
+          ],
+          [
+            -74.7933226,
+            10.9680939
+          ],
+          [
+            -74.8019871,
+            10.9648817
+          ],
+          [
+            -74.7760429,
+            10.9618181
+          ],
+          [
+            -74.7818677,
+            10.9261287
+          ],
+          [
+            -74.7915778,
+            10.9727032
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7795086,
+            10.9053146
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Peñita Nogales A3",
+    "codigo": "A3",
+    "operador": "Coolitoral",
+    "origen": "La Peñita",
+    "destino": "Nogales / Norte",
+    "barriosCubiertos": [
+      "La Peñita",
+      "Las Nieves",
+      "Barrio Abajo",
+      "San José",
+      "Calle 72",
+      "La Castellana",
+      "Nogales"
+    ],
+    "recorridoTextual": {
+      "ida": "La Peñita → Carrera 14 → Calle 45 → Carrera 38 → Calle 72 → Av. Circunvalar → Nogales",
+      "regreso": "Nogales → Av. Circunvalar → Calle 72 → Carrera 38 → Calle 45 → Carrera 14 → La Peñita"
+    },
+    "color": "#06B6D4",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "La Peñita",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.826184,
+            10.9666881
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Nogales / Norte",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8276332,
+            10.9936732
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.826184,
+            10.9666881
+          ],
+          [
+            -74.7993354,
+            10.9341019
+          ],
+          [
+            -74.8366279,
+            10.9825615
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.8276332,
+            10.9936732
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Nogales / Norte",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8276332,
+            10.9936732
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "La Peñita",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.826184,
+            10.9666881
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8276332,
+            10.9936732
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8366279,
+            10.9825615
+          ],
+          [
+            -74.7993354,
+            10.9341019
+          ],
+          [
+            -74.826184,
+            10.9666881
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Circunvalar Buenavista B17",
+    "codigo": "B17",
+    "operador": "Coolitoral",
+    "origen": "Centro Barranquilla",
+    "destino": "Buenavista / Circunvalar Alta",
+    "barriosCubiertos": [
+      "Centro",
+      "Barlovento",
+      "Los Andes",
+      "San Felipe",
+      "Calle 72",
+      "La Castellana",
+      "Los Alpes",
+      "Buenavista"
+    ],
+    "recorridoTextual": {
+      "ida": "Centro → Carrera 44 → Calle 45 → Av. Murillo → Av. Circunvalar → Calle 72 → Carrera 65 → Calle 80 → Buenavista",
+      "regreso": "Buenavista → Calle 80 → Carrera 65 → Calle 72 → Av. Circunvalar → Calle 45 → Carrera 44 → Centro"
+    },
+    "color": "#06B6D4",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Centro Barranquilla",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7787153,
+            10.9796421
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Buenavista / Circunvalar Alta",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8287021,
+            11.0146413
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7787153,
+            10.9796421
+          ],
+          [
+            -74.8107894,
+            10.9952477
+          ],
+          [
+            -74.7993354,
+            10.9341019
+          ],
+          [
+            -74.7863865,
+            10.9828794
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.7959975,
+            11.0057072
+          ],
+          [
+            -74.8126932,
+            11.003358
+          ],
+          [
+            -74.8287021,
+            11.0146413
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Buenavista / Circunvalar Alta",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8287021,
+            11.0146413
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Centro Barranquilla",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7787153,
+            10.9796421
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8287021,
+            11.0146413
+          ],
+          [
+            -74.8126932,
+            11.003358
+          ],
+          [
+            -74.7959975,
+            11.0057072
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.7993354,
+            10.9341019
+          ],
+          [
+            -74.8107894,
+            10.9952477
+          ],
+          [
+            -74.7787153,
+            10.9796421
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Cordialidad",
+    "codigo": "C16",
+    "operador": "Cootransnorte",
+    "origen": "Granabastos (Soledad)",
+    "destino": "Uninorte / Calle 72",
+    "barriosCubiertos": [
+      "Granabastos",
+      "Soledad",
+      "La Cordialidad",
+      "San Felipe",
+      "Barrio Abajo",
+      "Los Andes",
+      "Modelo",
+      "San Francisco",
+      "Calle 72"
+    ],
+    "recorridoTextual": {
+      "ida": "Granabastos → Av. Murillo → Av. Cordialidad → Carrera 38 → Calle 72 → Carrera 54 → Uninorte",
+      "regreso": "Uninorte → Carrera 54 → Calle 72 → Carrera 38 → Av. Cordialidad → Av. Murillo → Granabastos"
+    },
+    "color": "#7C3AED",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Granabastos (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7991488,
+            10.8875043
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Uninorte / Calle 72",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8515324,
+            11.0221483
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7991488,
+            10.8875043
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7937873,
+            10.963615
+          ],
+          [
+            -74.8366279,
+            10.9825615
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.8515324,
+            11.0221483
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Uninorte / Calle 72",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8515324,
+            11.0221483
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Granabastos (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7991488,
+            10.8875043
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8515324,
+            11.0221483
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8366279,
+            10.9825615
+          ],
+          [
+            -74.7937873,
+            10.963615
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7991488,
+            10.8875043
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Vía 40",
+    "codigo": "C15",
+    "operador": "Cootransnorte",
+    "origen": "Granabastos (Soledad)",
+    "destino": "Zona Industrial Vía 40 / Norte",
+    "barriosCubiertos": [
+      "Granabastos",
+      "Soledad",
+      "Centro",
+      "Barlovento",
+      "Zona Industrial",
+      "Calle 72",
+      "Calle 80"
+    ],
+    "recorridoTextual": {
+      "ida": "Granabastos → Av. Murillo → Calle 30 → Vía 40 → Calle 72 → Calle 80 → Norte",
+      "regreso": "Norte → Calle 80 → Calle 72 → Vía 40 → Calle 30 → Av. Murillo → Granabastos"
+    },
+    "color": "#7C3AED",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Granabastos (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7991488,
+            10.8875043
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Zona Industrial Vía 40 / Norte",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8126932,
+            11.003358
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7991488,
+            10.8875043
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8126932,
+            11.003358
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Zona Industrial Vía 40 / Norte",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8126932,
+            11.003358
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Granabastos (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7991488,
+            10.8875043
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8126932,
+            11.003358
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7991488,
+            10.8875043
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Soledad 2000 Calle 72 Zoológico",
+    "codigo": "D8",
+    "operador": "Lolaya",
+    "origen": "Manuela Beltrán (Soledad)",
+    "destino": "Zoológico / Concepción (Calle 77)",
+    "barriosCubiertos": [
+      "Soledad 2000",
+      "Manuela Beltrán",
+      "Hipódromo",
+      "Las Palmas",
+      "La Victoria",
+      "Cevillar",
+      "El Carmen",
+      "Loma Fresca",
+      "Los Andes",
+      "Olaya",
+      "Las Delicias",
+      "Prado",
+      "Bellavista",
+      "San Francisco",
+      "La Concepción"
+    ],
+    "recorridoTextual": {
+      "ida": "Manuela Beltrán → Calle 30 → Carrera 8 → Calle 36B → Carrera 14 → Calle 53D → Carrera 25 → Calle 57 → Carrera 27 → Calle 71 → Carrera 35B → Calle 72 → Vía 40 → Calle 76 → Carrera 68 → Calle 77",
+      "regreso": "Calle 77 → Carrera 68 → Calle 76 → Vía 40 → Calle 72 → Carrera 35B → Calle 71 → Carrera 27 → Calle 57 → Carrera 25 → Calle 53D → Carrera 14 → Calle 36B → Carrera 8 → Calle 30 → Manuela Beltrán"
+    },
+    "color": "#EF4444",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Manuela Beltrán (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7795086,
+            10.9053146
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Zoológico / Concepción (Calle 77)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8016621,
+            11.0063266
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7795086,
+            10.9053146
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.7940943,
+            10.9458274
+          ],
+          [
+            -74.7903988,
+            10.934614
+          ],
+          [
+            -74.826184,
+            10.9666881
+          ],
+          [
+            -74.8019871,
+            10.9648817
+          ],
+          [
+            -74.7933226,
+            10.9680939
+          ],
+          [
+            -74.8014051,
+            10.9685893
+          ],
+          [
+            -74.7863762,
+            10.9680728
+          ],
+          [
+            -74.808152,
+            10.9881681
+          ],
+          [
+            -74.833212,
+            10.9801384
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.8108471,
+            10.9954896
+          ],
+          [
+            -74.794822,
+            11.0081009
+          ],
+          [
+            -74.8016621,
+            11.0063266
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Zoológico / Concepción (Calle 77)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8016621,
+            11.0063266
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Manuela Beltrán (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7795086,
+            10.9053146
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8016621,
+            11.0063266
+          ],
+          [
+            -74.794822,
+            11.0081009
+          ],
+          [
+            -74.8108471,
+            10.9954896
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.833212,
+            10.9801384
+          ],
+          [
+            -74.808152,
+            10.9881681
+          ],
+          [
+            -74.7863762,
+            10.9680728
+          ],
+          [
+            -74.8014051,
+            10.9685893
+          ],
+          [
+            -74.7933226,
+            10.9680939
+          ],
+          [
+            -74.8019871,
+            10.9648817
+          ],
+          [
+            -74.826184,
+            10.9666881
+          ],
+          [
+            -74.7903988,
+            10.934614
+          ],
+          [
+            -74.7940943,
+            10.9458274
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.7795086,
+            10.9053146
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Granabastos C72 Uninorte",
+    "codigo": "C17",
+    "operador": "Sobusa",
+    "origen": "Granabastos (Soledad)",
+    "destino": "Uninorte / Buenavista",
+    "barriosCubiertos": [
+      "Granabastos",
+      "Soledad",
+      "Ciudad del Puerto",
+      "Arboleda",
+      "Centro",
+      "Zona Norte",
+      "Calle 72",
+      "Uninorte",
+      "Buenavista"
+    ],
+    "recorridoTextual": {
+      "ida": "Granabastos → Av. Murillo → Calle 30 → Av. Circunvalar → Calle 72 → Carrera 54 → Uninorte → Buenavista",
+      "regreso": "Buenavista → Uninorte → Carrera 54 → Calle 72 → Av. Circunvalar → Calle 30 → Av. Murillo → Granabastos"
+    },
+    "color": "#F59E0B",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Granabastos (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7991488,
+            10.8875043
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Uninorte / Buenavista",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8287021,
+            11.0146413
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7991488,
+            10.8875043
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.8515324,
+            11.0221483
+          ],
+          [
+            -74.8287021,
+            11.0146413
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Uninorte / Buenavista",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8287021,
+            11.0146413
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Granabastos (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7991488,
+            10.8875043
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8287021,
+            11.0146413
+          ],
+          [
+            -74.8515324,
+            11.0221483
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7991488,
+            10.8875043
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "K-54 Uninorte",
+    "codigo": "C10",
+    "operador": "Sobusa",
+    "origen": "Soledad",
+    "destino": "Uninorte (Calle 98)",
+    "barriosCubiertos": [
+      "Soledad",
+      "Las Palmas",
+      "Carrera 54",
+      "Zona Norte",
+      "El Recreo",
+      "Uninorte"
+    ],
+    "recorridoTextual": {
+      "ida": "Soledad → Av. Murillo → Carrera 54 → Calle 54 → Calle 72 → Calle 80 → Uninorte",
+      "regreso": "Uninorte → Calle 80 → Calle 72 → Carrera 54 → Av. Murillo → Soledad"
+    },
+    "color": "#F59E0B",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Soledad",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7866218,
+            10.9163045
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Uninorte (Calle 98)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8515324,
+            11.0221483
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7866218,
+            10.9163045
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.7908302,
+            10.9899504
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8126932,
+            11.003358
+          ],
+          [
+            -74.8515324,
+            11.0221483
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Uninorte (Calle 98)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8515324,
+            11.0221483
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Soledad",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7866218,
+            10.9163045
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8515324,
+            11.0221483
+          ],
+          [
+            -74.8126932,
+            11.003358
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7866218,
+            10.9163045
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Vivero Paraíso (Manuela Beltrán)",
+    "codigo": "C12",
+    "operador": "Sobusa",
+    "origen": "Nevada Granabastos",
+    "destino": "Norte / Calle 90",
+    "barriosCubiertos": [
+      "Granabastos",
+      "Manuela Beltrán",
+      "Ciudad del Puerto",
+      "Arboleda",
+      "Soledad",
+      "Centro",
+      "Barlovento",
+      "La Merced",
+      "Rebolo",
+      "San Roque",
+      "El Golf",
+      "Recreo",
+      "Paraíso",
+      "Los Cocos"
+    ],
+    "recorridoTextual": {
+      "ida": "Nevada Granabastos → Av. Murillo → Manuela Beltrán → Calle 37 → Cra 11 → Calle 43 → Cra 14 → Ciudad del Puerto → Cra 24 → Calle 45 → Arboleda → Cra 30 → Calle 30 → Av. Circunvalar → Blvd. Simón Bolívar → Calle 17 → Cra 38 → Calle 30 → Cra 45 → Calle 53 → Cra 54 → Calle 58 → Cra 66 → Calle 68 → Cra 62 → Calle 77 → Vía 40 → Calle 80 → Calle 85 → Cra 64 → Calle 90",
+      "regreso": "Calle 90 → Cra 49C → Calle 75 → Cra 52 → Calle 70 → Cra 47 → Cra 50 → Calle 54 → Cra 44 → Calle 40 → Cra 38 → Calle 17 → Blvd. Simón Bolívar → Av. Circunvalar → Calle 30 → Arboleda → Cra 30 → Calle 45 → Cra 24 → Ciudad del Puerto → Cra 14 → Cra 11 → Nevada Granabastos"
+    },
+    "color": "#F59E0B",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Nevada Granabastos",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8064166,
+            10.8935409
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Norte / Calle 90",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8274296,
+            10.9983827
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8064166,
+            10.8935409
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7795086,
+            10.9053146
+          ],
+          [
+            -74.7782027,
+            10.9018792
+          ],
+          [
+            -74.7892952,
+            10.9050308
+          ],
+          [
+            -74.7866036,
+            10.933049
+          ],
+          [
+            -74.8079533,
+            10.9133288
+          ],
+          [
+            -74.7819156,
+            10.9176627
+          ],
+          [
+            -74.7966224,
+            10.9214252
+          ],
+          [
+            -74.7899874,
+            10.9184222
+          ],
+          [
+            -74.7835442,
+            10.9260227
+          ],
+          [
+            -74.7956815,
+            10.9246599
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.7771488,
+            10.9439344
+          ],
+          [
+            -74.772362,
+            10.946207
+          ],
+          [
+            -74.8366279,
+            10.9825615
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.8154872,
+            10.9989857
+          ],
+          [
+            -74.8016115,
+            10.9645848
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.8109481,
+            10.9535723
+          ],
+          [
+            -74.7885219,
+            10.9994452
+          ],
+          [
+            -74.797106,
+            10.9979661
+          ],
+          [
+            -74.8002928,
+            11.0078281
+          ],
+          [
+            -74.8016621,
+            11.0063266
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.8126932,
+            11.003358
+          ],
+          [
+            -74.8210162,
+            11.0023625
+          ],
+          [
+            -74.8136914,
+            11.013258
+          ],
+          [
+            -74.8274296,
+            10.9983827
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Norte / Calle 90",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8274296,
+            10.9983827
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Nevada Granabastos",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8064166,
+            10.8935409
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8274296,
+            10.9983827
+          ],
+          [
+            -74.824857,
+            11.0061535
+          ],
+          [
+            -74.7993286,
+            11.0051188
+          ],
+          [
+            -74.8019489,
+            10.9967053
+          ],
+          [
+            -74.7987593,
+            10.999148
+          ],
+          [
+            -74.8278314,
+            11.0058694
+          ],
+          [
+            -74.8235554,
+            11.0066217
+          ],
+          [
+            -74.7908302,
+            10.9899504
+          ],
+          [
+            -74.8107894,
+            10.9952477
+          ],
+          [
+            -74.7818856,
+            10.982163
+          ],
+          [
+            -74.8366279,
+            10.9825615
+          ],
+          [
+            -74.772362,
+            10.946207
+          ],
+          [
+            -74.7771488,
+            10.9439344
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.7835442,
+            10.9260227
+          ],
+          [
+            -74.7956815,
+            10.9246599
+          ],
+          [
+            -74.7899874,
+            10.9184222
+          ],
+          [
+            -74.7966224,
+            10.9214252
+          ],
+          [
+            -74.7819156,
+            10.9176627
+          ],
+          [
+            -74.8079533,
+            10.9133288
+          ],
+          [
+            -74.7892952,
+            10.9050308
+          ],
+          [
+            -74.8064166,
+            10.8935409
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "R1 Joe Arroyo → S1 Portal de Soledad",
+    "codigo": "R1/S1",
+    "operador": "Transmetro",
+    "origen": "Estación Joe Arroyo (Calle 17)",
+    "destino": "Portal de Soledad",
+    "barriosCubiertos": [
+      "Barlovento",
+      "Centro",
+      "Rebolo",
+      "San Roque",
+      "Barrio Abajo",
+      "La Concepción",
+      "Modelo",
+      "El Golf",
+      "Zona Norte",
+      "Soledad"
+    ],
+    "recorridoTextual": {
+      "ida": "Joe Arroyo → Calle 17 → Paseo Bolívar → Calle 30 → Carrera 46 → Calle 45 → Carrera 54 → Calle 58 → Calle 72 → Carrera 46 (troncal) → Portal de Soledad",
+      "regreso": "Portal de Soledad → Carrera 46 (troncal) → Calle 72 → Calle 58 → Carrera 54 → Calle 45 → Carrera 46 → Calle 30 → Paseo Bolívar → Calle 17 → Joe Arroyo"
+    },
+    "color": "#3B82F6",
+    "tieneParadas": true,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Estación Joe Arroyo (Calle 17)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8077717,
+            10.9947003
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Portal de Soledad",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8011416,
+            10.9072938
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8077717,
+            10.9947003
+          ],
+          [
+            -74.772362,
+            10.946207
+          ],
+          [
+            -74.7775292,
+            10.9833247
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.7765622,
+            10.9851811
+          ],
+          [
+            -74.7993354,
+            10.9341019
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.8109481,
+            10.9535723
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.7531185,
+            10.9504474
+          ],
+          [
+            -74.8011416,
+            10.9072938
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Portal de Soledad",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8011416,
+            10.9072938
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Estación Joe Arroyo (Calle 17)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8077717,
+            10.9947003
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8011416,
+            10.9072938
+          ],
+          [
+            -74.7531185,
+            10.9504474
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8109481,
+            10.9535723
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.7993354,
+            10.9341019
+          ],
+          [
+            -74.7765622,
+            10.9851811
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.7775292,
+            10.9833247
+          ],
+          [
+            -74.772362,
+            10.946207
+          ],
+          [
+            -74.8077717,
+            10.9947003
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "R2 Joe Arroyo ↔ B2 Barranquillita",
+    "codigo": "R2/B2",
+    "operador": "Transmetro",
+    "origen": "Barranquillita",
+    "destino": "Joe Arroyo (Calle 17)",
+    "barriosCubiertos": [
+      "Barranquillita",
+      "Barlovento",
+      "Centro",
+      "Barrio Abajo",
+      "San Felipe",
+      "Los Andes",
+      "Modelo",
+      "San Francisco",
+      "Calle 72",
+      "Calle 80"
+    ],
+    "recorridoTextual": {
+      "ida": "Barranquillita → Vía 40 → Paseo Bolívar → Calle 30 → Carrera 46 → Calle 45 → Carrera 54 → Calle 72 → Calle 80",
+      "regreso": "Calle 80 → Calle 72 → Carrera 54 → Calle 45 → Carrera 46 → Calle 30 → Paseo Bolívar → Vía 40 → Barranquillita"
+    },
+    "color": "#3B82F6",
+    "tieneParadas": true,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Barranquillita",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7726223,
+            10.9813908
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Joe Arroyo (Calle 17)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8126932,
+            11.003358
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7726223,
+            10.9813908
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.7775292,
+            10.9833247
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.7765622,
+            10.9851811
+          ],
+          [
+            -74.7993354,
+            10.9341019
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8126932,
+            11.003358
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Joe Arroyo (Calle 17)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8126932,
+            11.003358
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Barranquillita",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7726223,
+            10.9813908
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8126932,
+            11.003358
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.7993354,
+            10.9341019
+          ],
+          [
+            -74.7765622,
+            10.9851811
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.7775292,
+            10.9833247
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.7726223,
+            10.9813908
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Alimentadora 1-2 Carrera Ocho",
+    "codigo": "A1-2",
+    "operador": "Transmetro",
+    "origen": "Estación Norte / Calle 80",
+    "destino": "Carrera 8 / Sur",
+    "barriosCubiertos": [
+      "Recreo",
+      "Las Estrellas",
+      "Paraíso",
+      "El Campito",
+      "La Unión",
+      "San Roque"
+    ],
+    "recorridoTextual": {
+      "ida": "Estación Calle 80 → Calle 79 → Carrera 8 → Calle 72",
+      "regreso": "Calle 72 → Carrera 8 → Calle 79 → Calle 80"
+    },
+    "color": "#3B82F6",
+    "tieneParadas": true,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Estación Norte / Calle 80",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8071883,
+            11.0061273
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Carrera 8 / Sur",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7930699,
+            11.0064664
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8071883,
+            11.0061273
+          ],
+          [
+            -74.7940943,
+            10.9458274
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Carrera 8 / Sur",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7930699,
+            11.0064664
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Estación Norte / Calle 80",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8071883,
+            11.0061273
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.7940943,
+            10.9458274
+          ],
+          [
+            -74.8071883,
+            11.0061273
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Alimentadora 3-4 Villa Sol",
+    "codigo": "A3-4",
+    "operador": "Transmetro",
+    "origen": "Portal de Soledad",
+    "destino": "Villa Sol",
+    "barriosCubiertos": [
+      "Soledad",
+      "Villa Sol",
+      "Manuela Beltrán",
+      "La Palma"
+    ],
+    "recorridoTextual": {
+      "ida": "Portal de Soledad → Autopista al Aeropuerto → Villa Sol",
+      "regreso": "Villa Sol → Autopista al Aeropuerto → Portal de Soledad"
+    },
+    "color": "#3B82F6",
+    "tieneParadas": true,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Portal de Soledad",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8011416,
+            10.9072938
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Villa Sol",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7919926,
+            10.8921471
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8011416,
+            10.9072938
+          ],
+          [
+            -74.7919926,
+            10.8921471
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Villa Sol",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7919926,
+            10.8921471
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Portal de Soledad",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8011416,
+            10.9072938
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7919926,
+            10.8921471
+          ],
+          [
+            -74.8011416,
+            10.9072938
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "María Modelo Manuela Beltrán",
+    "codigo": "A14",
+    "operador": "Transurbar",
+    "origen": "Nevada Villa Estadio (Soledad)",
+    "destino": "Vía 40 / Calle 77",
+    "barriosCubiertos": [
+      "Villa Estadio",
+      "Soledad",
+      "Manuela Beltrán",
+      "María Auxiliadora",
+      "El Prado",
+      "Barlovento",
+      "Centro",
+      "La Merced",
+      "Zona Industrial"
+    ],
+    "recorridoTextual": {
+      "ida": "Nevada Villa Estadio → Av. Murillo → Autopista → Calle 30 → Cra 4 → Calle 38B → Cra 8 → Calle 41 → Cra 21 → Calle 38 → Cra 44 → Calle 30 → Vía 40 → Cra 54 → Calle 64 → Cra 58 → Calle 77",
+      "regreso": "Calle 77 → Cra 58 → Calle 64 → Cra 54 → Vía 40 → Calle 30 → Cra 44 → Calle 38 → Cra 21 → Calle 41 → Cra 8 → Calle 38B → Cra 4 → Calle 30 → Autopista → Av. Murillo → Nevada Villa Estadio"
+    },
+    "color": "#FB923C",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Nevada Villa Estadio (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8001257,
+            10.9130568
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Vía 40 / Calle 77",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8016621,
+            11.0063266
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8001257,
+            10.9130568
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.7864391,
+            10.9395638
+          ],
+          [
+            -74.7942619,
+            10.9471626
+          ],
+          [
+            -74.7940943,
+            10.9458274
+          ],
+          [
+            -74.7813118,
+            10.9894028
+          ],
+          [
+            -74.771274,
+            10.9589527
+          ],
+          [
+            -74.7796562,
+            10.9873267
+          ],
+          [
+            -74.8107894,
+            10.9952477
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.7990484,
+            10.9880459
+          ],
+          [
+            -74.8012139,
+            11.0049236
+          ],
+          [
+            -74.8016621,
+            11.0063266
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Vía 40 / Calle 77",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8016621,
+            11.0063266
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Nevada Villa Estadio (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8001257,
+            10.9130568
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8016621,
+            11.0063266
+          ],
+          [
+            -74.8012139,
+            11.0049236
+          ],
+          [
+            -74.7990484,
+            10.9880459
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.8107894,
+            10.9952477
+          ],
+          [
+            -74.7796562,
+            10.9873267
+          ],
+          [
+            -74.771274,
+            10.9589527
+          ],
+          [
+            -74.7813118,
+            10.9894028
+          ],
+          [
+            -74.7940943,
+            10.9458274
+          ],
+          [
+            -74.7942619,
+            10.9471626
+          ],
+          [
+            -74.7864391,
+            10.9395638
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.8001257,
+            10.9130568
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Galapa Calle 72",
+    "codigo": "E7",
+    "operador": "Lucero San Felipe",
+    "origen": "Galapa (Municipio)",
+    "destino": "Calle 72 / Vía 40",
+    "barriosCubiertos": [
+      "Galapa",
+      "Autopista",
+      "Villa Campestre",
+      "Las Granjas",
+      "Cordialidad",
+      "Barrio Abajo",
+      "Calle 72"
+    ],
+    "recorridoTextual": {
+      "ida": "Galapa → Autopista al Aeropuerto → Av. Murillo → Cordialidad → Carrera 38 → Calle 72 → Vía 40",
+      "regreso": "Vía 40 → Calle 72 → Carrera 38 → Cordialidad → Av. Murillo → Autopista al Aeropuerto → Galapa"
+    },
+    "color": "#F472B6",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Galapa (Municipio)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8864007,
+            10.8994371
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Calle 72 / Vía 40",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8019731,
+            11.0243762
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8864007,
+            10.8994371
+          ],
+          [
+            -74.7863865,
+            10.9828794
+          ],
+          [
+            -74.7937873,
+            10.963615
+          ],
+          [
+            -74.8366279,
+            10.9825615
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Calle 72 / Vía 40",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8019731,
+            11.0243762
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Galapa (Municipio)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8864007,
+            10.8994371
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8366279,
+            10.9825615
+          ],
+          [
+            -74.7937873,
+            10.963615
+          ],
+          [
+            -74.7863865,
+            10.9828794
+          ],
+          [
+            -74.8864007,
+            10.8994371
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Circunvalar Buenavista (Malvinas)",
+    "codigo": "B17M",
+    "operador": "Lucero San Felipe",
+    "origen": "Malvinas",
+    "destino": "Buenavista / Circunvalar",
+    "barriosCubiertos": [
+      "Malvinas",
+      "Las Nieves",
+      "Centro",
+      "Barrio Abajo",
+      "Calle 72",
+      "La Castellana",
+      "Buenavista"
+    ],
+    "recorridoTextual": {
+      "ida": "Malvinas → Av. Circunvalar baja → Calle 45 → Carrera 44 → Calle 72 → Av. Circunvalar → Buenavista",
+      "regreso": "Buenavista → Av. Circunvalar → Calle 72 → Carrera 44 → Calle 45 → Av. Circunvalar baja → Malvinas"
+    },
+    "color": "#F472B6",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Malvinas",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8280418,
+            10.9530413
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Buenavista / Circunvalar",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8287021,
+            11.0146413
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8280418,
+            10.9530413
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.7993354,
+            10.9341019
+          ],
+          [
+            -74.8107894,
+            10.9952477
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.8287021,
+            11.0146413
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Buenavista / Circunvalar",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8287021,
+            11.0146413
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Malvinas",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8280418,
+            10.9530413
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8287021,
+            11.0146413
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8107894,
+            10.9952477
+          ],
+          [
+            -74.7993354,
+            10.9341019
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.8280418,
+            10.9530413
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Circunvalar Calle 84",
+    "codigo": "B18",
+    "operador": "Sodis",
+    "origen": "Centro / Calle 17",
+    "destino": "Calle 84 / Circunvalar Alta",
+    "barriosCubiertos": [
+      "Centro",
+      "Barlovento",
+      "Los Andes",
+      "San Felipe",
+      "Calle 72",
+      "La Castellana",
+      "Los Alpes",
+      "Calle 80",
+      "Calle 84"
+    ],
+    "recorridoTextual": {
+      "ida": "Calle 17 → Carrera 44 → Calle 45 → Av. Circunvalar → Calle 72 → Carrera 65 → Calle 80 → Calle 84",
+      "regreso": "Calle 84 → Calle 80 → Carrera 65 → Calle 72 → Av. Circunvalar → Calle 45 → Carrera 44 → Calle 17"
+    },
+    "color": "#A78BFA",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Centro / Calle 17",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.772362,
+            10.946207
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Calle 84 / Circunvalar Alta",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.829316,
+            10.9808768
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.772362,
+            10.946207
+          ],
+          [
+            -74.8107894,
+            10.9952477
+          ],
+          [
+            -74.7993354,
+            10.9341019
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.7959975,
+            11.0057072
+          ],
+          [
+            -74.8126932,
+            11.003358
+          ],
+          [
+            -74.829316,
+            10.9808768
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Calle 84 / Circunvalar Alta",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.829316,
+            10.9808768
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Centro / Calle 17",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.772362,
+            10.946207
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.829316,
+            10.9808768
+          ],
+          [
+            -74.8126932,
+            11.003358
+          ],
+          [
+            -74.7959975,
+            11.0057072
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.7993354,
+            10.9341019
+          ],
+          [
+            -74.8107894,
+            10.9952477
+          ],
+          [
+            -74.772362,
+            10.946207
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "La Paz C-53",
+    "codigo": "C53",
+    "operador": "Sodis",
+    "origen": "La Paz (Soledad/Sur)",
+    "destino": "Calle 53 / Norte de Barranquilla",
+    "barriosCubiertos": [
+      "La Paz",
+      "Soledad",
+      "Las Palmas",
+      "Cevillar",
+      "La Victoria",
+      "Loma Fresca",
+      "Los Andes",
+      "Olaya"
+    ],
+    "recorridoTextual": {
+      "ida": "La Paz → Av. Murillo → Calle 30 → Carrera 38 → Calle 53 → Carrera 54 → Calle 58",
+      "regreso": "Calle 58 → Carrera 54 → Calle 53 → Carrera 38 → Calle 30 → Av. Murillo → La Paz"
+    },
+    "color": "#A78BFA",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "La Paz (Soledad/Sur)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.799286,
+            10.9204449
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Calle 53 / Norte de Barranquilla",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8109481,
+            10.9535723
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.8366279,
+            10.9825615
+          ],
+          [
+            -74.8016115,
+            10.9645848
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.8109481,
+            10.9535723
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Calle 53 / Norte de Barranquilla",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.8109481,
+            10.9535723
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "La Paz (Soledad/Sur)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.799286,
+            10.9204449
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.8109481,
+            10.9535723
+          ],
+          [
+            -74.7992023,
+            10.9977898
+          ],
+          [
+            -74.8016115,
+            10.9645848
+          ],
+          [
+            -74.8366279,
+            10.9825615
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Caracolí",
+    "codigo": "D10",
+    "operador": "Transmecar",
+    "origen": "Barranquilla Sur/Centro",
+    "destino": "Caracolí",
+    "barriosCubiertos": [
+      "Centro",
+      "Las Nieves",
+      "Barrio Abajo",
+      "La Victoria",
+      "Cevillar",
+      "Caracolí"
+    ],
+    "recorridoTextual": {
+      "ida": "Centro → Calle 30 → Carrera 8 → Calle 36B → Carrera 14 → Calle 45 → Caracolí",
+      "regreso": "Caracolí → Calle 45 → Carrera 14 → Calle 36B → Carrera 8 → Calle 30 → Centro"
+    },
+    "color": "#10B981",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Barranquilla Sur/Centro",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7787153,
+            10.9796421
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Caracolí",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7993354,
+            10.9341019
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7787153,
+            10.9796421
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.7940943,
+            10.9458274
+          ],
+          [
+            -74.7903988,
+            10.934614
+          ],
+          [
+            -74.826184,
+            10.9666881
+          ],
+          [
+            -74.7993354,
+            10.9341019
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Caracolí",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7993354,
+            10.9341019
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Barranquilla Sur/Centro",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7787153,
+            10.9796421
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7993354,
+            10.9341019
+          ],
+          [
+            -74.826184,
+            10.9666881
+          ],
+          [
+            -74.7903988,
+            10.934614
+          ],
+          [
+            -74.7940943,
+            10.9458274
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.7787153,
+            10.9796421
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Arboleda Normandía",
+    "codigo": "D6",
+    "operador": "Cootrasol",
+    "origen": "La Arboleda (Soledad)",
+    "destino": "Normandía / Norte",
+    "barriosCubiertos": [
+      "Arboleda",
+      "Soledad",
+      "Ciudad del Puerto",
+      "Centro",
+      "Calle 72",
+      "La Castellana",
+      "Normandía"
+    ],
+    "recorridoTextual": {
+      "ida": "Arboleda → Carrera 30 → Calle 30 → Av. Circunvalar → Calle 72 → Normandía",
+      "regreso": "Normandía → Calle 72 → Av. Circunvalar → Calle 30 → Carrera 30 → Arboleda"
+    },
+    "color": "#22D3EE",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "La Arboleda (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7835442,
+            10.9260227
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Normandía / Norte",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7930699,
+            11.0064664
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7835442,
+            10.9260227
+          ],
+          [
+            -74.7956815,
+            10.9246599
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Normandía / Norte",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7930699,
+            11.0064664
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "La Arboleda (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7835442,
+            10.9260227
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8386453,
+            10.9936275
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.7956815,
+            10.9246599
+          ],
+          [
+            -74.7835442,
+            10.9260227
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Hipódromo",
+    "codigo": "D7",
+    "operador": "Cootrasol",
+    "origen": "Hipódromo (Soledad)",
+    "destino": "Norte Barranquilla",
+    "barriosCubiertos": [
+      "Hipódromo",
+      "Soledad",
+      "Las Palmas",
+      "Cevillar",
+      "Loma Fresca",
+      "Centro",
+      "Zona Industrial",
+      "Calle 72"
+    ],
+    "recorridoTextual": {
+      "ida": "Hipódromo → Carrera 14 → Calle 54 → Av. Murillo → Calle 30 → Vía 40 → Calle 72 → Norte",
+      "regreso": "Norte → Calle 72 → Vía 40 → Calle 30 → Av. Murillo → Calle 54 → Carrera 14 → Hipódromo"
+    },
+    "color": "#22D3EE",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Hipódromo (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7699127,
+            10.928117
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Norte Barranquilla",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7930699,
+            11.0064664
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7699127,
+            10.928117
+          ],
+          [
+            -74.8079533,
+            10.9133288
+          ],
+          [
+            -74.791654,
+            10.9054664
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Norte Barranquilla",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7930699,
+            11.0064664
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Hipódromo (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7699127,
+            10.928117
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.791654,
+            10.9054664
+          ],
+          [
+            -74.8079533,
+            10.9133288
+          ],
+          [
+            -74.7699127,
+            10.928117
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Miramar Alameda del Río",
+    "codigo": "D5",
+    "operador": "La Carolina",
+    "origen": "Ciudadela Miramar (Soledad)",
+    "destino": "Alameda del Río (Norte)",
+    "barriosCubiertos": [
+      "Ciudadela Miramar",
+      "Soledad",
+      "Centro",
+      "Barlovento",
+      "Zona Industrial",
+      "La Concepción",
+      "El Recreo",
+      "Alameda del Río"
+    ],
+    "recorridoTextual": {
+      "ida": "Ciudadela Miramar → Av. Murillo → Calle 30 → Vía 40 → Calle 76 → Carrera 58 → Calle 80 → Alameda del Río",
+      "regreso": "Alameda del Río → Calle 80 → Carrera 58 → Calle 76 → Vía 40 → Calle 30 → Av. Murillo → Ciudadela Miramar"
+    },
+    "color": "#818CF8",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "Ciudadela Miramar (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.799286,
+            10.9204449
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Alameda del Río (Norte)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.843939,
+            10.9949022
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.799286,
+            10.9204449
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.8108471,
+            10.9954896
+          ],
+          [
+            -74.8012139,
+            11.0049236
+          ],
+          [
+            -74.8126932,
+            11.003358
+          ],
+          [
+            -74.843939,
+            10.9949022
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Alameda del Río (Norte)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.843939,
+            10.9949022
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Ciudadela Miramar (Soledad)",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.799286,
+            10.9204449
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.843939,
+            10.9949022
+          ],
+          [
+            -74.8126932,
+            11.003358
+          ],
+          [
+            -74.8012139,
+            11.0049236
+          ],
+          [
+            -74.8108471,
+            10.9954896
+          ],
+          [
+            -74.8019731,
+            11.0243762
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.799286,
+            10.9204449
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  },
+  {
+    "nombre": "Bosque Aduanilla Cordialidad",
+    "codigo": "E1",
+    "operador": "Monterrey",
+    "origen": "El Bosque",
+    "destino": "Aduanilla / Cordialidad / Norte",
+    "barriosCubiertos": [
+      "El Bosque",
+      "Centro",
+      "Barlovento",
+      "Aduanilla",
+      "Cordialidad",
+      "San Felipe",
+      "Barrio Abajo",
+      "Calle 72"
+    ],
+    "recorridoTextual": {
+      "ida": "El Bosque → Calle 30 → Carrera 44 → Aduanilla → Cordialidad → Carrera 38 → Calle 72 → Norte",
+      "regreso": "Norte → Calle 72 → Carrera 38 → Cordialidad → Aduanilla → Carrera 44 → Calle 30 → El Bosque"
+    },
+    "color": "#34D399",
+    "tieneParadas": false,
+    "geometriaOSM": false,
+    "type": "official",
+    "ida": {
+      "puntoPartida": {
+        "nombre": "El Bosque",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.817938,
+            10.9532733
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "Aduanilla / Cordialidad / Norte",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7930699,
+            11.0064664
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.817938,
+            10.9532733
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.8107894,
+            10.9952477
+          ],
+          [
+            -74.7937873,
+            10.963615
+          ],
+          [
+            -74.8366279,
+            10.9825615
+          ],
+          [
+            -74.7930699,
+            11.0064664
+          ]
+        ]
+      }
+    },
+    "regreso": {
+      "puntoPartida": {
+        "nombre": "Aduanilla / Cordialidad / Norte",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.7930699,
+            11.0064664
+          ]
+        }
+      },
+      "puntoFinal": {
+        "nombre": "El Bosque",
+        "coordenadas": {
+          "type": "Point",
+          "coordinates": [
+            -74.817938,
+            10.9532733
+          ]
+        }
+      },
+      "trazado": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.7930699,
+            11.0064664
+          ],
+          [
+            -74.8366279,
+            10.9825615
+          ],
+          [
+            -74.7937873,
+            10.963615
+          ],
+          [
+            -74.8107894,
+            10.9952477
+          ],
+          [
+            -74.7764483,
+            10.9810442
+          ],
+          [
+            -74.817938,
+            10.9532733
+          ]
+        ]
+      }
+    },
+    "activa": true,
+    "trazadoIncompleto": false,
+    "audit": {
+      "revisadoManualmente": false,
+      "observaciones": "Geocodificado desde análisis oficial v5"
+    },
+    "fuente": "geocoded"
+  }
+]
