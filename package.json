@@ -4,6 +4,8 @@
   "description": "Plataforma de crowdsourcing GIS para transporte tradicional en Barranquilla",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "start": "cd server && node server.js",
+    "build": "npm run install:all",
     "server": "cd server && node server.js",
     "client": "cd client && npm run dev",
     "seed": "cd server && node data/seed.js",
