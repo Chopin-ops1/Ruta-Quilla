@@ -270,8 +270,8 @@ async function startServer() {
     // Paso 2: Poblar datos de demostración
     await seedDatabase();
 
-    // Paso 3: Iniciar servidor HTTP
-    const server = app.listen(PORT, () => {
+    // Paso 3: Iniciar servidor HTTP vinculando explícitamente a 0.0.0.0 para plataformas Cloud
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log('');
       console.log('============================================');
       console.log('  🚌 RutaQuilla API Server');
