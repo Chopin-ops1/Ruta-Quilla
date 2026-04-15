@@ -1,0 +1,27 @@
+name: ruta-quilla
+services:
+  - name: server
+    github:
+      branch: master
+      repo: Chopin-ops1/Ruta-Quilla
+    source_dir: server
+    envs:
+      - key: NODE_ENV
+        scope: RUN_TIME
+        value: production
+    http_port: 5000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    run_command: npm start
+static_sites:
+  - name: client
+    github:
+      branch: master
+      repo: Chopin-ops1/Ruta-Quilla
+    source_dir: client
+    build_command: npm run build
+    environment_slug: node-js
+    envs:
+      - key: VITE_API_URL
+        scope: BUILD_TIME
+        value: ${server.PUBLIC_URL}
