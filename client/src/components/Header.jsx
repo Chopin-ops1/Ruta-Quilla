@@ -1,15 +1,15 @@
 /**
  * ============================================
- * RutaQuilla - Header v2 (Premium Redesign)
+ * RutaQuilla - Header v3 (Premium + Freemium)
  * ============================================
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { Bus, User, Crown, LogOut, Menu, X, ChevronDown, Zap } from 'lucide-react';
+import { Bus, User, Crown, LogOut, Menu, X, ChevronDown, Zap, Search, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export default function Header({ onLoginClick, onMenuToggle, menuOpen }) {
-  const { user, isAuthenticated, isPremium, logout } = useAuth();
+export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLegal }) {
+  const { user, isAuthenticated, isPremium, logout, remainingFreeSearches, maxFreeSearches } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef(null);
 
@@ -100,6 +100,28 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen }) {
           </span>
         </div>
 
+        {/* Free searches badge (only when not authenticated) */}
+        {!isAuthenticated && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            padding: '5px 12px', borderRadius: 20,
+            background: remainingFreeSearches > 0
+              ? 'rgba(245,158,11,0.07)'
+              : 'rgba(239,68,68,0.07)',
+            border: `1px solid ${remainingFreeSearches > 0
+              ? 'rgba(245,158,11,0.2)'
+              : 'rgba(239,68,68,0.2)'}`,
+          }}>
+            <Search size={11} color={remainingFreeSearches > 0 ? '#F59E0B' : '#EF4444'} />
+            <span style={{
+              fontSize: 11, fontWeight: 600,
+              color: remainingFreeSearches > 0 ? '#FBBF24' : '#F87171',
+            }}>
+              {remainingFreeSearches}/{maxFreeSearches} gratis
+            </span>
+          </div>
+        )}
+
         {/* Route count badge */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 5,
@@ -116,6 +138,27 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen }) {
 
       {/* Right: Auth */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Mobile: free searches badge */}
+        {!isAuthenticated && (
+          <div className="md:hidden" style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            padding: '4px 8px', borderRadius: 12,
+            background: remainingFreeSearches > 0
+              ? 'rgba(245,158,11,0.1)'
+              : 'rgba(239,68,68,0.1)',
+            border: `1px solid ${remainingFreeSearches > 0
+              ? 'rgba(245,158,11,0.25)'
+              : 'rgba(239,68,68,0.25)'}`,
+          }}>
+            <span style={{
+              fontSize: 10, fontWeight: 700,
+              color: remainingFreeSearches > 0 ? '#FBBF24' : '#F87171',
+            }}>
+              {remainingFreeSearches}/{maxFreeSearches}
+            </span>
+          </div>
+        )}
+
         {isAuthenticated ? (
           <div ref={menuRef} style={{ position: 'relative' }}>
             <button
@@ -204,6 +247,22 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen }) {
                   </div>
                 </div>
 
+                {/* Legal link */}
+                <button
+                  onClick={() => { onShowLegal?.('privacy'); setShowUserMenu(false); }}
+                  style={{
+                    width: '100%', padding: '10px 16px',
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    border: 'none', background: 'transparent',
+                    color: '#94A3B8', fontSize: 12, fontWeight: 500,
+                    cursor: 'pointer', transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <Shield size={14} /> Privacidad y Legal
+                </button>
+
                 {/* Logout */}
                 <button
                   onClick={() => { logout(); setShowUserMenu(false); }}
@@ -214,6 +273,7 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen }) {
                     border: 'none', background: 'transparent',
                     color: '#F87171', fontSize: 13, fontWeight: 500,
                     cursor: 'pointer', transition: 'background 0.15s',
+                    borderTop: '1px solid rgba(255,255,255,0.04)',
                   }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}

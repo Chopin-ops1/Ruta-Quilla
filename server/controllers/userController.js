@@ -14,9 +14,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/UserModel');
 
-const crypto = require('crypto');
-const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/jwt');
 
 /**
  * Genera un token JWT firmado con el ID del usuario.

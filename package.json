@@ -10,7 +10,7 @@
     "server": "cd server && node server.js",
     "client": "cd client && npm run dev",
     "seed": "cd server && node data/seed.js",
-    "install:all": "npm install && cd server && npm install && cd ../client && npm install"
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install --production=false"
   },
   "dependencies": {
     "concurrently": "^8.2.2"

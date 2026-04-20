@@ -1,10 +1,12 @@
 /**
  * ============================================
- * RutaQuilla - POI Layer v3 (Mini-Labels)
+ * RutaQuilla - POI Layer v4 (Progressive + Stable)
  * ============================================
- * - DivIcon con SVG minimalista por categoría
- * - Nombre visible desde zoom 15 (no solo en hover)
- * - Solo aparece en zoom >= 15
+ * - Carga progresiva: POIs importantes desde zoom 14
+ * - Labels desde zoom 16
+ * - Acumula POIs (merge, no replace) para evitar parpadeo
+ * - Debounce de 800ms para no spamear Overpass
+ * - Mantiene POIs visibles al hacer pan
  */
 
 import { useEffect, useState, useRef, useCallback } from 'react';
@@ -17,8 +19,8 @@ import {
   POI_CATEGORIES,
 } from '../services/poiService';
 
-const MIN_ZOOM = 16;
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes — reduce Overpass rate-limit hits
+const MIN_ZOOM = 14;
+const DEBOUNCE_MS = 800;
 
 // SVG icons per category (minimalista, stroke-based)
 const CATEGORY_SVG = {
@@ -40,6 +42,7 @@ const CATEGORY_SVG = {
   parking:          `<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 17V7h5a3 3 0 0 1 0 6H9" stroke-width="2" stroke-linecap="round"/>`,
   hotel:            `<path d="M3 22V12M21 22V12M3 12a9 9 0 0 1 18 0M12 12V7M8 22v-4a4 4 0 0 1 8 0v4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`,
   mall:             `<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke-width="2"/>`,
+  fire_station:     `<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`,
 };
 
 function buildPOIIcon(category, name, zoom) {
@@ -102,13 +105,16 @@ function buildPOIIcon(category, name, zoom) {
 
 export default function POILayer() {
   const map = useMap();
-  const [pois, setPois] = useState([]);
+  const [poisMap, setPoisMap] = useState(new Map()); // key: poi.id → poi object
   const [visible, setVisible] = useState(false);
   const [currentZoom, setCurrentZoom] = useState(map.getZoom());
   const fetchTimeoutRef = useRef(null);
-  const lastBoundsRef = useRef(null);
+  const lastFetchKeyRef = useRef(null);
+  const isLoadingRef = useRef(false);
 
   const loadPOIs = useCallback(async () => {
+    if (isLoadingRef.current) return; // prevent concurrent fetches
+    
     const zoom = map.getZoom();
     setCurrentZoom(zoom);
     if (zoom < MIN_ZOOM) { setVisible(false); return; }
@@ -116,31 +122,53 @@ export default function POILayer() {
     setVisible(true);
     const bounds = map.getBounds();
     const key = `${bounds.getSouth().toFixed(3)},${bounds.getWest().toFixed(3)},${zoom}`;
-    if (lastBoundsRef.current === key) return;
-    lastBoundsRef.current = key;
+    
+    if (lastFetchKeyRef.current === key) return;
+    lastFetchKeyRef.current = key;
 
+    isLoadingRef.current = true;
     try {
       const data = await fetchPOIs({
         south: bounds.getSouth(), west: bounds.getWest(),
         north: bounds.getNorth(), east: bounds.getEast(),
-      });
-      setPois(data);
+      }, zoom);
+      
+      if (data && data.length > 0) {
+        // Merge: keep existing POIs + add new ones (prevents flash)
+        setPoisMap(prev => {
+          const merged = new Map(prev);
+          data.forEach(poi => merged.set(poi.id, poi));
+          
+          // Limit total POIs to prevent performance issues
+          if (merged.size > 300) {
+            const entries = [...merged.entries()];
+            const trimmed = entries.slice(entries.length - 250);
+            return new Map(trimmed);
+          }
+          return merged;
+        });
+      }
     } catch (err) {
       console.warn('POI load error:', err);
+      // Don't clear existing POIs on error
+    } finally {
+      isLoadingRef.current = false;
     }
   }, [map]);
 
   useMapEvents({
     moveend() {
       if (fetchTimeoutRef.current) clearTimeout(fetchTimeoutRef.current);
-      fetchTimeoutRef.current = setTimeout(loadPOIs, 500);
+      fetchTimeoutRef.current = setTimeout(loadPOIs, DEBOUNCE_MS);
     },
     zoomend() {
       const z = map.getZoom();
       setCurrentZoom(z);
       if (z < MIN_ZOOM) { setVisible(false); return; }
+      // Reset fetch key on zoom change to force re-fetch with new tier
+      lastFetchKeyRef.current = null;
       if (fetchTimeoutRef.current) clearTimeout(fetchTimeoutRef.current);
-      fetchTimeoutRef.current = setTimeout(loadPOIs, 500);
+      fetchTimeoutRef.current = setTimeout(loadPOIs, DEBOUNCE_MS);
     },
   });
 
@@ -149,11 +177,13 @@ export default function POILayer() {
     return () => { if (fetchTimeoutRef.current) clearTimeout(fetchTimeoutRef.current); };
   }, [loadPOIs]);
 
-  if (!visible || pois.length === 0) return null;
+  if (!visible || poisMap.size === 0) return null;
+
+  const poisArray = [...poisMap.values()];
 
   return (
     <>
-      {pois.map(poi => (
+      {poisArray.map(poi => (
         <Marker
           key={`poi-${poi.id}`}
           position={[poi.lat, poi.lng]}

@@ -20,9 +20,8 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/UserModel');
 
-// Cargar secreto JWT desde variables de entorno
-const crypto = require('crypto');
-const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+// Importar secreto JWT centralizado (garantiza mismo secreto en controller y middleware)
+const { JWT_SECRET } = require('../config/jwt');
 
 /**
  * Middleware: Verificar Token JWT

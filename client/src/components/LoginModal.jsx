@@ -1,12 +1,15 @@
 /**
  * ============================================
- * RutaQuilla - Modal de Login/Registro v2
+ * RutaQuilla - Modal de Login/Registro v3
  * ============================================
  * Diseño premium: glassmorphism + gradientes + animaciones
+ * - Soporta prop `reason` para mostrar mensajes contextuales
+ * - Checkbox obligatorio de aceptación legal en registro
+ * - Sin cuentas demo (producción real)
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { X, Mail, Lock, User, Eye, EyeOff, Bus, Crown, Sparkles, ArrowRight, Loader2 } from 'lucide-react';
+import { X, Mail, Lock, User, Eye, EyeOff, Bus, Shield, ArrowRight, Loader2, MapPin, CheckSquare, Square } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 function FloatingInput({ id, label, type = 'text', value, onChange, icon: Icon, rightElement, autoFocus }) {
@@ -76,7 +79,20 @@ function FloatingInput({ id, label, type = 'text', value, onChange, icon: Icon, 
   );
 }
 
-export default function LoginModal({ isOpen, onClose }) {
+const REASON_MESSAGES = {
+  limit: {
+    icon: '🔒',
+    title: 'Has usado tus 3 búsquedas gratis',
+    subtitle: 'Regístrate para obtener búsquedas ilimitadas — ¡es gratis!',
+  },
+  default: {
+    icon: null,
+    title: null,
+    subtitle: null,
+  },
+};
+
+export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal }) {
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -84,6 +100,7 @@ export default function LoginModal({ isOpen, onClose }) {
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const { login, register, error: authError } = useAuth();
 
@@ -91,14 +108,27 @@ export default function LoginModal({ isOpen, onClose }) {
     if (!isOpen) {
       setEmail(''); setPassword(''); setName('');
       setLocalError(''); setMode('login');
+      setAcceptedTerms(false);
     }
-  }, [isOpen]);
+    // If reason is 'limit', default to register mode
+    if (isOpen && reason === 'limit') {
+      setMode('register');
+    }
+  }, [isOpen, reason]);
 
   if (!isOpen) return null;
+
+  const reasonData = REASON_MESSAGES[reason] || REASON_MESSAGES.default;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError('');
+
+    if (mode === 'register' && !acceptedTerms) {
+      setLocalError('Debes aceptar la Política de Privacidad y los Términos');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       if (mode === 'login') {
@@ -115,12 +145,6 @@ export default function LoginModal({ isOpen, onClose }) {
     }
   };
 
-  const fillDemo = (type) => {
-    if (type === 'free') { setEmail('demo@rutaquilla.com'); setPassword('demo123'); }
-    else { setEmail('premium@rutaquilla.com'); setPassword('premium123'); }
-    setMode('login');
-  };
-
   const errorMsg = localError || authError;
 
   return (
@@ -128,7 +152,7 @@ export default function LoginModal({ isOpen, onClose }) {
       {/* Animated backdrop */}
       <div
         className="absolute inset-0"
-        onClick={onClose}
+        onClick={reason === 'limit' ? undefined : onClose}
         style={{
           background: 'rgba(0,0,0,0.75)',
           backdropFilter: 'blur(16px)',
@@ -172,40 +196,65 @@ export default function LoginModal({ isOpen, onClose }) {
           background: 'linear-gradient(90deg, #F59E0B, #06B6D4, #8B5CF6)',
         }} />
 
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          id="close-modal-btn"
-          style={{
-            position: 'absolute', top: 16, right: 16, zIndex: 10,
-            width: 32, height: 32, borderRadius: 10,
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', color: '#94A3B8',
-            transition: 'all 0.2s',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#F1F5F9'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#94A3B8'; }}
-        >
-          <X size={15} />
-        </button>
+        {/* Close button (hidden when limit-gated) */}
+        {reason !== 'limit' && (
+          <button
+            onClick={onClose}
+            id="close-modal-btn"
+            style={{
+              position: 'absolute', top: 16, right: 16, zIndex: 10,
+              width: 32, height: 32, borderRadius: 10,
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: '#94A3B8',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#F1F5F9'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#94A3B8'; }}
+          >
+            <X size={15} />
+          </button>
+        )}
+
+        {/* Reason banner (when limit reached) */}
+        {reasonData.title && (
+          <div style={{
+            padding: '16px 36px',
+            background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(6,182,212,0.08))',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 28, marginBottom: 6 }}>{reasonData.icon}</div>
+            <p style={{
+              fontSize: 14, fontWeight: 700, color: '#F59E0B',
+              fontFamily: 'Outfit, sans-serif', margin: 0, marginBottom: 4,
+            }}>
+              {reasonData.title}
+            </p>
+            <p style={{ fontSize: 12, color: '#94A3B8', margin: 0 }}>
+              {reasonData.subtitle}
+            </p>
+          </div>
+        )}
 
         {/* Hero section */}
-        <div style={{ padding: '36px 36px 24px', textAlign: 'center' }}>
+        <div style={{ padding: reasonData.title ? '20px 36px 16px' : '36px 36px 24px', textAlign: 'center' }}>
           {/* Logo */}
-          <div style={{
-            width: 68, height: 68, borderRadius: 20, margin: '0 auto 20px',
-            background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #92400E 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 12px 32px rgba(245,158,11,0.35), 0 0 0 1px rgba(245,158,11,0.2) inset',
-          }}>
-            <Bus size={32} color="#000" strokeWidth={2.5} />
-          </div>
+          {!reasonData.title && (
+            <div style={{
+              width: 68, height: 68, borderRadius: 20, margin: '0 auto 20px',
+              background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #92400E 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 12px 32px rgba(245,158,11,0.35), 0 0 0 1px rgba(245,158,11,0.2) inset',
+            }}>
+              <Bus size={32} color="#000" strokeWidth={2.5} />
+            </div>
+          )}
 
           <h2 style={{
             fontFamily: 'Outfit, sans-serif',
-            fontSize: 26, fontWeight: 700,
+            fontSize: reasonData.title ? 22 : 26, fontWeight: 700,
             color: '#F1F5F9', marginBottom: 6, lineHeight: 1.2,
           }}>
             {mode === 'login' ? 'Bienvenido de vuelta' : 'Crea tu cuenta'}
@@ -290,6 +339,42 @@ export default function LoginModal({ isOpen, onClose }) {
             />
           </div>
 
+          {/* Legal checkbox (only for register) */}
+          {mode === 'register' && (
+            <div
+              style={{
+                marginTop: 16, display: 'flex', alignItems: 'flex-start', gap: 10,
+                cursor: 'pointer',
+              }}
+              onClick={() => setAcceptedTerms(!acceptedTerms)}
+            >
+              <div style={{ flexShrink: 0, marginTop: 1 }}>
+                {acceptedTerms ? (
+                  <CheckSquare size={18} color="#F59E0B" />
+                ) : (
+                  <Square size={18} color="#475569" />
+                )}
+              </div>
+              <p style={{ fontSize: 11.5, color: '#94A3B8', lineHeight: 1.5, margin: 0 }}>
+                Acepto la{' '}
+                <span
+                  style={{ color: '#06B6D4', cursor: 'pointer', textDecoration: 'underline' }}
+                  onClick={(e) => { e.stopPropagation(); onShowLegal?.('privacy'); }}
+                >
+                  Política de Privacidad
+                </span>{' '}
+                y los{' '}
+                <span
+                  style={{ color: '#06B6D4', cursor: 'pointer', textDecoration: 'underline' }}
+                  onClick={(e) => { e.stopPropagation(); onShowLegal?.('terms'); }}
+                >
+                  Términos y Condiciones
+                </span>{' '}
+                de RutaQuilla conforme a la Ley 1581 de 2012.
+              </p>
+            </div>
+          )}
+
           {/* Error */}
           {errorMsg && (
             <div className="animate-fade-in" style={{
@@ -306,23 +391,26 @@ export default function LoginModal({ isOpen, onClose }) {
           {/* Submit */}
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || (mode === 'register' && !acceptedTerms)}
             id="submit-auth-btn"
             style={{
               width: '100%', marginTop: 20, padding: '15px 0',
-              borderRadius: 16, border: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer',
-              background: isSubmitting
-                ? 'rgba(245,158,11,0.4)'
+              borderRadius: 16, border: 'none',
+              cursor: (isSubmitting || (mode === 'register' && !acceptedTerms)) ? 'not-allowed' : 'pointer',
+              background: (isSubmitting || (mode === 'register' && !acceptedTerms))
+                ? 'rgba(245,158,11,0.25)'
                 : 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-              color: '#000', fontSize: 14, fontWeight: 700,
+              color: (isSubmitting || (mode === 'register' && !acceptedTerms)) ? '#666' : '#000',
+              fontSize: 14, fontWeight: 700,
               fontFamily: 'Inter, sans-serif',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              boxShadow: isSubmitting ? 'none' : '0 8px 24px rgba(245,158,11,0.35)',
+              boxShadow: (isSubmitting || (mode === 'register' && !acceptedTerms))
+                ? 'none' : '0 8px 24px rgba(245,158,11,0.35)',
               transition: 'all 0.2s',
               letterSpacing: '0.02em',
             }}
-            onMouseEnter={e => { if (!isSubmitting) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 12px 28px rgba(245,158,11,0.45)'; } }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = isSubmitting ? 'none' : '0 8px 24px rgba(245,158,11,0.35)'; }}
+            onMouseEnter={e => { if (!isSubmitting && (mode !== 'register' || acceptedTerms)) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 12px 28px rgba(245,158,11,0.45)'; } }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = (isSubmitting || (mode === 'register' && !acceptedTerms)) ? 'none' : '0 8px 24px rgba(245,158,11,0.35)'; }}
           >
             {isSubmitting
               ? <><Loader2 size={16} className="animate-spin" /> Procesando...</>
@@ -330,45 +418,35 @@ export default function LoginModal({ isOpen, onClose }) {
             }
           </button>
 
-          {/* Demo accounts */}
-          <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <p style={{ textAlign: 'center', fontSize: 11, color: '#475569', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
-              Acceso rápido — demostración
-            </p>
-            <div style={{ display: 'flex', gap: 8 }}>
+          {/* Footer with legal links */}
+          <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
               <button
                 type="button"
-                onClick={() => fillDemo('free')}
-                id="demo-free-btn"
+                onClick={() => onShowLegal?.('privacy')}
                 style={{
-                  flex: 1, padding: '10px 0', borderRadius: 12, cursor: 'pointer',
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.09)',
-                  color: '#94A3B8', fontSize: 12, fontWeight: 600,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  transition: 'all 0.2s',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: 11, color: '#475569', fontWeight: 500,
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  transition: 'color 0.2s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#F1F5F9'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#94A3B8'; }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#06B6D4'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#475569'; }}
               >
-                <User size={13} /> Free
+                <Shield size={11} /> Privacidad
               </button>
               <button
                 type="button"
-                onClick={() => fillDemo('premium')}
-                id="demo-premium-btn"
+                onClick={() => onShowLegal?.('terms')}
                 style={{
-                  flex: 1, padding: '10px 0', borderRadius: 12, cursor: 'pointer',
-                  background: 'linear-gradient(135deg, rgba(245,158,11,0.12), rgba(217,119,6,0.12))',
-                  border: '1px solid rgba(245,158,11,0.25)',
-                  color: '#FBBF24', fontSize: 12, fontWeight: 700,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  transition: 'all 0.2s',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: 11, color: '#475569', fontWeight: 500,
+                  transition: 'color 0.2s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(245,158,11,0.22), rgba(217,119,6,0.22))'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(245,158,11,0.12), rgba(217,119,6,0.12))'; }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#06B6D4'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#475569'; }}
               >
-                <Crown size={13} /> Premium
+                Términos
               </button>
             </div>
           </div>

@@ -1,6 +1,6 @@
 /**
  * ============================================
- * RutaQuilla - App Principal v2
+ * RutaQuilla - App Principal v3
  * ============================================
  *
  * Orquesta la navegación tipo Google Maps:
@@ -8,6 +8,8 @@
  * - Estado de navegación (origen → destino)
  * - Pin-drop mode para marcar puntos en el mapa
  * - Listado de rutas para exploración individual
+ * - Sistema freemium: 3 búsquedas gratis sin registro
+ * - Páginas legales y banner de cookies
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -19,11 +21,15 @@ import Sidebar from './components/Sidebar';
 import MapComponent from './components/MapComponent';
 import GPSTracker from './components/GPSTracker';
 import LoginModal from './components/LoginModal';
+import LegalPages from './components/LegalPages';
+import CookieConsent from './components/CookieConsent';
 
 export default function App() {
   // ---- UI state ----
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [loginReason, setLoginReason] = useState(null);
+  const [showLegal, setShowLegal] = useState(null); // 'privacy' | 'terms' | null
 
   // ---- Routes data (for the list, loaded on-demand) ----
   const [routes, setRoutes] = useState([]);
@@ -52,7 +58,7 @@ export default function App() {
   const [userPosition, setUserPosition] = useState(null);
   const [gpsTrack, setGpsTrack] = useState([]);
 
-  const { isPremium, isAuthenticated } = useAuth();
+  const { isPremium, isAuthenticated, canNavigate, incrementUsage, remainingFreeSearches } = useAuth();
 
   /**
    * Load routes list (for the Rutas tab - lazy, doesn't render on map).
@@ -90,8 +96,16 @@ export default function App() {
 
   /**
    * Navigate: search for route options between origin and destination.
+   * Includes freemium gate: after 3 free searches, requires login.
    */
   const handleNavigate = useCallback(async (origin, destination) => {
+    // Freemium gate: check if user can navigate
+    if (!canNavigate()) {
+      setLoginReason('limit');
+      setShowLogin(true);
+      return;
+    }
+
     try {
       setIsNavigating(true);
       setSelectedRoute(null); // Clear single route preview
@@ -99,6 +113,9 @@ export default function App() {
       const response = await routesAPI.navigate(origin, destination);
       setNavigationResult(response);
       setSelectedOptionIdx(0);
+
+      // Increment usage counter (only for non-authenticated users)
+      incrementUsage();
 
       // Close sidebar on mobile
       setMenuOpen(false);
@@ -108,7 +125,7 @@ export default function App() {
     } finally {
       setIsNavigating(false);
     }
-  }, []);
+  }, [canNavigate, incrementUsage]);
 
   /**
    * Select a route option idx — updates the map display.
@@ -176,12 +193,23 @@ export default function App() {
     }
   }, [isCapturing, handleCaptureToggle]);
 
+  const handleOpenLogin = useCallback((reason = null) => {
+    setLoginReason(reason);
+    setShowLogin(true);
+  }, []);
+
+  const handleCloseLogin = useCallback(() => {
+    setShowLogin(false);
+    setLoginReason(null);
+  }, []);
+
   return (
     <div className="w-full h-full flex flex-col" style={{ background: 'var(--bg-dark)' }}>
       <Header
-        onLoginClick={() => setShowLogin(true)}
+        onLoginClick={() => handleOpenLogin()}
         onMenuToggle={() => setMenuOpen(!menuOpen)}
         menuOpen={menuOpen}
+        onShowLegal={setShowLegal}
       />
 
       <div className="flex-1 flex relative" style={{ marginTop: 56 }}>
@@ -259,7 +287,22 @@ export default function App() {
         onTrackUpdate={handleTrackUpdate}
       />
 
-      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
+      <LoginModal
+        isOpen={showLogin}
+        onClose={handleCloseLogin}
+        reason={loginReason}
+        onShowLegal={setShowLegal}
+      />
+
+      {showLegal && (
+        <LegalPages
+          page={showLegal}
+          onClose={() => setShowLegal(null)}
+          onNavigate={setShowLegal}
+        />
+      )}
+
+      <CookieConsent onShowPrivacy={() => setShowLegal('privacy')} />
     </div>
   );
 }

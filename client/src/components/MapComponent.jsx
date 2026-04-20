@@ -33,25 +33,45 @@ const DEFAULT_ZOOM = 13;
 function createOriginIcon() {
   return L.divIcon({
     className: '',
-    html: `<div style="position: relative;">
+    html: `<div style="
+      position: relative;
+      animation: marker-drop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    ">
+      <div style="
+        position: absolute; top: -10px; left: -10px;
+        width: 40px; height: 40px;
+        border: 2px solid rgba(16, 185, 129, 0.4);
+        border-radius: 50%;
+        animation: origin-pulse-1 2s ease-out infinite;
+      "></div>
+      <div style="
+        position: absolute; top: -10px; left: -10px;
+        width: 40px; height: 40px;
+        border: 1.5px solid rgba(16, 185, 129, 0.25);
+        border-radius: 50%;
+        animation: origin-pulse-2 2s ease-out 0.8s infinite;
+      "></div>
       <div style="
         width: 20px; height: 20px;
-        background: #10B981;
+        background: radial-gradient(circle at 35% 35%, #34D399, #10B981, #059669);
         border: 3px solid white;
         border-radius: 50%;
-        box-shadow: 0 0 14px rgba(16, 185, 129, 0.6);
+        box-shadow: 0 0 16px rgba(16, 185, 129, 0.6), 0 2px 8px rgba(0,0,0,0.3);
       "></div>
       <div style="
-        position: absolute; top: -5px; left: -5px;
-        width: 30px; height: 30px;
-        border: 2px solid rgba(16, 185, 129, 0.3);
-        border-radius: 50%;
-        animation: ripple 2s ease-out infinite;
-      "></div>
+        position: absolute; top: 26px; left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        font-family: Inter, sans-serif;
+        font-size: 10px; font-weight: 700;
+        color: #10B981;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        letter-spacing: 0.03em;
+      ">ORIGEN</div>
     </div>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-    popupAnchor: [0, -15],
+    iconSize: [40, 50],
+    iconAnchor: [20, 20],
+    popupAnchor: [0, -20],
   });
 }
 
@@ -59,19 +79,43 @@ function createDestinationIcon() {
   return L.divIcon({
     className: '',
     html: `<div style="
-      width: 28px; height: 28px;
-      background: #EF4444;
-      border: 3px solid white;
-      border-radius: 6px;
-      box-shadow: 0 0 14px rgba(239, 68, 68, 0.6);
-      display: flex; align-items: center; justify-content: center;
-      transform: rotate(45deg);
+      position: relative;
+      animation: marker-drop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s forwards;
+      opacity: 0;
     ">
-      <div style="width: 8px; height: 8px; background: white; border-radius: 50%; transform: rotate(-45deg);"></div>
+      <div style="
+        position: absolute; top: -6px; left: -6px;
+        width: 40px; height: 40px;
+        border-radius: 8px;
+        background: rgba(239, 68, 68, 0.15);
+        animation: dest-glow 2s ease-in-out infinite;
+        transform: rotate(45deg);
+      "></div>
+      <div style="
+        width: 28px; height: 28px;
+        background: linear-gradient(135deg, #F87171, #EF4444, #DC2626);
+        border: 3px solid white;
+        border-radius: 6px;
+        box-shadow: 0 0 16px rgba(239, 68, 68, 0.6), 0 2px 8px rgba(0,0,0,0.3);
+        display: flex; align-items: center; justify-content: center;
+        transform: rotate(45deg);
+      ">
+        <div style=\"width: 8px; height: 8px; background: white; border-radius: 50%; transform: rotate(-45deg);\"></div>
+      </div>
+      <div style="
+        position: absolute; top: 34px; left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        font-family: Inter, sans-serif;
+        font-size: 10px; font-weight: 700;
+        color: #EF4444;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        letter-spacing: 0.03em;
+      ">DESTINO</div>
     </div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-    popupAnchor: [0, -14],
+    iconSize: [40, 56],
+    iconAnchor: [20, 20],
+    popupAnchor: [0, -20],
   });
 }
 
@@ -101,22 +145,39 @@ function createUserIcon() {
     className: '',
     html: `<div style="position: relative;">
       <div style="
-        width: 16px; height: 16px;
-        background: #3B82F6;
-        border: 3px solid white;
-        border-radius: 50%;
-        box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
-      "></div>
-      <div style="
-        position: absolute; top: -4px; left: -4px;
-        width: 24px; height: 24px;
+        position: absolute; top: -6px; left: -6px;
+        width: 28px; height: 28px;
         border: 2px solid rgba(59, 130, 246, 0.3);
         border-radius: 50%;
-        animation: ripple 2s ease-out infinite;
+        animation: origin-pulse-1 2.5s ease-out infinite;
       "></div>
+      <div style="
+        position: absolute; top: -6px; left: -6px;
+        width: 28px; height: 28px;
+        border: 1.5px solid rgba(59, 130, 246, 0.2);
+        border-radius: 50%;
+        animation: origin-pulse-2 2.5s ease-out 1s infinite;
+      "></div>
+      <div style="
+        width: 16px; height: 16px;
+        background: radial-gradient(circle at 35% 35%, #60A5FA, #3B82F6, #2563EB);
+        border: 3px solid white;
+        border-radius: 50%;
+        box-shadow: 0 0 12px rgba(59, 130, 246, 0.6), 0 2px 6px rgba(0,0,0,0.3);
+        animation: gps-breathe 3s ease-in-out infinite;
+      "></div>
+      <div style="
+        position: absolute; top: 22px; left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        font-family: Inter, sans-serif;
+        font-size: 9px; font-weight: 700;
+        color: #60A5FA;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+      ">TÚ</div>
     </div>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
+    iconSize: [28, 36],
+    iconAnchor: [14, 14],
   });
 }
 

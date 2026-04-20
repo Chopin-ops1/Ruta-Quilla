@@ -7,6 +7,7 @@
  * - Login/Registro con JWT
  * - Persistencia de sesión en localStorage
  * - Estado del usuario (free/premium)
+ * - Sistema freemium: 3 búsquedas gratis sin registro
  * - Funciones de auth disponibles en toda la app
  */
 
@@ -15,10 +16,19 @@ import { usersAPI, setToken, removeToken } from '../services/api';
 
 const AuthContext = createContext(null);
 
+const MAX_FREE_SEARCHES = 3;
+const USAGE_KEY = 'rutaquilla_usage_count';
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Freemium: usage counter (persisted in localStorage)
+  const [usageCount, setUsageCount] = useState(() => {
+    const stored = localStorage.getItem(USAGE_KEY);
+    return stored ? parseInt(stored, 10) : 0;
+  });
 
   /**
    * Verificar sesión existente al montar el componente.
@@ -97,6 +107,29 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  /**
+   * Freemium: ¿Puede el usuario navegar?
+   * - Autenticado: siempre puede
+   * - No autenticado: solo si tiene usos restantes
+   */
+  const canNavigate = useCallback(() => {
+    if (user) return true;
+    return usageCount < MAX_FREE_SEARCHES;
+  }, [user, usageCount]);
+
+  /**
+   * Freemium: Incrementar el contador de uso.
+   * Solo incrementa si NO está autenticado.
+   */
+  const incrementUsage = useCallback(() => {
+    if (user) return; // Usuarios registrados: ilimitado
+    const newCount = usageCount + 1;
+    setUsageCount(newCount);
+    localStorage.setItem(USAGE_KEY, newCount.toString());
+  }, [user, usageCount]);
+
+  const remainingFreeSearches = Math.max(0, MAX_FREE_SEARCHES - usageCount);
+
   const value = {
     user,
     loading,
@@ -108,6 +141,12 @@ export function AuthProvider({ children }) {
     logout,
     upgradeToPremium,
     clearError: () => setError(null),
+    // Freemium
+    canNavigate,
+    incrementUsage,
+    usageCount,
+    remainingFreeSearches,
+    maxFreeSearches: MAX_FREE_SEARCHES,
   };
 
   return (
