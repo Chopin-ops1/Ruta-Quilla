@@ -196,54 +196,147 @@ function createSponsorIcon(color = '#F59E0B') {
 }
 
 /**
- * Sub-component: handles map click.
- * In pinMode: directly sets the pin.
- * Otherwise: shows a contextual popup with "Set as origin" / "Set as destination".
+ * Sub-component: handles map interaction.
+ * - In pinMode: single click sets the pin directly.
+ * - Desktop (no pinMode): RIGHT-CLICK shows context popup.
+ * - Mobile (no pinMode): LONG-PRESS (500ms hold) shows context popup.
+ * This prevents accidental popups from simple taps/clicks.
  */
 function MapClickHandler({ pinMode, onMapClick, onSetOrigin, onSetDestination }) {
   const map = useMap();
+  const longPressTimerRef = useRef(null);
+  const longPressPointRef = useRef(null);
+  const rippleRef = useRef(null);
 
+  // Clean up ripple element
+  const removeRipple = useCallback(() => {
+    if (rippleRef.current) {
+      try { map.getContainer().removeChild(rippleRef.current); } catch (_) {}
+      rippleRef.current = null;
+    }
+  }, [map]);
+
+  // Show the context popup at a location
+  const showContextPopup = useCallback((latlng) => {
+    const popup = L.popup({
+      className: 'context-popup',
+      closeButton: false,
+      minWidth: 180,
+      maxWidth: 220,
+      offset: [0, -5],
+    })
+      .setLatLng(latlng)
+      .setContent(`
+        <button class="ctx-btn" id="ctx-origin">
+          <span class="ctx-btn-icon">📍</span>
+          Origen desde aquí
+        </button>
+        <button class="ctx-btn" id="ctx-dest">
+          <span class="ctx-btn-icon">🏁</span>
+          Destino aquí
+        </button>
+      `)
+      .openOn(map);
+
+    setTimeout(() => {
+      document.getElementById('ctx-origin')?.addEventListener('click', () => {
+        onSetOrigin?.({ lat: latlng.lat, lng: latlng.lng });
+        map.closePopup(popup);
+      });
+      document.getElementById('ctx-dest')?.addEventListener('click', () => {
+        onSetDestination?.({ lat: latlng.lat, lng: latlng.lng });
+        map.closePopup(popup);
+      });
+    }, 50);
+  }, [map, onSetOrigin, onSetDestination]);
+
+  // Create a visual ripple indicator during long-press
+  const showRipple = useCallback((containerPoint) => {
+    removeRipple();
+    const el = document.createElement('div');
+    el.style.cssText = `
+      position: absolute; z-index: 9999;
+      width: 50px; height: 50px;
+      left: ${containerPoint.x - 25}px; top: ${containerPoint.y - 25}px;
+      border-radius: 50%;
+      border: 2px solid rgba(245,158,11,0.6);
+      background: rgba(245,158,11,0.1);
+      animation: origin-pulse-1 0.6s ease-out forwards;
+      pointer-events: none;
+    `;
+    map.getContainer().appendChild(el);
+    rippleRef.current = el;
+  }, [map, removeRipple]);
+
+  useEffect(() => {
+    const container = map.getContainer();
+
+    // ---- Right-click (desktop) ----
+    const onContextMenu = (e) => {
+      if (pinMode) return;
+      e.preventDefault();
+      const latlng = map.containerPointToLatLng(L.point(e.offsetX, e.offsetY));
+      showContextPopup(latlng);
+    };
+
+    // ---- Long-press (mobile) ----
+    const onTouchStart = (e) => {
+      if (pinMode) return;
+      if (e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      const rect = container.getBoundingClientRect();
+      const point = { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+      longPressPointRef.current = point;
+
+      longPressTimerRef.current = setTimeout(() => {
+        // Vibrate if available (mobile feedback)
+        if (navigator.vibrate) navigator.vibrate(30);
+        showRipple(L.point(point.x, point.y));
+        const latlng = map.containerPointToLatLng(L.point(point.x, point.y));
+        showContextPopup(latlng);
+        longPressTimerRef.current = null;
+      }, 500);
+    };
+
+    const onTouchMove = () => {
+      // Cancel long-press if finger moves
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+      removeRipple();
+    };
+
+    const onTouchEnd = () => {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+      setTimeout(removeRipple, 600);
+    };
+
+    container.addEventListener('contextmenu', onContextMenu);
+    container.addEventListener('touchstart', onTouchStart, { passive: true });
+    container.addEventListener('touchmove', onTouchMove, { passive: true });
+    container.addEventListener('touchend', onTouchEnd);
+
+    return () => {
+      container.removeEventListener('contextmenu', onContextMenu);
+      container.removeEventListener('touchstart', onTouchStart);
+      container.removeEventListener('touchmove', onTouchMove);
+      container.removeEventListener('touchend', onTouchEnd);
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+      removeRipple();
+    };
+  }, [map, pinMode, showContextPopup, showRipple, removeRipple]);
+
+  // Pin mode: simple click sets position
   useMapEvents({
     click(e) {
-      const latlng = e.latlng;
-
       if (pinMode) {
-        onMapClick?.({ lat: latlng.lat, lng: latlng.lng });
-        return;
+        onMapClick?.({ lat: e.latlng.lat, lng: e.latlng.lng });
       }
-
-      // Show contextual popup
-      const popup = L.popup({
-        className: 'context-popup',
-        closeButton: false,
-        minWidth: 180,
-        maxWidth: 220,
-        offset: [0, -5],
-      })
-        .setLatLng(latlng)
-        .setContent(`
-          <button class="ctx-btn" id="ctx-origin">
-            <span class="ctx-btn-icon">📍</span>
-            Origen desde aquí
-          </button>
-          <button class="ctx-btn" id="ctx-dest">
-            <span class="ctx-btn-icon">🏁</span>
-            Destino aquí
-          </button>
-        `)
-        .openOn(map);
-
-      // Attach event listeners after popup opens
-      setTimeout(() => {
-        document.getElementById('ctx-origin')?.addEventListener('click', () => {
-          onSetOrigin?.({ lat: latlng.lat, lng: latlng.lng });
-          map.closePopup(popup);
-        });
-        document.getElementById('ctx-dest')?.addEventListener('click', () => {
-          onSetDestination?.({ lat: latlng.lat, lng: latlng.lng });
-          map.closePopup(popup);
-        });
-      }, 50);
+      // No popup on normal click — only long-press or right-click
     },
   });
   return null;

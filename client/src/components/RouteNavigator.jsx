@@ -555,7 +555,7 @@ export default function RouteNavigator({
             {[
               { icon: <Crosshair size={11} />, color: '#34D399', text: 'Usa GPS para detectar tu ubicación' },
               { icon: <Search size={11} />, color: '#60A5FA', text: 'Busca por nombre o dirección (ej: Calle 63B #38-15)' },
-              { icon: <MapPin size={11} />, color: '#F87171', text: 'Toca el mapa para marcar un punto' },
+              { icon: <MapPin size={11} />, color: '#F87171', text: '🖱️ Click derecho o mantén presionado el mapa' },
             ].map((tip, i) => (
               <div key={i} style={{
                 display: 'flex', alignItems: 'center', gap: 10,
