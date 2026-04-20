@@ -23,6 +23,7 @@ import GPSTracker from './components/GPSTracker';
 import LoginModal from './components/LoginModal';
 import LegalPages from './components/LegalPages';
 import CookieConsent from './components/CookieConsent';
+import MapQuickBar from './components/MapQuickBar';
 
 export default function App() {
   // ---- UI state ----
@@ -268,12 +269,10 @@ export default function App() {
               pinMode={pinMode}
               onMapClick={handleMapClick}
               onSetOrigin={(coords) => {
-                setOriginFromMap(coords);
-                setMenuOpen(true); // Open sidebar if closed
+                setOriginFromMap({ ...coords, _t: Date.now() });
               }}
               onSetDestination={(coords) => {
-                setDestFromMap(coords);
-                setMenuOpen(true); // Open sidebar if closed
+                setDestFromMap({ ...coords, _t: Date.now() });
               }}
             />
           )}
@@ -303,6 +302,16 @@ export default function App() {
       )}
 
       <CookieConsent onShowPrivacy={() => setShowLegal('privacy')} />
+
+      {/* Floating bottom bar for map-picked points (mobile-friendly) */}
+      <MapQuickBar
+        originFromMap={originFromMap}
+        destFromMap={destFromMap}
+        onNavigate={handleNavigate}
+        onClear={handleClearNavigation}
+        isNavigating={isNavigating}
+        navigationResult={navigationResult}
+      />
     </div>
   );
 }
