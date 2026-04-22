@@ -649,6 +649,240 @@ function getCompanyColor(company) {
   return colors[company] || colors['Otra'];
 }
 
+/**
+ * POST /api/routes/admin/create
+ * Create a new official route (admin only).
+ */
+async function createRoute(req, res) {
+  try {
+    const { nombre, operador, color, ida, regreso, fare, codigo, origen, destino, codigoAMBQ, resolucionPdf } = req.body;
+
+    if (!nombre || !operador || !ida?.trazado?.coordinates?.length) {
+      return res.status(400).json({
+        success: false,
+        message: 'Campos requeridos: nombre, operador, ida.trazado.coordinates',
+      });
+    }
+
+    // Build route object
+    const routeData = {
+      nombre,
+      operador,
+      color: color || getCompanyColor(operador),
+      type: 'official',
+      fare: fare || 2600,
+      fuente: 'manual',
+      activa: true,
+      trazadoIncompleto: false,
+      geometriaOSM: false,
+      audit: { revisadoManualmente: true, observaciones: `Creada por admin ${req.user.email}` },
+      ida: {
+        puntoPartida: {
+          nombre: origen || 'Inicio Ida',
+          coordenadas: {
+            type: 'Point',
+            coordinates: ida.trazado.coordinates[0],
+          },
+        },
+        puntoFinal: {
+          nombre: destino || 'Fin Ida',
+          coordenadas: {
+            type: 'Point',
+            coordinates: ida.trazado.coordinates[ida.trazado.coordinates.length - 1],
+          },
+        },
+        trazado: {
+          type: 'LineString',
+          coordinates: ida.trazado.coordinates,
+        },
+      },
+      regreso: regreso?.trazado?.coordinates?.length >= 2
+        ? {
+            puntoPartida: {
+              nombre: destino || 'Inicio Vuelta',
+              coordenadas: {
+                type: 'Point',
+                coordinates: regreso.trazado.coordinates[0],
+              },
+            },
+            puntoFinal: {
+              nombre: origen || 'Fin Vuelta',
+              coordenadas: {
+                type: 'Point',
+                coordinates: regreso.trazado.coordinates[regreso.trazado.coordinates.length - 1],
+              },
+            },
+            trazado: {
+              type: 'LineString',
+              coordinates: regreso.trazado.coordinates,
+            },
+          }
+        : {
+            // Mirror ida as regreso if not provided
+            puntoPartida: {
+              nombre: destino || 'Inicio Vuelta',
+              coordenadas: {
+                type: 'Point',
+                coordinates: ida.trazado.coordinates[ida.trazado.coordinates.length - 1],
+              },
+            },
+            puntoFinal: {
+              nombre: origen || 'Fin Vuelta',
+              coordenadas: {
+                type: 'Point',
+                coordinates: ida.trazado.coordinates[0],
+              },
+            },
+            trazado: {
+              type: 'LineString',
+              coordinates: [...ida.trazado.coordinates].reverse(),
+            },
+          },
+    };
+
+    if (codigo) routeData.codigo = codigo;
+    if (origen) routeData.origen = origen;
+    if (destino) routeData.destino = destino;
+    if (codigoAMBQ) routeData.codigoAMBQ = codigoAMBQ;
+    if (resolucionPdf) routeData.resolucionPdf = resolucionPdf;
+
+    const route = new Route(routeData);
+    await route.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Ruta creada exitosamente',
+      data: route,
+    });
+  } catch (error) {
+    console.error('Error al crear ruta:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al crear la ruta',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
+  }
+}
+
+/**
+ * PUT /api/routes/:id
+ * Update an existing route (admin only).
+ */
+async function updateRoute(req, res) {
+  try {
+    const route = await Route.findById(req.params.id);
+    if (!route) {
+      return res.status(404).json({ success: false, message: 'Ruta no encontrada' });
+    }
+
+    const updates = req.body;
+
+    // Update simple fields
+    const simpleFields = ['nombre', 'operador', 'color', 'fare', 'codigo', 'origen', 'destino', 'activa', 'codigoAMBQ', 'resolucionPdf', 'trazadoIncompleto'];
+    for (const field of simpleFields) {
+      if (updates[field] !== undefined) {
+        route[field] = updates[field];
+      }
+    }
+
+    // Update ida — auto-generate puntoPartida/puntoFinal from coordinates
+    if (updates.ida?.trazado?.coordinates?.length >= 2) {
+      const coords = updates.ida.trazado.coordinates;
+      route.ida = {
+        puntoPartida: {
+          nombre: updates.origen || route.origen || 'Inicio Ida',
+          coordenadas: { type: 'Point', coordinates: coords[0] },
+        },
+        puntoFinal: {
+          nombre: updates.destino || route.destino || 'Fin Ida',
+          coordenadas: { type: 'Point', coordinates: coords[coords.length - 1] },
+        },
+        trazado: { type: 'LineString', coordinates: coords },
+      };
+    }
+
+    // Update regreso — auto-generate puntoPartida/puntoFinal from coordinates
+    if (updates.regreso?.trazado?.coordinates?.length >= 2) {
+      const coords = updates.regreso.trazado.coordinates;
+      route.regreso = {
+        puntoPartida: {
+          nombre: updates.destino || route.destino || 'Inicio Vuelta',
+          coordenadas: { type: 'Point', coordinates: coords[0] },
+        },
+        puntoFinal: {
+          nombre: updates.origen || route.origen || 'Fin Vuelta',
+          coordenadas: { type: 'Point', coordinates: coords[coords.length - 1] },
+        },
+        trazado: { type: 'LineString', coordinates: coords },
+      };
+    }
+
+    route.audit.revisadoManualmente = true;
+    route.audit.observaciones = `Actualizada por admin ${req.user.email} el ${new Date().toISOString()}`;
+    route.updatedAt = new Date();
+
+    await route.save();
+
+    res.json({
+      success: true,
+      message: 'Ruta actualizada',
+      data: route,
+    });
+  } catch (error) {
+    console.error('Error al actualizar ruta:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al actualizar la ruta',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
+  }
+}
+
+/**
+ * DELETE /api/routes/:id
+ * Delete a route (admin only).
+ */
+async function deleteRoute(req, res) {
+  try {
+    const route = await Route.findByIdAndDelete(req.params.id);
+    if (!route) {
+      return res.status(404).json({ success: false, message: 'Ruta no encontrada' });
+    }
+
+    res.json({
+      success: true,
+      message: `Ruta "${route.nombre}" eliminada`,
+    });
+  } catch (error) {
+    console.error('Error al eliminar ruta:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al eliminar la ruta',
+    });
+  }
+}
+
+/**
+ * DELETE /api/routes/admin/all
+ * Delete ALL routes (admin only — use with caution).
+ */
+async function deleteAllRoutes(req, res) {
+  try {
+    const result = await Route.deleteMany({});
+    res.json({
+      success: true,
+      message: `${result.deletedCount} rutas eliminadas`,
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error('Error al eliminar todas las rutas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al eliminar las rutas',
+    });
+  }
+}
+
 module.exports = {
   captureRoute,
   getNearbyRoutes,
@@ -656,4 +890,8 @@ module.exports = {
   getRouteAudit,
   getRouteById,
   navigateRoute,
+  createRoute,
+  updateRoute,
+  deleteRoute,
+  deleteAllRoutes,
 };

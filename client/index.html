@@ -3,10 +3,75 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="description" content="RutaQuilla - Plataforma de crowdsourcing para mapear rutas del transporte tradicional en Barranquilla. Encuentra buses de Sobrusa, Coolitoral y Transmecar cerca de ti." />
+
+    <!-- SEO Primary Meta Tags -->
+    <title>RutaQuilla — Rutas de buses en Barranquilla</title>
+    <meta name="title" content="RutaQuilla — Rutas de buses en Barranquilla" />
+    <meta name="description" content="Encuentra las rutas de buses de Barranquilla en tiempo real. Busca tu dirección, descubre qué bus te sirve y navega con confianza por la ciudad. Sobrusa, Coolitoral, Transmecar y más." />
+    <meta name="keywords" content="buses barranquilla, rutas transporte barranquilla, rutas buses barranquilla, sobrusa, coolitoral, transmecar, transporte publico barranquilla, como llegar barranquilla bus" />
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content="RutaQuilla" />
+    <meta name="language" content="es" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://rutaquilla.me/" />
+    <meta property="og:title" content="RutaQuilla — Rutas de buses en Barranquilla" />
+    <meta property="og:description" content="Encuentra las rutas de buses de Barranquilla en tiempo real. Busca tu dirección, descubre qué bus te sirve y navega con confianza." />
+    <meta property="og:image" content="https://rutaquilla.me/og-image.png" />
+    <meta property="og:locale" content="es_CO" />
+    <meta property="og:site_name" content="RutaQuilla" />
+
+    <!-- Twitter / X -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://rutaquilla.me/" />
+    <meta property="twitter:title" content="RutaQuilla — Rutas de buses en Barranquilla" />
+    <meta property="twitter:description" content="Encuentra las rutas de buses de Barranquilla. Busca tu dirección y descubre qué bus te sirve." />
+    <meta property="twitter:image" content="https://rutaquilla.me/og-image.png" />
+
+    <!-- Theme & PWA -->
     <meta name="theme-color" content="#0B1120" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="RutaQuilla" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://rutaquilla.me/" />
+
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚌</text></svg>" />
-    <title>RutaQuilla — Transporte Barranquilla</title>
+
+    <!-- Preconnect to CDNs for faster tile loading -->
+    <link rel="preconnect" href="https://basemaps.cartocdn.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "RutaQuilla",
+      "url": "https://rutaquilla.me",
+      "description": "Plataforma para encontrar rutas de buses del transporte público colectivo en Barranquilla, Colombia.",
+      "applicationCategory": "TransportApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "COP"
+      },
+      "areaServed": {
+        "@type": "City",
+        "name": "Barranquilla",
+        "containedInPlace": {
+          "@type": "Country",
+          "name": "Colombia"
+        }
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

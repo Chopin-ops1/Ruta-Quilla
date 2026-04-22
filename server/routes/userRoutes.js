@@ -3,11 +3,17 @@
  */
 const express = require('express');
 const router = express.Router();
-const { register, login, getProfile, upgradeToPremium } = require('../controllers/userController');
+const { register, verifyEmail, resendCode, login, getProfile, upgradeToPremium } = require('../controllers/userController');
 const { verifyToken } = require('../middleware/authMiddleware');
 
 // POST /api/users/register - Registro de nuevo usuario (público)
 router.post('/register', register);
+
+// POST /api/users/verify - Verificar email con código (público)
+router.post('/verify', verifyEmail);
+
+// POST /api/users/resend-code - Reenviar código de verificación (público)
+router.post('/resend-code', resendCode);
 
 // POST /api/users/login - Inicio de sesión (público)
 router.post('/login', login);

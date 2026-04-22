@@ -38,21 +38,23 @@ export default function CookieConsent({ onShowPrivacy }) {
       style={{
         position: 'fixed',
         bottom: 16,
-        left: '50%',
-        transform: 'translateX(-50%)',
+        left: 16,
+        right: 16,
         zIndex: 1500,
-        width: 'calc(100% - 32px)',
+        width: 'auto',
         maxWidth: 520,
+        margin: '0 auto',
         borderRadius: 20,
         background: 'rgba(17, 24, 39, 0.95)',
         border: '1px solid rgba(255,255,255,0.08)',
         boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset',
         backdropFilter: 'blur(24px)',
         WebkitBackdropFilter: 'blur(24px)',
-        padding: '18px 20px',
+        padding: '16px',
         display: 'flex',
         alignItems: 'center',
-        gap: 14,
+        gap: 12,
+        flexWrap: 'wrap',
       }}
     >
       {/* Cookie icon */}

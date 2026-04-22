@@ -12,7 +12,7 @@
  * - Páginas legales y banner de cookies
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useAuth } from './context/AuthContext';
 import { routesAPI, mapsAPI } from './services/api';
 import { getCurrentPosition } from './services/gpsService';
@@ -25,12 +25,36 @@ import LegalPages from './components/LegalPages';
 import CookieConsent from './components/CookieConsent';
 import MapQuickBar from './components/MapQuickBar';
 
+// Lazy load AdminPanel — only downloaded when admin navigates to /admin
+const AdminPanel = lazy(() => import('./components/AdminPanel'));
+
 export default function App() {
+  // ---- Page routing ----
+  const [currentPage, setCurrentPage] = useState(() => {
+    return window.location.pathname === '/admin' ? 'admin' : 'main';
+  });
   // ---- UI state ----
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(() => window.innerWidth >= 768);
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
   const [showLogin, setShowLogin] = useState(false);
   const [loginReason, setLoginReason] = useState(null);
   const [showLegal, setShowLegal] = useState(null); // 'privacy' | 'terms' | null
+
+  // Track screen size for responsive sidebar margin
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Track browser navigation (back/forward)
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPage(window.location.pathname === '/admin' ? 'admin' : 'main');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // ---- Routes data (for the list, loaded on-demand) ----
   const [routes, setRoutes] = useState([]);
@@ -59,7 +83,18 @@ export default function App() {
   const [userPosition, setUserPosition] = useState(null);
   const [gpsTrack, setGpsTrack] = useState([]);
 
-  const { isPremium, isAuthenticated, canNavigate, incrementUsage, remainingFreeSearches } = useAuth();
+  const { isPremium, isAuthenticated, isAdmin, canNavigate, incrementUsage, remainingFreeSearches } = useAuth();
+
+  // Navigate to admin panel
+  const goToAdmin = useCallback(() => {
+    window.history.pushState({}, '', '/admin');
+    setCurrentPage('admin');
+  }, []);
+
+  const goToMain = useCallback(() => {
+    window.history.pushState({}, '', '/');
+    setCurrentPage('main');
+  }, []);
 
   /**
    * Load routes list (for the Rutas tab - lazy, doesn't render on map).
@@ -206,18 +241,37 @@ export default function App() {
 
   return (
     <div className="w-full h-full flex flex-col" style={{ background: 'var(--bg-dark)' }}>
+      {/* Admin Panel — separate full-screen page (lazy loaded) */}
+      {currentPage === 'admin' && isAdmin ? (
+        <Suspense fallback={
+          <div style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-dark)' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>🔧</div>
+              <p style={{ color: '#94A3B8', fontSize: 14 }}>Cargando panel de administración...</p>
+            </div>
+          </div>
+        }>
+          <AdminPanel onBack={goToMain} />
+        </Suspense>
+      ) : (
+      <>
       <Header
         onLoginClick={() => handleOpenLogin()}
         onMenuToggle={() => setMenuOpen(!menuOpen)}
         menuOpen={menuOpen}
         onShowLegal={setShowLegal}
+        onAdminClick={isAdmin ? goToAdmin : undefined}
       />
 
       <div className="flex-1 flex relative" style={{ marginTop: 56 }}>
         <Sidebar
           routes={routes}
           isOpen={menuOpen}
-          onRouteSelect={handleRouteSelect}
+          onRouteSelect={(route) => {
+            handleRouteSelect(route);
+            // Auto-close sidebar on mobile after selecting a route
+            if (!isDesktop) setMenuOpen(false);
+          }}
           selectedRoute={selectedRoute}
           onToggleLayer={handleToggleLayer}
           layerVisibility={layerVisibility}
@@ -236,7 +290,21 @@ export default function App() {
           onPinModeChange={setPinMode}
         />
 
-        <main className="flex-1 relative md:ml-80">
+        {/* Dark overlay behind sidebar on mobile */}
+        {menuOpen && !isDesktop && (
+          <div
+            onClick={() => setMenuOpen(false)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 1040,
+              background: 'rgba(0,0,0,0.5)',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+              transition: 'opacity 0.3s',
+            }}
+          />
+        )}
+
+        <main className="flex-1 relative" style={{ marginLeft: menuOpen && isDesktop ? '20rem' : 0, transition: 'margin-left 0.3s ease-out' }}>
           {loading ? (
             <div className="w-full h-full flex items-center justify-center">
               <div className="text-center animate-fade-in">
@@ -312,6 +380,8 @@ export default function App() {
         isNavigating={isNavigating}
         navigationResult={navigationResult}
       />
+      </>
+      )}
     </div>
   );
 }

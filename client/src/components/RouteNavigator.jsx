@@ -14,7 +14,7 @@ import {
   Navigation, Search, Clock, Footprints,
   Bus, Star, Crosshair, ArrowRight, X,
   Loader2, MapPin, ChevronDown, ChevronUp,
-  Zap, CornerDownRight
+  Zap, CornerDownRight, History
 } from 'lucide-react';
 import { searchPlaces, reverseGeocode } from '../services/routingService';
 import { getCurrentPosition } from '../services/gpsService';
@@ -119,6 +119,24 @@ export default function RouteNavigator({
   const [gpsLoading, setGpsLoading] = useState(false);
   // selectedOptionIdx is now controlled from App
 
+  // Search history (persisted in localStorage)
+  const [searchHistory, setSearchHistory] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('rutaquilla_search_history') || '[]');
+    } catch { return []; }
+  });
+
+  const saveToHistory = useCallback((place) => {
+    if (!place?.displayName) return;
+    setSearchHistory(prev => {
+      // Remove duplicates, add to front, keep max 5
+      const filtered = prev.filter(p => p.displayName !== place.displayName);
+      const next = [place, ...filtered].slice(0, 5);
+      localStorage.setItem('rutaquilla_search_history', JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const timerRef = useRef(null);
 
   const debouncedSearch = useCallback((query, setter, showSetter) => {
@@ -133,15 +151,31 @@ export default function RouteNavigator({
 
   const handleOriginInput = v => {
     setOriginText(v); setOrigin(null);
-    debouncedSearch(v, setOriginSuggestions, setShowOriginSugg);
+    if (v.length < 2 && searchHistory.length > 0) {
+      setOriginSuggestions(searchHistory);
+      setShowOriginSugg(true);
+    } else {
+      debouncedSearch(v, setOriginSuggestions, setShowOriginSugg);
+    }
   };
   const handleDestInput = v => {
     setDestText(v); setDestination(null);
-    debouncedSearch(v, setDestSuggestions, setShowDestSugg);
+    if (v.length < 2 && searchHistory.length > 0) {
+      setDestSuggestions(searchHistory);
+      setShowDestSugg(true);
+    } else {
+      debouncedSearch(v, setDestSuggestions, setShowDestSugg);
+    }
   };
 
-  const selectOrigin = s => { setOriginText(s.displayName); setOrigin({ lat: s.lat, lng: s.lng }); setShowOriginSugg(false); };
-  const selectDest = s => { setDestText(s.displayName); setDestination({ lat: s.lat, lng: s.lng }); setShowDestSugg(false); };
+  const selectOrigin = s => {
+    setOriginText(s.displayName); setOrigin({ lat: s.lat, lng: s.lng });
+    setShowOriginSugg(false); saveToHistory(s);
+  };
+  const selectDest = s => {
+    setDestText(s.displayName); setDestination({ lat: s.lat, lng: s.lng });
+    setShowDestSugg(false); saveToHistory(s);
+  };
 
   const handleGPS = async () => {
     try {
@@ -207,7 +241,14 @@ export default function RouteNavigator({
             placeholder="¿Desde dónde sales?"
             value={originText}
             onChange={e => handleOriginInput(e.target.value)}
-            onFocus={() => { setOriginFocused(true); if (originSuggestions.length) setShowOriginSugg(true); }}
+            onFocus={() => {
+              setOriginFocused(true);
+              if (originSuggestions.length) setShowOriginSugg(true);
+              else if (!originText && searchHistory.length > 0) {
+                setOriginSuggestions(searchHistory);
+                setShowOriginSugg(true);
+              }
+            }}
             onBlur={() => { setOriginFocused(false); setTimeout(() => setShowOriginSugg(false), 200); }}
             focused={originFocused}
             rightSlot={
@@ -262,7 +303,14 @@ export default function RouteNavigator({
             placeholder="¿A dónde quieres ir?"
             value={destText}
             onChange={e => handleDestInput(e.target.value)}
-            onFocus={() => { setDestFocused(true); if (destSuggestions.length) setShowDestSugg(true); }}
+            onFocus={() => {
+              setDestFocused(true);
+              if (destSuggestions.length) setShowDestSugg(true);
+              else if (!destText && searchHistory.length > 0) {
+                setDestSuggestions(searchHistory);
+                setShowDestSugg(true);
+              }
+            }}
             onBlur={() => { setDestFocused(false); setTimeout(() => setShowDestSugg(false), 200); }}
             focused={destFocused}
             rightSlot={

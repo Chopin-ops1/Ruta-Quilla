@@ -102,19 +102,35 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-  const { login, register, error: authError } = useAuth();
+  // Verification step
+  const [verifyStep, setVerifyStep] = useState(false);
+  const [verifyEmail, setVerifyEmailAddr] = useState('');
+  const [verifyCode, setVerifyCode] = useState(['', '', '', '', '', '']);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const codeRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
+
+  const { login, register, verifyEmail: verifyEmailFn, resendCode: resendCodeFn, error: authError } = useAuth();
 
   useEffect(() => {
     if (!isOpen) {
       setEmail(''); setPassword(''); setName('');
       setLocalError(''); setMode('login');
       setAcceptedTerms(false);
+      setVerifyStep(false); setVerifyEmailAddr('');
+      setVerifyCode(['', '', '', '', '', '']);
     }
-    // If reason is 'limit', default to register mode
     if (isOpen && reason === 'limit') {
       setMode('register');
     }
   }, [isOpen, reason]);
+
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown(c => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
 
   if (!isOpen) return null;
 
@@ -132,16 +148,86 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
     setIsSubmitting(true);
     try {
       if (mode === 'login') {
-        await login(email, password);
+        const result = await login(email, password);
+        // If NOT_VERIFIED, show verify step
+        if (result?.notVerified) {
+          setVerifyEmailAddr(result.email || email);
+          setVerifyStep(true);
+          setResendCooldown(60);
+          setIsSubmitting(false);
+          return;
+        }
+        onClose();
       } else {
         if (!name.trim()) { setLocalError('El nombre es requerido'); setIsSubmitting(false); return; }
-        await register(name, email, password);
+        const result = await register(name, email, password);
+        // If requires verification, show verify step
+        if (result?.data?.requiresVerification) {
+          setVerifyEmailAddr(result.data.email || email);
+          setVerifyStep(true);
+          setResendCooldown(60);
+          setIsSubmitting(false);
+          return;
+        }
+        onClose();
       }
-      onClose();
     } catch (err) {
       setLocalError(err.message || 'Error de autenticación');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleCodeChange = (index, value) => {
+    if (!/^\d*$/.test(value)) return; // Only digits
+    const newCode = [...verifyCode];
+    newCode[index] = value.slice(-1); // Only last digit
+    setVerifyCode(newCode);
+    // Auto-focus next input
+    if (value && index < 5) {
+      codeRefs[index + 1].current?.focus();
+    }
+  };
+
+  const handleCodeKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !verifyCode[index] && index > 0) {
+      codeRefs[index - 1].current?.focus();
+    }
+  };
+
+  const handleCodePaste = (e) => {
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pasted.length === 6) {
+      setVerifyCode(pasted.split(''));
+      codeRefs[5].current?.focus();
+    }
+  };
+
+  const handleVerifySubmit = async () => {
+    const code = verifyCode.join('');
+    if (code.length !== 6) {
+      setLocalError('Ingresa los 6 dígitos del código');
+      return;
+    }
+    setVerifyLoading(true); setLocalError('');
+    try {
+      await verifyEmailFn(verifyEmail, code);
+      onClose();
+    } catch (err) {
+      setLocalError(err.message || 'Código incorrecto');
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (resendCooldown > 0) return;
+    try {
+      await resendCodeFn(verifyEmail);
+      setResendCooldown(60);
+      setLocalError('');
+    } catch (err) {
+      setLocalError(err.message || 'Error al reenviar');
     }
   };
 
@@ -257,15 +343,108 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
             fontSize: reasonData.title ? 22 : 26, fontWeight: 700,
             color: '#F1F5F9', marginBottom: 6, lineHeight: 1.2,
           }}>
-            {mode === 'login' ? 'Bienvenido de vuelta' : 'Crea tu cuenta'}
+            {verifyStep ? 'Verifica tu email' : (mode === 'login' ? 'Bienvenido de vuelta' : 'Crea tu cuenta')}
           </h2>
           <p style={{ fontSize: 13, color: '#64748B', lineHeight: 1.5 }}>
-            {mode === 'login'
-              ? 'Conecta con el transporte de Barranquilla'
-              : 'Únete a la comunidad de transporte colectivo'}
+            {verifyStep
+              ? <span>Enviamos un código a <strong style={{ color: '#06B6D4' }}>{verifyEmail}</strong></span>
+              : (mode === 'login'
+                ? 'Conecta con el transporte de Barranquilla'
+                : 'Únete a la comunidad de transporte colectivo')
+            }
           </p>
         </div>
 
+        {/* === VERIFICATION STEP === */}
+        {verifyStep ? (
+          <div style={{ padding: '0 36px 32px' }}>
+            {/* Code input boxes */}
+            <div style={{
+              display: 'flex', justifyContent: 'center', gap: 8,
+              marginBottom: 20,
+            }}>
+              {verifyCode.map((digit, i) => (
+                <input
+                  key={i}
+                  ref={codeRefs[i]}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={e => handleCodeChange(i, e.target.value)}
+                  onKeyDown={e => handleCodeKeyDown(i, e)}
+                  onPaste={i === 0 ? handleCodePaste : undefined}
+                  autoFocus={i === 0}
+                  style={{
+                    width: 48, height: 56, borderRadius: 14,
+                    background: digit ? 'rgba(245,158,11,0.08)' : 'rgba(255,255,255,0.04)',
+                    border: `2px solid ${digit ? 'rgba(245,158,11,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                    color: '#F59E0B', fontSize: 24, fontWeight: 800,
+                    textAlign: 'center', outline: 'none',
+                    fontFamily: "'Courier New', monospace",
+                    transition: 'all 0.2s',
+                    caretColor: '#F59E0B',
+                  }}
+                  onFocus={e => { e.target.style.borderColor = 'rgba(6,182,212,0.7)'; e.target.style.boxShadow = '0 0 0 4px rgba(6,182,212,0.1)'; }}
+                  onBlur={e => { e.target.style.borderColor = digit ? 'rgba(245,158,11,0.5)' : 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
+                />
+              ))}
+            </div>
+
+            {/* Error */}
+            {errorMsg && (
+              <div style={{
+                padding: '10px 14px', borderRadius: 12, marginBottom: 14,
+                background: 'rgba(239,68,68,0.08)',
+                border: '1px solid rgba(239,68,68,0.2)',
+                display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                <Shield size={14} style={{ color: '#F87171', flexShrink: 0 }} />
+                <span style={{ fontSize: 12, color: '#F87171' }}>{errorMsg}</span>
+              </div>
+            )}
+
+            {/* Verify button */}
+            <button
+              onClick={handleVerifySubmit}
+              disabled={verifyLoading || verifyCode.join('').length !== 6}
+              style={{
+                width: '100%', padding: '14px', borderRadius: 14,
+                background: verifyCode.join('').length === 6
+                  ? 'linear-gradient(135deg, #F59E0B, #D97706)'
+                  : 'rgba(255,255,255,0.06)',
+                color: verifyCode.join('').length === 6 ? '#000' : '#475569',
+                fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                boxShadow: verifyCode.join('').length === 6 ? '0 6px 20px rgba(245,158,11,0.35)' : 'none',
+                transition: 'all 0.3s',
+              }}
+            >
+              {verifyLoading ? <Loader2 size={16} className="animate-spin" /> : <Shield size={16} />}
+              {verifyLoading ? 'Verificando...' : 'Verificar cuenta'}
+            </button>
+
+            {/* Resend code */}
+            <div style={{ textAlign: 'center', marginTop: 16 }}>
+              <p style={{ fontSize: 12, color: '#475569', margin: '0 0 8px' }}>
+                ¿No recibiste el código?
+              </p>
+              <button
+                onClick={handleResend}
+                disabled={resendCooldown > 0}
+                style={{
+                  background: 'none', border: 'none', cursor: resendCooldown > 0 ? 'default' : 'pointer',
+                  color: resendCooldown > 0 ? '#334155' : '#06B6D4',
+                  fontSize: 13, fontWeight: 600,
+                  transition: 'color 0.2s',
+                }}
+              >
+                {resendCooldown > 0 ? `Reenviar en ${resendCooldown}s` : 'Reenviar código'}
+              </button>
+            </div>
+          </div>
+        ) : (
+        <>
         {/* Mode toggle pills */}
         <div style={{ padding: '0 36px 24px' }}>
           <div style={{
@@ -451,6 +630,8 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
             </div>
           </div>
         </form>
+        </>
+        )}
       </div>
     </div>
   );

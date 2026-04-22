@@ -142,4 +142,32 @@ async function optionalAuth(req, res, next) {
   next();
 }
 
-module.exports = { verifyToken, requirePremium, optionalAuth };
+/**
+ * Middleware: Requerir Admin
+ * 
+ * Debe usarse DESPUÉS de verifyToken.
+ * Verifica que el usuario tenga role: 'admin'.
+ * 
+ * Uso: router.put('/api/routes/:id', verifyToken, requireAdmin, handler)
+ */
+function requireAdmin(req, res, next) {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: 'Autenticación requerida.',
+      code: 'NOT_AUTHENTICATED',
+    });
+  }
+
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({
+      success: false,
+      message: 'Acceso denegado. Se requiere rol de administrador.',
+      code: 'ADMIN_REQUIRED',
+    });
+  }
+
+  next();
+}
+
+module.exports = { verifyToken, requirePremium, requireAdmin, optionalAuth };

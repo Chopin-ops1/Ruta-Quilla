@@ -13,7 +13,7 @@ import { useState, useEffect } from 'react';
 import {
   Route, Navigation, Filter, MapPin, Bus,
   ChevronRight, Crown, Download,
-  CheckCircle2, Eye, EyeOff, Zap
+  CheckCircle2, Eye, EyeOff, Zap, Star
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { formatDistance, getRouteLength } from '../utils/geoUtils';
@@ -47,6 +47,25 @@ export default function Sidebar({
   const [searchText, setSearchText] = useState('');
   const [expandedCompany, setExpandedCompany] = useState(null);
 
+  // Favorites system (persisted in localStorage)
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('rutaquilla_favorites') || '[]');
+    } catch { return []; }
+  });
+
+  const toggleFavorite = (routeId) => {
+    setFavorites(prev => {
+      const next = prev.includes(routeId)
+        ? prev.filter(id => id !== routeId)
+        : [...prev, routeId];
+      localStorage.setItem('rutaquilla_favorites', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const isFavorite = (routeId) => favorites.includes(routeId);
+
   // Auto-switch to navigation tab if user clicks map context menu
   useEffect(() => {
     if (onSetOriginFromMap || onSetDestinationFromMap) {
@@ -75,13 +94,22 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`
-        fixed top-14 left-0 bottom-0 z-[1050] w-[85vw] max-w-sm md:w-80
-        glass-strong overflow-hidden
-        transition-transform duration-300 ease-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-      `}
-      style={{ borderRight: '1px solid var(--glass-border)' }}
+      style={{
+        position: 'fixed',
+        top: 58,
+        left: 0,
+        bottom: 0,
+        zIndex: 1050,
+        width: '85vw',
+        maxWidth: '20rem',
+        overflow: 'hidden',
+        transition: 'transform 0.3s ease-out',
+        transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
+        borderRight: '1px solid var(--glass-border)',
+        background: 'rgba(11, 17, 32, 0.92)',
+        backdropFilter: 'blur(32px) saturate(200%)',
+        WebkitBackdropFilter: 'blur(32px) saturate(200%)',
+      }}
     >
       <div className="h-full flex flex-col">
         {/* Tabs */}
@@ -89,6 +117,7 @@ export default function Sidebar({
           {[
             { id: 'navigate', icon: Navigation, label: 'Navegar' },
             { id: 'routes', icon: Route, label: 'Rutas' },
+            { id: 'favorites', icon: Star, label: 'Favoritos' },
             { id: 'capture', icon: Navigation, label: 'Capturar' },
           ].map(tab => (
             <button
@@ -333,6 +362,23 @@ export default function Sidebar({
                                       )}
                                     </div>
                                   </div>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); toggleFavorite(route._id); }}
+                                    style={{
+                                      background: 'none', border: 'none', cursor: 'pointer',
+                                      padding: 4, flexShrink: 0, display: 'flex',
+                                      transition: 'transform 0.2s',
+                                    }}
+                                    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.2)'; }}
+                                    onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+                                    title={isFavorite(route._id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                                  >
+                                    <Star
+                                      size={14}
+                                      fill={isFavorite(route._id) ? '#F59E0B' : 'none'}
+                                      color={isFavorite(route._id) ? '#F59E0B' : 'var(--text-muted)'}
+                                    />
+                                  </button>
                                   <ChevronRight size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                                 </div>
                               </button>
@@ -344,6 +390,67 @@ export default function Sidebar({
                   })()
                 )}
               </div>
+            </div>
+          )}
+
+          {/* ---- Tab: Favoritos ---- */}
+          {activeTab === 'favorites' && (
+            <div className="animate-fade-in p-3">
+              {(() => {
+                const favRoutes = routes.filter(r => isFavorite(r._id));
+                if (favRoutes.length === 0) {
+                  return (
+                    <div className="text-center py-12">
+                      <Star size={36} style={{ color: 'var(--text-muted)', margin: '0 auto', opacity: 0.3 }} />
+                      <p className="text-sm mt-3 font-medium" style={{ color: 'var(--text-secondary)' }}>
+                        Sin favoritos aún
+                      </p>
+                      <p className="text-xs mt-1" style={{ color: 'var(--text-muted)', maxWidth: 220, margin: '4px auto 0' }}>
+                        Toca la ⭐ en cualquier ruta para guardarla aquí y acceder rápido.
+                      </p>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>
+                      ⭐ {favRoutes.length} ruta{favRoutes.length > 1 ? 's' : ''} favorita{favRoutes.length > 1 ? 's' : ''}
+                    </p>
+                    {favRoutes.map(route => (
+                      <button
+                        key={route._id}
+                        onClick={() => onRouteSelect?.(route)}
+                        className="w-full text-left p-3 rounded-xl transition-all duration-200"
+                        style={{
+                          background: selectedRoute?._id === route._id ? 'var(--bg-card)' : 'rgba(255,255,255,0.02)',
+                          border: `1px solid ${selectedRoute?._id === route._id ? (route.color || '#555') + '40' : 'var(--border-color)'}`,
+                        }}
+                        onMouseEnter={e => { if (selectedRoute?._id !== route._id) e.currentTarget.style.background = 'var(--bg-card)'; }}
+                        onMouseLeave={e => { if (selectedRoute?._id !== route._id) e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-3 h-3 rounded-full flex-shrink-0"
+                            style={{ background: route.color, boxShadow: `0 0 8px ${route.color}50` }} />
+                          <div className="flex-1 min-w-0">
+                            <span className="text-[12px] font-semibold truncate block" style={{ color: 'var(--text-primary)' }}>
+                              {route.nombre}
+                            </span>
+                            <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                              {route.operador} · {getRouteLength(route.ida?.trazado?.coordinates).toFixed(1)} km
+                            </span>
+                          </div>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); toggleFavorite(route._id); }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                          >
+                            <Star size={14} fill="#F59E0B" color="#F59E0B" />
+                          </button>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           )}
 

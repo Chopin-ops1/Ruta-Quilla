@@ -50,7 +50,7 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     enum: {
-      values: ['free', 'premium'],
+      values: ['free', 'premium', 'admin'],
       message: 'Rol no válido: {VALUE}',
     },
     default: 'free',
@@ -70,6 +70,19 @@ const userSchema = new mongoose.Schema({
   avatar: {
     type: String,
     default: '',
+  },
+  // ---- Email Verification ----
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
+  verificationCode: {
+    type: String,
+    select: false, // No exponer en queries normales
+  },
+  verificationCodeExpiry: {
+    type: Date,
+    select: false,
   },
 }, {
   timestamps: true,
@@ -92,16 +105,15 @@ const userSchema = new mongoose.Schema({
  * contraseña fue modificada (evita re-hash en updates).
  */
 userSchema.pre('save', async function(next) {
+  // Sincronizar isPremium con el rol (siempre)
+  this.isPremium = this.role === 'premium' || this.role === 'admin';
+
   // Solo hashear si la contraseña fue modificada
   if (!this.isModified('password')) return next();
   
   try {
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
-    
-    // Sincronizar isPremium con el rol
-    this.isPremium = this.role === 'premium';
-    
     next();
   } catch (error) {
     next(error);

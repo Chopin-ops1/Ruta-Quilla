@@ -8,7 +8,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Bus, User, Crown, LogOut, Menu, X, ChevronDown, Zap, Search, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLegal }) {
+export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLegal, onAdminClick }) {
   const { user, isAuthenticated, isPremium, logout, remainingFreeSearches, maxFreeSearches } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef(null);
@@ -43,7 +43,6 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
         <button
           onClick={onMenuToggle}
           id="menu-toggle-btn"
-          className="md:hidden"
           style={{
             width: 36, height: 36, borderRadius: 10, border: 'none',
             background: menuOpen ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.06)',
@@ -136,8 +135,26 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
         </div>
       </div>
 
-      {/* Right: Auth */}
+      {/* Right: Auth + Admin */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Admin button */}
+        {onAdminClick && (
+          <button
+            onClick={onAdminClick}
+            id="admin-btn"
+            style={{
+              padding: '6px 12px', borderRadius: 10, border: '1px solid rgba(245,158,11,0.3)',
+              background: 'rgba(245,158,11,0.1)', color: '#F59E0B',
+              fontSize: 11, fontWeight: 700, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 5,
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(245,158,11,0.2)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(245,158,11,0.1)'; }}
+          >
+            <Shield size={12} /> Admin
+          </button>
+        )}
         {/* Mobile: free searches badge */}
         {!isAuthenticated && (
           <div className="md:hidden" style={{

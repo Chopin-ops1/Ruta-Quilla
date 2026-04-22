@@ -176,6 +176,35 @@ export const routesAPI = {
     }),
 };
 
+// ---- Admin Rutas (requiere token JWT de admin) ----
+export const adminRoutesAPI = {
+  /** Crear ruta oficial */
+  create: (routeData) =>
+    apiRequest('/routes/admin/create', {
+      method: 'POST',
+      body: JSON.stringify(routeData),
+    }),
+
+  /** Actualizar ruta */
+  update: (id, updates) =>
+    apiRequest(`/routes/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    }),
+
+  /** Eliminar ruta */
+  delete: (id) =>
+    apiRequest(`/routes/${id}`, {
+      method: 'DELETE',
+    }),
+
+  /** Eliminar TODAS las rutas */
+  deleteAll: () =>
+    apiRequest('/routes/admin/all', {
+      method: 'DELETE',
+    }),
+};
+
 // ---- Usuarios ----
 export const usersAPI = {
   /** Registrar nuevo usuario */
@@ -183,6 +212,20 @@ export const usersAPI = {
     apiRequest('/users/register', {
       method: 'POST',
       body: JSON.stringify(userData),
+    }),
+
+  /** Verificar email con código */
+  verify: (email, code) =>
+    apiRequest('/users/verify', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    }),
+
+  /** Reenviar código de verificación */
+  resendCode: (email) =>
+    apiRequest('/users/resend-code', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
     }),
 
   /** Iniciar sesión */

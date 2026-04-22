@@ -59,11 +59,48 @@ export function AuthProvider({ children }) {
     setError(null);
     try {
       const response = await usersAPI.register({ name, email, password });
-      setToken(response.data.token);
-      setUser(response.data.user);
+      // If server requires verification, don't log in yet
+      if (response.data?.requiresVerification) {
+        return response;
+      }
+      // Auto-verified (email not configured on server)
+      if (response.data?.token) {
+        setToken(response.data.token);
+        setUser(response.data.user);
+      }
       return response;
     } catch (err) {
       setError(err.message || 'Error al registrar');
+      throw err;
+    }
+  }, []);
+
+  /**
+   * Verificar email con código de 6 dígitos.
+   */
+  const verifyEmail = useCallback(async (email, code) => {
+    setError(null);
+    try {
+      const response = await usersAPI.verify(email, code);
+      if (response.data?.token) {
+        setToken(response.data.token);
+        setUser(response.data.user);
+      }
+      return response;
+    } catch (err) {
+      setError(err.message || 'Código inválido');
+      throw err;
+    }
+  }, []);
+
+  /**
+   * Reenviar código de verificación.
+   */
+  const resendCode = useCallback(async (email) => {
+    try {
+      return await usersAPI.resendCode(email);
+    } catch (err) {
+      setError(err.message || 'Error al reenviar código');
       throw err;
     }
   }, []);
@@ -79,6 +116,10 @@ export function AuthProvider({ children }) {
       setUser(response.data.user);
       return response;
     } catch (err) {
+      // Handle NOT_VERIFIED — don't throw, return so modal can show verify step
+      if (err.code === 'NOT_VERIFIED') {
+        return { notVerified: true, email: err.data?.email };
+      }
       setError(err.message || 'Credenciales incorrectas');
       throw err;
     }
@@ -135,8 +176,11 @@ export function AuthProvider({ children }) {
     loading,
     error,
     isAuthenticated: !!user,
-    isPremium: user?.isPremium || user?.role === 'premium',
+    isPremium: user?.isPremium || user?.role === 'premium' || user?.role === 'admin',
+    isAdmin: user?.role === 'admin',
     register,
+    verifyEmail,
+    resendCode,
     login,
     logout,
     upgradeToPremium,
