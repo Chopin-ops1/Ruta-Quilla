@@ -393,6 +393,69 @@ function MapPositioner({ navigationResult, selectedRoute, walkToBoard, walkFromA
   return null;
 }
 
+/**
+ * Sub-component: flies the map to the user's GPS position on first detection.
+ * Only triggers once so the user can freely pan afterward.
+ */
+function FlyToUser({ userPosition }) {
+  const map = useMap();
+  const hasFlewRef = useRef(false);
+
+  useEffect(() => {
+    if (userPosition && !hasFlewRef.current) {
+      hasFlewRef.current = true;
+      map.flyTo(
+        [userPosition.lat, userPosition.lng],
+        15, // zoom level — close enough to see streets
+        { duration: 1.5, easeLinearity: 0.25 }
+      );
+    }
+  }, [userPosition, map]);
+
+  return null;
+}
+
+/**
+ * Sub-component: flies the map to preview origin/destination as they're set.
+ * If both are set, fits bounds to show both points.
+ */
+function FlyToPreview({ previewOrigin, previewDestination }) {
+  const map = useMap();
+  const lastOriginRef = useRef(null);
+  const lastDestRef = useRef(null);
+
+  useEffect(() => {
+    const originChanged = previewOrigin && (
+      !lastOriginRef.current ||
+      lastOriginRef.current.lat !== previewOrigin.lat ||
+      lastOriginRef.current.lng !== previewOrigin.lng
+    );
+    const destChanged = previewDestination && (
+      !lastDestRef.current ||
+      lastDestRef.current.lat !== previewDestination.lat ||
+      lastDestRef.current.lng !== previewDestination.lng
+    );
+
+    if (originChanged) lastOriginRef.current = previewOrigin;
+    if (destChanged) lastDestRef.current = previewDestination;
+
+    if (previewOrigin && previewDestination && (originChanged || destChanged)) {
+      // Both set — fit bounds to show both
+      const bounds = L.latLngBounds([
+        [previewOrigin.lat, previewOrigin.lng],
+        [previewDestination.lat, previewDestination.lng],
+      ]);
+      map.flyToBounds(bounds, { padding: [80, 80], maxZoom: 15, duration: 1 });
+    } else if (originChanged && previewOrigin) {
+      map.flyTo([previewOrigin.lat, previewOrigin.lng], Math.max(map.getZoom(), 15), { duration: 1 });
+    } else if (destChanged && previewDestination) {
+      map.flyTo([previewDestination.lat, previewDestination.lng], Math.max(map.getZoom(), 15), { duration: 1 });
+    }
+  }, [previewOrigin, previewDestination, map]);
+
+  return null;
+}
+
 import 'leaflet-polylinedecorator';
 
 /**
@@ -469,6 +532,8 @@ export default function MapComponent({
   userPosition,
   isCapturing,
   pinMode,
+  previewOrigin,
+  previewDestination,
   onMapClick,
 }) {
   const { isPremium } = useAuth();
@@ -645,6 +710,30 @@ export default function MapComponent({
           walkFromAlight={walkFromAlight}
           busSegment={currentOption?.busSegment}
         />
+        <FlyToUser userPosition={userPosition} />
+        <FlyToPreview previewOrigin={previewOrigin} previewDestination={previewDestination} />
+
+        {/* ======= PREVIEW MARKERS (before search, show where user set origin/dest) ======= */}
+        {!navigationResult && (
+          <>
+            {previewOrigin && (
+              <Marker
+                position={[previewOrigin.lat, previewOrigin.lng]}
+                icon={createOriginIcon()}
+              >
+                <Popup><strong>📍 Origen seleccionado</strong></Popup>
+              </Marker>
+            )}
+            {previewDestination && (
+              <Marker
+                position={[previewDestination.lat, previewDestination.lng]}
+                icon={createDestinationIcon()}
+              >
+                <Popup><strong>🏁 Destino seleccionado</strong></Popup>
+              </Marker>
+            )}
+          </>
+        )}
 
         {/* ======= POI LAYER ======= */}
         <POILayer />
@@ -897,19 +986,34 @@ export default function MapComponent({
         )}
 
         {userPosition && (
-          <Marker
-            position={[userPosition.lat, userPosition.lng]}
-            icon={createUserIcon()}
-          >
-            <Popup>
-              <div>
-                <strong>Tu posición</strong>
-                <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>
-                  Precisión: {userPosition.accuracy?.toFixed(0)}m
+          <>
+            {/* Accuracy radius circle */}
+            <Circle
+              center={[userPosition.lat, userPosition.lng]}
+              radius={userPosition.accuracy || 30}
+              pathOptions={{
+                color: '#3B82F6',
+                fillColor: '#3B82F6',
+                fillOpacity: 0.08,
+                weight: 1,
+                opacity: 0.25,
+              }}
+            />
+            {/* User dot marker */}
+            <Marker
+              position={[userPosition.lat, userPosition.lng]}
+              icon={createUserIcon()}
+            >
+              <Popup>
+                <div>
+                  <strong>Tu posición</strong>
+                  <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>
+                    Precisión: ±{userPosition.accuracy?.toFixed(0)}m
+                  </div>
                 </div>
-              </div>
-            </Popup>
-          </Marker>
+              </Popup>
+            </Marker>
+          </>
         )}
       </MapContainer>
 

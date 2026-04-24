@@ -46,6 +46,13 @@ html, body, #root {
   overflow: hidden;
 }
 
+/* Modern mobile browsers: use dvh to exclude system gesture bar */
+@supports (height: 100dvh) {
+  html, body, #root {
+    height: 100dvh;
+  }
+}
+
 body {
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
   background: var(--bg-dark);

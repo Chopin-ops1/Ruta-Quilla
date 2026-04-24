@@ -4,8 +4,10 @@
  * ============================================
  *
  * Minimalist floating bar that appears at the bottom
- * when origin/destination are set directly from the map
- * (via right-click or long-press context menu).
+ * when origin/destination are set from ANY source:
+ * - Map context menu (right-click / long-press)
+ * - Sidebar GPS button
+ * - Sidebar address search
  *
  * Shows:
  * - Origin address (green)
@@ -16,13 +18,15 @@
  * need to open the sidebar to search.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MapPin, Search, X, Loader2, Navigation } from 'lucide-react';
 import { reverseGeocode } from '../services/routingService';
 
 export default function MapQuickBar({
   originFromMap,
   destFromMap,
+  previewOrigin,
+  previewDestination,
   onNavigate,
   onClear,
   isNavigating,
@@ -30,52 +34,71 @@ export default function MapQuickBar({
 }) {
   const [originName, setOriginName] = useState(null);
   const [destName, setDestName] = useState(null);
-  const [visible, setVisible] = useState(false);
+
+  // Compute effective origin/dest from ANY source
+  const effectiveOrigin = previewOrigin || originFromMap;
+  const effectiveDest = previewDestination || destFromMap;
+
+  // Track previous coords to avoid redundant geocoding
+  const prevOriginRef = useRef(null);
+  const prevDestRef = useRef(null);
 
   // Resolve origin address
   useEffect(() => {
-    if (originFromMap?.lat) {
-      setVisible(true);
-      reverseGeocode(originFromMap.lat, originFromMap.lng)
-        .then(name => setOriginName(name))
-        .catch(() => setOriginName(`${originFromMap.lat.toFixed(4)}, ${originFromMap.lng.toFixed(4)}`));
+    if (!effectiveOrigin?.lat) {
+      setOriginName(null);
+      prevOriginRef.current = null;
+      return;
     }
-  }, [originFromMap]);
+    // Skip if same coordinates
+    const key = `${effectiveOrigin.lat.toFixed(6)},${effectiveOrigin.lng.toFixed(6)}`;
+    if (prevOriginRef.current === key) return;
+    prevOriginRef.current = key;
+
+    setOriginName(null); // Show "Cargando..." while fetching
+    reverseGeocode(effectiveOrigin.lat, effectiveOrigin.lng)
+      .then(name => setOriginName(name))
+      .catch(() => setOriginName(`${effectiveOrigin.lat.toFixed(4)}, ${effectiveOrigin.lng.toFixed(4)}`));
+  }, [effectiveOrigin?.lat, effectiveOrigin?.lng]);
 
   // Resolve destination address
   useEffect(() => {
-    if (destFromMap?.lat) {
-      setVisible(true);
-      reverseGeocode(destFromMap.lat, destFromMap.lng)
-        .then(name => setDestName(name))
-        .catch(() => setDestName(`${destFromMap.lat.toFixed(4)}, ${destFromMap.lng.toFixed(4)}`));
+    if (!effectiveDest?.lat) {
+      setDestName(null);
+      prevDestRef.current = null;
+      return;
     }
-  }, [destFromMap]);
+    const key = `${effectiveDest.lat.toFixed(6)},${effectiveDest.lng.toFixed(6)}`;
+    if (prevDestRef.current === key) return;
+    prevDestRef.current = key;
 
-  // Hide when navigation results are shown or cleared
-  useEffect(() => {
-    if (navigationResult) {
-      setVisible(false);
-    }
-  }, [navigationResult]);
+    setDestName(null);
+    reverseGeocode(effectiveDest.lat, effectiveDest.lng)
+      .then(name => setDestName(name))
+      .catch(() => setDestName(`${effectiveDest.lat.toFixed(4)}, ${effectiveDest.lng.toFixed(4)}`));
+  }, [effectiveDest?.lat, effectiveDest?.lng]);
 
-  // Hide if nothing set
-  if (!visible || (!originFromMap && !destFromMap)) return null;
+  // Hide when navigation results are shown
+  if (navigationResult) return null;
 
-  const canSearch = originFromMap?.lat && destFromMap?.lat && !isNavigating;
+  // Hide if nothing set from any source
+  if (!effectiveOrigin && !effectiveDest) return null;
+
+  const canSearch = effectiveOrigin?.lat && effectiveDest?.lat && !isNavigating;
 
   const handleSearch = () => {
     if (!canSearch) return;
     onNavigate(
-      { lat: originFromMap.lat, lng: originFromMap.lng },
-      { lat: destFromMap.lat, lng: destFromMap.lng }
+      { lat: effectiveOrigin.lat, lng: effectiveOrigin.lng },
+      { lat: effectiveDest.lat, lng: effectiveDest.lng }
     );
   };
 
   const handleClose = () => {
-    setVisible(false);
     setOriginName(null);
     setDestName(null);
+    prevOriginRef.current = null;
+    prevDestRef.current = null;
     onClear?.();
   };
 
@@ -86,7 +109,8 @@ export default function MapQuickBar({
       className="animate-slide-up"
       style={{
         position: 'fixed',
-        bottom: 16, left: '50%', transform: 'translateX(-50%)',
+        bottom: 'calc(28px + env(safe-area-inset-bottom, 0px))',
+        left: '50%', translate: '-50% 0',
         zIndex: 1200,
         width: 'calc(100% - 32px)', maxWidth: 420,
         borderRadius: 18,
@@ -101,18 +125,18 @@ export default function MapQuickBar({
       {/* Gradient top accent */}
       <div style={{
         height: 2,
-        background: originFromMap && destFromMap
+        background: effectiveOrigin && effectiveDest
           ? 'linear-gradient(90deg, #10B981, #F59E0B, #EF4444)'
-          : originFromMap
+          : effectiveOrigin
             ? 'linear-gradient(90deg, #10B981, #10B98160)'
             : 'linear-gradient(90deg, #EF444460, #EF4444)',
       }} />
 
-      <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ padding: '10px 14px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
         {/* Points row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* Origin chip */}
-          {originFromMap && (
+          {effectiveOrigin && (
             <div style={{
               flex: 1, display: 'flex', alignItems: 'center', gap: 6,
               padding: '6px 10px', borderRadius: 10,
@@ -134,12 +158,12 @@ export default function MapQuickBar({
           )}
 
           {/* Arrow */}
-          {originFromMap && destFromMap && (
+          {effectiveOrigin && effectiveDest && (
             <Navigation size={12} style={{ color: '#475569', flexShrink: 0, transform: 'rotate(90deg)' }} />
           )}
 
           {/* Destination chip */}
-          {destFromMap && (
+          {effectiveDest && (
             <div style={{
               flex: 1, display: 'flex', alignItems: 'center', gap: 6,
               padding: '6px 10px', borderRadius: 10,
@@ -182,7 +206,7 @@ export default function MapQuickBar({
             fontSize: 10, color: '#475569', textAlign: 'center',
             margin: 0, padding: '2px 0',
           }}>
-            {!originFromMap ? '🖱️ Click derecho → Origen' : '🖱️ Ahora selecciona el destino'}
+            {!effectiveOrigin ? '🖱️ Click derecho → Origen' : '🖱️ Ahora selecciona el destino'}
           </p>
         )}
 

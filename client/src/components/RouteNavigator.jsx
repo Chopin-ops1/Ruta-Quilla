@@ -101,6 +101,8 @@ export default function RouteNavigator({
   pinMode, onPinModeChange,
   selectedOptionIdx = 0,
   onSelectOptionIdx,
+  onPreviewOriginChange,
+  onPreviewDestinationChange,
 }) {
   const [originText, setOriginText] = useState('');
   const [destText, setDestText] = useState('');
@@ -171,10 +173,12 @@ export default function RouteNavigator({
   const selectOrigin = s => {
     setOriginText(s.displayName); setOrigin({ lat: s.lat, lng: s.lng });
     setShowOriginSugg(false); saveToHistory(s);
+    onPreviewOriginChange?.({ lat: s.lat, lng: s.lng });
   };
   const selectDest = s => {
     setDestText(s.displayName); setDestination({ lat: s.lat, lng: s.lng });
     setShowDestSugg(false); saveToHistory(s);
+    onPreviewDestinationChange?.({ lat: s.lat, lng: s.lng });
   };
 
   const handleGPS = async () => {
@@ -182,6 +186,7 @@ export default function RouteNavigator({
       setGpsLoading(true);
       const pos = await getCurrentPosition();
       setOrigin({ lat: pos.lat, lng: pos.lng });
+      onPreviewOriginChange?.({ lat: pos.lat, lng: pos.lng });
       const name = await reverseGeocode(pos.lat, pos.lng);
       setOriginText(`📍 ${name}`);
     } catch { alert('No se pudo obtener tu ubicación. Verifica permisos del navegador.'); }
@@ -191,6 +196,7 @@ export default function RouteNavigator({
   useEffect(() => {
     if (onSetOriginFromMap?.lat) {
       setOrigin(onSetOriginFromMap);
+      onPreviewOriginChange?.(onSetOriginFromMap);
       reverseGeocode(onSetOriginFromMap.lat, onSetOriginFromMap.lng).then(n => setOriginText(`📌 ${n}`));
     }
   }, [onSetOriginFromMap]);
@@ -198,6 +204,7 @@ export default function RouteNavigator({
   useEffect(() => {
     if (onSetDestinationFromMap?.lat) {
       setDestination(onSetDestinationFromMap);
+      onPreviewDestinationChange?.(onSetDestinationFromMap);
       reverseGeocode(onSetDestinationFromMap.lat, onSetDestinationFromMap.lng).then(n => setDestText(`📌 ${n}`));
     }
   }, [onSetDestinationFromMap]);
@@ -214,6 +221,8 @@ export default function RouteNavigator({
     setOrigin(null); setDestination(null);
     setExpandedOption(null);
     onSelectOptionIdx?.(0);
+    onPreviewOriginChange?.(null);
+    onPreviewDestinationChange?.(null);
     onClear?.();
   };
 

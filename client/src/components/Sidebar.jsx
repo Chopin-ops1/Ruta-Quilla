@@ -39,6 +39,8 @@ export default function Sidebar({
   onSetDestinationFromMap,
   pinMode,
   onPinModeChange,
+  onPreviewOriginChange,
+  onPreviewDestinationChange,
 }) {
   const { user, isPremium, isAuthenticated, upgradeToPremium } = useAuth();
   const [filterType, setFilterType] = useState('all');
@@ -152,6 +154,8 @@ export default function Sidebar({
               onPinModeChange={onPinModeChange}
               selectedOptionIdx={selectedOptionIdx}
               onSelectOptionIdx={onSelectOptionIdx}
+              onPreviewOriginChange={onPreviewOriginChange}
+              onPreviewDestinationChange={onPreviewDestinationChange}
             />
           )}
 

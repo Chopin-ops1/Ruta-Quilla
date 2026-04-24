@@ -24,6 +24,7 @@ import LoginModal from './components/LoginModal';
 import LegalPages from './components/LegalPages';
 import CookieConsent from './components/CookieConsent';
 import MapQuickBar from './components/MapQuickBar';
+import RouteResultBar from './components/RouteResultBar';
 
 // Lazy load AdminPanel — only downloaded when admin navigates to /admin
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
@@ -72,6 +73,10 @@ export default function App() {
   const [originFromMap, setOriginFromMap] = useState(null);
   const [destFromMap, setDestFromMap] = useState(null);
 
+  // ---- Preview markers (shown on map before navigation search) ----
+  const [previewOrigin, setPreviewOrigin] = useState(null);
+  const [previewDestination, setPreviewDestination] = useState(null);
+
   // ---- Map layer visibility ----
   const [layerVisibility, setLayerVisibility] = useState({
     official: true,
@@ -112,6 +117,21 @@ export default function App() {
       }
     }
     loadData();
+  }, []);
+
+  /**
+   * Request user geolocation on mount.
+   * Centers the map on the user's position and shows the animated blue dot.
+   * Silently falls back to default center if permission is denied.
+   */
+  useEffect(() => {
+    getCurrentPosition()
+      .then((pos) => {
+        setUserPosition(pos);
+      })
+      .catch((err) => {
+        console.log('📍 Ubicación no disponible:', err.message);
+      });
   }, []);
 
   /**
@@ -178,6 +198,8 @@ export default function App() {
     setSelectedOptionIdx(0);
     setOriginFromMap(null);
     setDestFromMap(null);
+    setPreviewOrigin(null);
+    setPreviewDestination(null);
     setPinMode(null);
   }, []);
 
@@ -187,9 +209,11 @@ export default function App() {
   const handleMapClick = useCallback((coords) => {
     if (pinMode === 'origin') {
       setOriginFromMap({ ...coords });
+      setPreviewOrigin({ ...coords });
       setPinMode(null);
     } else if (pinMode === 'destination') {
       setDestFromMap({ ...coords });
+      setPreviewDestination({ ...coords });
       setPinMode(null);
     }
   }, [pinMode]);
@@ -288,6 +312,8 @@ export default function App() {
           onSetDestinationFromMap={destFromMap}
           pinMode={pinMode}
           onPinModeChange={setPinMode}
+          onPreviewOriginChange={setPreviewOrigin}
+          onPreviewDestinationChange={setPreviewDestination}
         />
 
         {/* Dark overlay behind sidebar on mobile */}
@@ -335,12 +361,16 @@ export default function App() {
               userPosition={userPosition}
               isCapturing={isCapturing}
               pinMode={pinMode}
+              previewOrigin={previewOrigin}
+              previewDestination={previewDestination}
               onMapClick={handleMapClick}
               onSetOrigin={(coords) => {
                 setOriginFromMap({ ...coords, _t: Date.now() });
+                setPreviewOrigin({ ...coords });
               }}
               onSetDestination={(coords) => {
                 setDestFromMap({ ...coords, _t: Date.now() });
+                setPreviewDestination({ ...coords });
               }}
             />
           )}
@@ -375,10 +405,20 @@ export default function App() {
       <MapQuickBar
         originFromMap={originFromMap}
         destFromMap={destFromMap}
+        previewOrigin={previewOrigin}
+        previewDestination={previewDestination}
         onNavigate={handleNavigate}
         onClear={handleClearNavigation}
         isNavigating={isNavigating}
         navigationResult={navigationResult}
+      />
+
+      {/* Route result bar (replaces MapQuickBar when results exist) */}
+      <RouteResultBar
+        navigationResult={navigationResult}
+        selectedOptionIdx={selectedOptionIdx}
+        onSelectOptionIdx={handleSelectOptionIdx}
+        onClear={handleClearNavigation}
       />
       </>
       )}
