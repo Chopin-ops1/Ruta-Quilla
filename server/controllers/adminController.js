@@ -12,6 +12,7 @@ const User = require('../models/UserModel');
 const Route = require('../models/RouteModel');
 const CapturedRoute = require('../models/CapturedRouteModel');
 const { getTrafficData } = require('../middleware/trafficTracker');
+const { escapeRegex } = require('../middleware/security');
 
 /**
  * GET /api/admin/dashboard
@@ -93,7 +94,7 @@ async function getCapturedRoutes(req, res) {
     const filter = {};
     if (status) filter.status = status;
     if (company) filter.company = company;
-    if (routeName) filter.routeName = { $regex: routeName, $options: 'i' };
+    if (routeName) filter.routeName = { $regex: escapeRegex(routeName), $options: 'i' };
 
     const captures = await CapturedRoute.find(filter)
       .sort({ createdAt: -1 })
@@ -176,7 +177,7 @@ async function compareCaptures(req, res) {
       return res.status(400).json({ success: false, message: 'routeName es requerido' });
     }
 
-    const filter = { routeName: { $regex: routeName, $options: 'i' } };
+    const filter = { routeName: { $regex: escapeRegex(routeName), $options: 'i' } };
     if (company) filter.company = company;
 
     const captures = await CapturedRoute.find(filter)

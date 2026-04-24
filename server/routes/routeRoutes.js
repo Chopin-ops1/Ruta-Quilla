@@ -9,6 +9,7 @@ const {
   deleteRoute, deleteAllRoutes,
 } = require('../controllers/routeController');
 const { verifyToken, requireAdmin, optionalAuth } = require('../middleware/authMiddleware');
+const { validateObjectId } = require('../middleware/security');
 
 // ---- Public endpoints ----
 
@@ -36,12 +37,12 @@ router.post('/admin/create', verifyToken, requireAdmin, createRoute);
 router.delete('/admin/all', verifyToken, requireAdmin, deleteAllRoutes);
 
 // PUT /api/routes/:id - Actualizar ruta
-router.put('/:id', verifyToken, requireAdmin, updateRoute);
+router.put('/:id', validateObjectId, verifyToken, requireAdmin, updateRoute);
 
 // DELETE /api/routes/:id - Eliminar una ruta
-router.delete('/:id', verifyToken, requireAdmin, deleteRoute);
+router.delete('/:id', validateObjectId, verifyToken, requireAdmin, deleteRoute);
 
-// GET /api/routes/:id - Detalle de una ruta (público) — debe ir al final para no capturar /admin/xxx
-router.get('/:id', getRouteById);
+// GET /api/routes/:id - Detalle de una ruta (público)
+router.get('/:id', validateObjectId, getRouteById);
 
 module.exports = router;

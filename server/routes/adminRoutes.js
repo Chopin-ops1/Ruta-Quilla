@@ -14,6 +14,7 @@ const {
   getUsers,
 } = require('../controllers/adminController');
 const { verifyToken, requireAdmin } = require('../middleware/authMiddleware');
+const { validateObjectId } = require('../middleware/security');
 
 // All admin routes require authentication + admin role
 router.use(verifyToken, requireAdmin);
@@ -30,7 +31,7 @@ router.get('/users', getUsers);
 // Captures — compare must come before :id to avoid route collision
 router.get('/captures/compare', compareCaptures);
 router.get('/captures', getCapturedRoutes);
-router.get('/captures/:id', getCaptureById);
-router.put('/captures/:id/review', reviewCapture);
+router.get('/captures/:id', validateObjectId, getCaptureById);
+router.put('/captures/:id/review', validateObjectId, reviewCapture);
 
 module.exports = router;

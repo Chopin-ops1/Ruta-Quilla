@@ -25,6 +25,7 @@ const compression = require('compression');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
 const path = require('path');
 
 const { connectDatabase, disconnectDatabase } = require('./config/database');
@@ -50,11 +51,12 @@ const PORT = process.env.PORT || 5000;
  * Deshabilitamos contentSecurityPolicy en desarrollo
  * para permitir carga de tiles del mapa desde CDNs.
  */
+const isProduction = process.env.NODE_ENV === 'production';
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Vite HMR in dev
+      scriptSrc: isProduction ? ["'self'"] : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
       imgSrc: [
@@ -136,13 +138,26 @@ const authLimiter = rateLimit({
   message: { success: false, message: 'Demasiados intentos. Espera 15 minutos.', code: 'AUTH_RATE_LIMIT' },
   standardHeaders: true, legacyHeaders: false,
 });
+
+// Rate limit for GPS capture (prevent flooding)
+const captureLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // Max 10 captures per hour per IP
+  message: { success: false, message: 'Límite de capturas alcanzado. Intenta en 1 hora.', code: 'CAPTURE_RATE_LIMIT' },
+  standardHeaders: true, legacyHeaders: false,
+});
+
 app.use('/api/users/login', authLimiter);
 app.use('/api/users/register', authLimiter);
+app.use('/api/routes/capture', captureLimiter);
 app.use('/api/', limiter);
 
 // Parsear JSON con límite de tamaño
 app.use(express.json({ limit: '200kb' }));
 app.use(express.urlencoded({ extended: true, limit: '200kb' }));
+
+// Sanitize MongoDB query operators from user input (prevent NoSQL injection)
+app.use(mongoSanitize({ replaceWith: '_' }));
 
 // Logging de requests en desarrollo
 if (process.env.NODE_ENV !== 'production') {

@@ -16,6 +16,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/UserModel');
 const { generateVerificationCode, sendVerificationEmail, verifyConnection } = require('../services/emailService');
+const { logAuthEvent } = require('../middleware/security');
 
 const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/jwt');
 
@@ -316,6 +317,7 @@ async function login(req, res) {
     const user = await User.findByCredentials(email.toLowerCase());
 
     if (!user) {
+      logAuthEvent('LOGIN_FAIL_USER_NOT_FOUND', email, req.ip, false);
       return res.status(401).json({
         success: false,
         message: 'Credenciales incorrectas',
@@ -337,6 +339,7 @@ async function login(req, res) {
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
+      logAuthEvent('LOGIN_FAIL_BAD_PASSWORD', email, req.ip, false);
       return res.status(401).json({
         success: false,
         message: 'Credenciales incorrectas',
@@ -346,6 +349,8 @@ async function login(req, res) {
 
     // Generar token JWT
     const token = generateToken(user._id);
+    
+    logAuthEvent('LOGIN_SUCCESS', email, req.ip, true);
 
     res.json({
       success: true,
