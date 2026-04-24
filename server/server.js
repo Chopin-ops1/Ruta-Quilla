@@ -33,6 +33,10 @@ const { connectDatabase, disconnectDatabase } = require('./config/database');
 const routeRoutes = require('./routes/routeRoutes');
 const userRoutes = require('./routes/userRoutes');
 const mapRoutes = require('./routes/mapRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+
+// Traffic tracker middleware
+const { trafficTracker } = require('./middleware/trafficTracker');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -149,9 +153,13 @@ if (process.env.NODE_ENV !== 'production') {
 // Rutas de la API
 // ============================================
 
+// Traffic tracker (count requests per hour for admin dashboard)
+app.use(trafficTracker);
+
 app.use('/api/routes', routeRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/maps', mapRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Endpoint de salud del servidor
 app.get('/api/health', (req, res) => {

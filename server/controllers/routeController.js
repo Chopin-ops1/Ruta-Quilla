@@ -13,40 +13,52 @@
  */
 
 const Route = require('../models/RouteModel');
+const CapturedRoute = require('../models/CapturedRouteModel');
 
 /**
  * POST /api/routes/capture
  * 
- * Endpoint de ingesta GPS: Recibe un array de coordenadas
- * capturadas por la Geolocation API del navegador y las
- * convierte en un objeto GeoJSON LineString validado.
- * 
- * El cliente ya ha filtrado puntos con accuracy > 20m,
- * pero hacemos validación adicional en el servidor para
- * garantizar integridad de datos.
+ * Captures a GPS route from a user riding a bus.
+ * Saves to the CapturedRoute collection (separate from official routes)
+ * for admin review and verification.
  * 
  * Body esperado:
  * {
- *   name: "Nombre de la ruta",
+ *   routeName: "C20 - Cra 38",
  *   company: "Sobrusa",
+ *   direction: "ida" | "vuelta",
  *   coordinates: [[lng, lat], [lng, lat], ...],
- *   stops: [{ name: "Parada X", coordinates: [lng, lat] }],
- *   averageAccuracy: 12.5
+ *   averageAccuracy: 12.5,
+ *   durationSeconds: 1800
  * }
  */
 async function captureRoute(req, res) {
   try {
-    const { name, company, coordinates, stops, averageAccuracy, description } = req.body;
+    const { routeName, company, direction, coordinates, averageAccuracy, durationSeconds } = req.body;
 
-    // ---- Validación de datos de entrada ----
-    if (!name || !company || !coordinates) {
-      return res.status(400).json({
+    // Require authentication
+    if (!req.user) {
+      return res.status(401).json({
         success: false,
-        message: 'Campos requeridos: name, company, coordinates',
+        message: 'Debes iniciar sesión para capturar rutas',
       });
     }
 
-    // Validar que haya suficientes coordenadas para un LineString
+    // Validate required fields
+    if (!routeName || !company || !direction || !coordinates) {
+      return res.status(400).json({
+        success: false,
+        message: 'Campos requeridos: routeName, company, direction, coordinates',
+      });
+    }
+
+    if (!['ida', 'vuelta'].includes(direction)) {
+      return res.status(400).json({
+        success: false,
+        message: 'direction debe ser "ida" o "vuelta"',
+      });
+    }
+
     if (!Array.isArray(coordinates) || coordinates.length < 2) {
       return res.status(400).json({
         success: false,
@@ -54,14 +66,14 @@ async function captureRoute(req, res) {
       });
     }
 
-    // Validar formato de coordenadas [lng, lat]
+    // Validate coordinate format [lng, lat]
     const validCoordinates = coordinates.filter(coord => {
       return Array.isArray(coord) &&
              coord.length === 2 &&
              typeof coord[0] === 'number' &&
              typeof coord[1] === 'number' &&
-             coord[0] >= -180 && coord[0] <= 180 &&  // Longitud válida
-             coord[1] >= -90 && coord[1] <= 90;       // Latitud válida
+             coord[0] >= -180 && coord[0] <= 180 &&
+             coord[1] >= -90 && coord[1] <= 90;
     });
 
     if (validCoordinates.length < 2) {
@@ -71,59 +83,41 @@ async function captureRoute(req, res) {
       });
     }
 
-    /**
-     * Reducción de precisión de coordenadas a 6 decimales
-     * (~0.11m de precisión, más que suficiente para rutas urbanas).
-     * Esto reduce el tamaño del payload almacenado en MongoDB
-     * y acelera las consultas geoespaciales.
-     */
+    // Clean coordinates to 6 decimal places (~0.11m precision)
     const cleanedCoordinates = validCoordinates.map(coord => [
       Math.round(coord[0] * 1e6) / 1e6,
       Math.round(coord[1] * 1e6) / 1e6,
     ]);
 
-    // Construir paradas como GeoJSON Points si se proporcionan
-    const routeStops = (stops || []).map((stop, index) => ({
-      name: stop.name,
-      location: {
-        type: 'Point',
-        coordinates: [
-          Math.round(stop.coordinates[0] * 1e6) / 1e6,
-          Math.round(stop.coordinates[1] * 1e6) / 1e6,
-        ],
-      },
-      order: index,
-    }));
+    // First coordinate = boarding point
+    const boardingCoord = cleanedCoordinates[0];
 
-    // Crear el documento de ruta con GeoJSON LineString
-    const route = new Route({
-      name,
+    const capture = new CapturedRoute({
+      routeName,
       company,
-      type: 'community', // Rutas capturadas por GPS son siempre comunitarias
+      direction,
+      boardingPoint: {
+        type: 'Point',
+        coordinates: boardingCoord,
+      },
       geometry: {
         type: 'LineString',
         coordinates: cleanedCoordinates,
       },
-      stops: routeStops,
-      color: getCompanyColor(company),
-      contributorId: req.user ? req.user._id : null,
+      pointCount: cleanedCoordinates.length,
       averageAccuracy: averageAccuracy || 0,
-      description: description || '',
-      verified: false,
+      durationSeconds: durationSeconds || 0,
+      userId: req.user._id,
+      userName: req.user.name,
+      status: 'pending',
     });
 
-    await route.save();
-
-    // Incrementar contador de contribuciones del usuario
-    if (req.user) {
-      req.user.contributions += 1;
-      await req.user.save();
-    }
+    await capture.save();
 
     res.status(201).json({
       success: true,
-      message: 'Ruta capturada exitosamente',
-      data: route,
+      message: 'Ruta capturada exitosamente. Un administrador la revisará pronto.',
+      data: { id: capture._id, status: capture.status },
     });
   } catch (error) {
     console.error('Error al capturar ruta:', error);

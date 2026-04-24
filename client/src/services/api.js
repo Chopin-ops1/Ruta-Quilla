@@ -257,4 +257,38 @@ export const healthAPI = {
   check: () => apiRequest('/health'),
 };
 
-export default { routesAPI, usersAPI, mapsAPI, healthAPI };
+// ---- Admin Panel ----
+export const adminAPI = {
+  /** Dashboard stats */
+  getDashboard: () => apiRequest('/admin/dashboard'),
+
+  /** Traffic data (last 24h) */
+  getTraffic: () => apiRequest('/admin/traffic'),
+
+  /** List users */
+  getUsers: () => apiRequest('/admin/users'),
+
+  /** List captured routes with optional filters */
+  getCaptures: (filters = {}) => {
+    const params = new URLSearchParams(filters).toString();
+    return apiRequest(`/admin/captures${params ? `?${params}` : ''}`);
+  },
+
+  /** Get single capture detail */
+  getCaptureById: (id) => apiRequest(`/admin/captures/${id}`),
+
+  /** Approve or reject a capture */
+  reviewCapture: (id, data) =>
+    apiRequest(`/admin/captures/${id}/review`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  /** Compare captures of the same route */
+  compareCaptures: (routeName, company) => {
+    const params = new URLSearchParams({ routeName, ...(company ? { company } : {}) }).toString();
+    return apiRequest(`/admin/captures/compare?${params}`);
+  },
+};
+
+export default { routesAPI, usersAPI, mapsAPI, healthAPI, adminAPI };

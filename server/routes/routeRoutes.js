@@ -24,8 +24,8 @@ router.get('/nearby', getNearbyRoutes);
 // POST /api/routes/navigate - Buscar ruta entre dos puntos (público)
 router.post('/navigate', navigateRoute);
 
-// POST /api/routes/capture - Capturar nueva ruta GPS (autenticación opcional)
-router.post('/capture', optionalAuth, captureRoute);
+// POST /api/routes/capture - Capturar nueva ruta GPS (requiere autenticación)
+router.post('/capture', verifyToken, captureRoute);
 
 // ---- Admin endpoints (requieren token + rol admin) ----
 
