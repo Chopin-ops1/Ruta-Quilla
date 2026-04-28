@@ -308,8 +308,8 @@ export default function AdminPanel({ onBack }) {
           <span style={{ fontSize: 10, color: '#475569' }}>{user?.email}</span>
         </div>
 
-        {/* Tab content */}
-        <div style={{ flex: 1, overflow: 'hidden' }}>
+        {/* Tab content — editor needs hidden (map), others need scrollable */}
+        <div style={{ flex: 1, overflow: activeTab === 'editor' ? 'hidden' : 'auto' }}>
           {activeTab === 'dashboard' && <DashboardTab />}
           {activeTab === 'captures' && <CapturesTab />}
           {activeTab === 'editor' && <RouteEditorTab user={user} />}
