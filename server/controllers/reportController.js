@@ -115,6 +115,7 @@ async function createReport(req, res) {
 async function getActiveReports(req, res) {
   try {
     const { lat, lng, radius = 5000 } = req.query;
+    const cappedRadius = Math.min(parseInt(radius) || 5000, 10000); // max 10km
 
     const filter = { expiresAt: { $gt: new Date() } };
     let reports;
@@ -126,7 +127,7 @@ async function getActiveReports(req, res) {
           $geoNear: {
             near: { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] },
             distanceField: 'distance',
-            maxDistance: parseInt(radius),
+            maxDistance: cappedRadius,
             spherical: true,
             query: filter,
           },

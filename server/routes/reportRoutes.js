@@ -9,6 +9,7 @@ const express = require('express');
 const router = express.Router();
 const { createReport, getActiveReports, confirmReport, getReportTypes } = require('../controllers/reportController');
 const { verifyToken } = require('../middleware/authMiddleware');
+const { validateObjectId } = require('../middleware/security');
 
 // Públicos
 router.get('/active', getActiveReports);
@@ -16,6 +17,6 @@ router.get('/types', getReportTypes);
 
 // Requieren autenticación
 router.post('/', verifyToken, createReport);
-router.post('/:id/confirm', verifyToken, confirmReport);
+router.post('/:id/confirm', validateObjectId, verifyToken, confirmReport);
 
 module.exports = router;
