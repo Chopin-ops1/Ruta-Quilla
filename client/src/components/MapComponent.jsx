@@ -604,9 +604,11 @@ export default function MapComponent({
       // busSegment comes as [lng, lat], convert to [lat, lng] for routing service
       const rawLatLng = currentOption.busSegment.map(c => [c[1], c[0]]);
       
-      // If we have very few points, it's sparse waypoints that will cut corners through buildings.
-      // We ask OSRM to snap it to roads. If it has too many points (> 80), it's already dense enough.
-      if (rawLatLng.length < 80) {
+      // If the segment has >= 20 points, the admin already hand-drew/snapped this route
+      // to follow actual streets. Re-routing through OSRM would REPLACE the admin's precise
+      // trace with OSRM's "shortest path" guess, which takes different streets.
+      // Only use OSRM for very sparse legacy routes with few waypoints.
+      if (rawLatLng.length < 20) {
         try {
           const matched = await getMultiStopRoute(rawLatLng);
           if (!cancelled && matched.coordinates?.length) {
@@ -643,17 +645,20 @@ export default function MapComponent({
     setSmoothedSelectedRouteVuelta(rawVuelta);
 
     // ---- Then async upgrade to OSRM-snapped roads ----
+    // Only if the route has very few sparse waypoints (legacy routes).
+    // If the admin already hand-drew/snapped the route with dense coordinates,
+    // OSRM would overwrite that precise trace with its own "shortest path".
     let cancelled = false;
     async function matchSelectedRoute() {
       try {
         let idaFinished = rawIda;
-        if (rawIda.length >= 2 && rawIda.length < 80) {
+        if (rawIda.length >= 2 && rawIda.length < 20) {
           const matched = await getMultiStopRoute(rawIda);
           if (matched.coordinates?.length > 1) idaFinished = matched.coordinates;
         }
 
         let vueltaFinished = rawVuelta;
-        if (rawVuelta.length >= 2 && rawVuelta.length < 80) {
+        if (rawVuelta.length >= 2 && rawVuelta.length < 20) {
           const matched = await getMultiStopRoute(rawVuelta);
           if (matched.coordinates?.length > 1) vueltaFinished = matched.coordinates;
         }

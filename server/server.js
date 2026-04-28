@@ -35,6 +35,7 @@ const routeRoutes = require('./routes/routeRoutes');
 const userRoutes = require('./routes/userRoutes');
 const mapRoutes = require('./routes/mapRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const communityRoutes = require('./routes/communityRoutes');
 
 // Traffic tracker middleware
 const { trafficTracker } = require('./middleware/trafficTracker');
@@ -175,6 +176,7 @@ app.use('/api/routes', routeRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/maps', mapRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/community', communityRoutes);
 
 // Endpoint de salud del servidor
 app.get('/api/health', (req, res) => {

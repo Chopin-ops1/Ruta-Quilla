@@ -134,6 +134,10 @@ async function getCaptureById(req, res) {
  * PUT /api/admin/captures/:id/review
  * Approve or reject a community capture.
  * Body: { status: 'approved'|'rejected', adminNotes: '...' }
+ * 
+ * XP otorgado al contribuidor:
+ * - Aprobada: +50 XP (captura oficial incorporada)
+ * - Rechazada con notas: +5 XP (incentivo por participación)
  */
 async function reviewCapture(req, res) {
   try {
@@ -154,17 +158,35 @@ async function reviewCapture(req, res) {
     capture.reviewedAt = new Date();
     await capture.save();
 
-    // Increment contributor's count if approved
-    if (status === 'approved' && capture.userId) {
-      await User.findByIdAndUpdate(capture.userId, { $inc: { contributions: 1 } });
+    // ---- Sistema XP ----
+    let xpResult = null;
+    if (capture.userId) {
+      const contributor = await User.findById(capture.userId);
+      if (contributor) {
+        if (status === 'approved') {
+          // Incrementar contribuciones antes de awardXP para que las insignias
+          // de capturas se evalúen con el nuevo total.
+          contributor.contributions += 1;
+          xpResult = await contributor.awardXP(50);
+        } else if (status === 'rejected' && adminNotes) {
+          // XP simbólico por participar aunque sea rechazada
+          xpResult = await contributor.awardXP(5);
+        }
+      }
     }
 
-    res.json({ success: true, message: `Captura ${status === 'approved' ? 'aprobada' : 'rechazada'}`, data: capture });
+    res.json({
+      success: true,
+      message: `Captura ${status === 'approved' ? 'aprobada' : 'rechazada'}`,
+      data: capture,
+      xp: xpResult,
+    });
   } catch (error) {
     console.error('Error al revisar captura:', error);
     res.status(500).json({ success: false, message: 'Error al revisar captura' });
   }
 }
+
 
 /**
  * GET /api/admin/captures/compare?routeName=X&company=Y

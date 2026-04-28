@@ -291,4 +291,16 @@ export const adminAPI = {
   },
 };
 
-export default { routesAPI, usersAPI, mapsAPI, healthAPI, adminAPI };
+// ---- Community (Quilla XP) ----
+export const communityAPI = {
+  /** Top contribuidores (público) */
+  getLeaderboard: (limit = 10) => apiRequest(`/community/leaderboard?limit=${limit}`),
+
+  /** Perfil XP del usuario autenticado */
+  getProfile: () => apiRequest('/community/me'),
+
+  /** Tabla de niveles e insignias disponibles */
+  getLevels: () => apiRequest('/community/levels'),
+};
+
+export default { routesAPI, usersAPI, mapsAPI, healthAPI, adminAPI, communityAPI };
