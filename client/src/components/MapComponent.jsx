@@ -972,26 +972,35 @@ export default function MapComponent({
               })}
             >
               <Popup>
-                <div style={{ minWidth: 180 }}>
+                <div style={{ minWidth: 200, maxWidth: 260 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                     <span style={{ fontSize: 18 }}>{report.emoji}</span>
                     <strong style={{ fontSize: 13 }}>{report.label}</strong>
                   </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    {report.routeCodigo && (
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#F59E0B', background: 'rgba(245,158,11,0.15)', padding: '2px 6px', borderRadius: 4 }}>
+                        {report.routeCodigo}
+                      </span>
+                    )}
+                    <span style={{ fontSize: 11, color: '#1E293B' }}>🚌 {report.routeName}</span>
+                  </div>
                   {report.description && (
                     <p style={{ fontSize: 12, color: '#64748B', margin: '0 0 4px' }}>{report.description}</p>
                   )}
-                  {report.routeName && (
-                    <p style={{ fontSize: 11, color: '#94A3B8', margin: '0 0 4px' }}>🚌 Ruta: {report.routeName}</p>
-                  )}
-                  <div style={{ fontSize: 11, color: '#475569', display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: 11, color: '#475569', display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                     <span>👤 {report.userName}</span>
                     <span>⏰ hace {report.minutesAgo || '?'} min</span>
                   </div>
-                  {report.confirmations > 0 && (
-                    <p style={{ fontSize: 10, color: '#10B981', marginTop: 4 }}>
-                      ✅ {report.confirmations} confirmaci{report.confirmations === 1 ? 'ón' : 'ones'}
-                    </p>
-                  )}
+                  <div style={{ display: 'flex', gap: 8, fontSize: 10, marginBottom: 8 }}>
+                    {report.confirmations > 0 && (
+                      <span style={{ color: '#10B981' }}>✅ {report.confirmations} conf.</span>
+                    )}
+                    {report.dismissals > 0 && (
+                      <span style={{ color: '#F59E0B' }}>👎 {report.dismissals}/3 votos</span>
+                    )}
+                    <span style={{ color: '#94A3B8' }}>⏳ {report.minutesLeft || '?'} min restantes</span>
+                  </div>
                 </div>
               </Popup>
             </Marker>

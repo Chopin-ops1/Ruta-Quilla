@@ -29,6 +29,7 @@ import { snapToRoads, reverseGeocode } from '../services/routingService';
 import DashboardTab from './admin/DashboardTab';
 import CapturesTab from './admin/CapturesTab';
 import UsersTab from './admin/UsersTab';
+import ReportsTab from './ReportsTab';
 
 const BARRANQUILLA_CENTER = [10.9685, -74.7813];
 const DEFAULT_ZOOM = 13;
@@ -249,6 +250,7 @@ function RouteEditorTab({ user }) {
 const TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={14} /> },
   { id: 'captures', label: 'Capturas', icon: <Radar size={14} /> },
+  { id: 'reports', label: 'Reportes', icon: <AlertTriangle size={14} /> },
   { id: 'editor', label: 'Editor', icon: <Map size={14} /> },
   { id: 'users', label: 'Usuarios', icon: <Users size={14} /> },
 ];
@@ -312,6 +314,7 @@ export default function AdminPanel({ onBack }) {
         <div style={{ flex: 1, overflow: activeTab === 'editor' ? 'hidden' : 'auto' }}>
           {activeTab === 'dashboard' && <DashboardTab />}
           {activeTab === 'captures' && <CapturesTab />}
+          {activeTab === 'reports' && <ReportsTab />}
           {activeTab === 'editor' && <RouteEditorTab user={user} />}
           {activeTab === 'users' && <UsersTab />}
         </div>

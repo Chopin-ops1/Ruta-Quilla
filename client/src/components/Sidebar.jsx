@@ -41,6 +41,7 @@ export default function Sidebar({
   onPinModeChange,
   onPreviewOriginChange,
   onPreviewDestinationChange,
+  activeReports = [],
 }) {
   const { user, isPremium, isAuthenticated, upgradeToPremium } = useAuth();
   const [filterType, setFilterType] = useState('all');
@@ -48,6 +49,9 @@ export default function Sidebar({
   const [activeTab, setActiveTab] = useState('navigate');
   const [searchText, setSearchText] = useState('');
   const [expandedCompany, setExpandedCompany] = useState(null);
+
+  // Compute affected route IDs from active reports
+  const affectedRouteIds = new Set(activeReports.map(r => r.routeId).filter(Boolean));
 
   // Favorites system (persisted in localStorage)
   const [favorites, setFavorites] = useState(() => {
@@ -336,6 +340,16 @@ export default function Sidebar({
                                       <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
                                         {getRouteLength(route.ida?.trazado?.coordinates).toFixed(1)} km
                                       </span>
+                                      {affectedRouteIds.has(route._id) && (
+                                        <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{
+                                          background: 'rgba(239,68,68,0.15)',
+                                          color: '#EF4444',
+                                          border: '1px solid rgba(239,68,68,0.3)',
+                                          animation: 'pulse 2s infinite',
+                                        }}>
+                                          ⚠️ Afectada
+                                        </span>
+                                      )}
                                       {route.regreso?.trazado?.coordinates?.length > 1 && (
                                         <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium" style={{
                                           background: 'rgba(139, 92, 246, 0.1)',

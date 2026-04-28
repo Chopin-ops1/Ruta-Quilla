@@ -308,7 +308,15 @@ export const reportAPI = {
     return apiRequest(`/reports/active${params}`);
   },
   confirm: (id) => apiRequest(`/reports/${id}/confirm`, { method: 'POST' }),
+  dismiss: (id, reason) => apiRequest(`/reports/${id}/dismiss`, { method: 'POST', body: JSON.stringify({ reason }) }),
   getTypes: () => apiRequest('/reports/types'),
+  getAffected: (routeId) => apiRequest(`/reports/affected/${routeId}`),
+  // Admin
+  adminGetAll: (filters = {}) => {
+    const params = new URLSearchParams(filters).toString();
+    return apiRequest(`/reports/admin${params ? `?${params}` : ''}`);
+  },
+  adminDelete: (id, reason = '') => apiRequest(`/reports/admin/${id}`, { method: 'DELETE', body: JSON.stringify({ reason }) }),
 };
 
 export default { routesAPI, usersAPI, mapsAPI, healthAPI, adminAPI, communityAPI, reportAPI };

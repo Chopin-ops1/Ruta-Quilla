@@ -4,16 +4,19 @@
  * ============================================
  *
  * Endpoints para reportes en tiempo real:
- * - POST   /api/reports          — Crear reporte (auth)
- * - GET    /api/reports/active    — Reportes activos cerca de un punto (público)
+ * - POST   /api/reports          — Crear reporte (auth, routeId obligatorio)
+ * - GET    /api/reports/active    — Reportes activos (público)
  * - POST   /api/reports/:id/confirm — Confirmar un reporte (auth)
- * - GET    /api/reports/types     — Tipos de reporte disponibles
+ * - POST   /api/reports/:id/dismiss — Votar para remover (auth)
+ * - GET    /api/reports/types     — Tipos disponibles
+ * - GET    /api/reports/affected/:routeId — ¿La ruta tiene reportes activos?
+ * - GET    /api/reports/admin     — Todos los reportes para admin
+ * - DELETE /api/reports/admin/:id — Admin elimina un reporte
  */
 
 const Report = require('../models/ReportModel');
 const User = require('../models/UserModel');
 
-// Emojis + labels para cada tipo
 const TYPE_META = {
   desvio:     { emoji: '🔀', label: 'Desvío de ruta',    color: '#F59E0B' },
   cancelada:  { emoji: '🚫', label: 'Ruta cancelada',    color: '#EF4444' },
@@ -24,21 +27,31 @@ const TYPE_META = {
   otro:       { emoji: '📌', label: 'Otro',              color: '#64748B' },
 };
 
+const DISMISS_LABELS = {
+  invalido:    '❌ Reporte inválido',
+  solucionado: '✅ Problema solucionado',
+  vencido:     '⏰ Ya no aplica',
+};
+
 /**
  * POST /api/reports
- * Crear un nuevo reporte de incidencia.
- * Body: { type, description?, location: { lat, lng }, routeName?, locationName? }
- *
- * Otorga +10 XP al usuario que reporta.
+ * Crear un nuevo reporte. routeId es OBLIGATORIO.
  */
 async function createReport(req, res) {
   try {
-    const { type, description, location, routeName, locationName } = req.body;
+    const { type, description, location, routeId, routeName, routeCodigo, locationName } = req.body;
 
     if (!type || !location?.lat || !location?.lng) {
       return res.status(400).json({
         success: false,
         message: 'Campos requeridos: type, location { lat, lng }',
+      });
+    }
+
+    if (!routeId || !routeName) {
+      return res.status(400).json({
+        success: false,
+        message: 'Debes seleccionar la ruta de bus afectada',
       });
     }
 
@@ -70,20 +83,20 @@ async function createReport(req, res) {
         coordinates: [parseFloat(location.lng), parseFloat(location.lat)],
       },
       locationName: locationName || '',
-      routeName: routeName || '',
+      routeId,
+      routeName,
+      routeCodigo: routeCodigo || '',
       userId: req.user._id,
       userName: req.user.name,
     });
 
     await report.save();
 
-    // Award +10 XP for reporting
+    // Award +10 XP
     let xpResult = null;
     try {
       const user = await User.findById(req.user._id);
-      if (user) {
-        xpResult = await user.awardXP(10);
-      }
+      if (user) xpResult = await user.awardXP(10);
     } catch (xpErr) {
       console.warn('XP award failed for report:', xpErr.message);
     }
@@ -93,12 +106,7 @@ async function createReport(req, res) {
     res.status(201).json({
       success: true,
       message: `${meta.emoji} Reporte creado. ¡Gracias por informar!`,
-      data: {
-        _id: report._id,
-        type: report.type,
-        ...meta,
-        expiresAt: report.expiresAt,
-      },
+      data: { _id: report._id, type: report.type, ...meta, expiresAt: report.expiresAt },
       xp: xpResult,
     });
   } catch (error) {
@@ -109,19 +117,17 @@ async function createReport(req, res) {
 
 /**
  * GET /api/reports/active?lat=X&lng=Y&radius=5000
- * Retorna reportes activos (no expirados) cerca de un punto.
- * Público — no requiere autenticación.
+ * Reportes activos (no expirados, no dismissed).
  */
 async function getActiveReports(req, res) {
   try {
     const { lat, lng, radius = 5000 } = req.query;
-    const cappedRadius = Math.min(parseInt(radius) || 5000, 10000); // max 10km
+    const cappedRadius = Math.min(parseInt(radius) || 5000, 10000);
 
-    const filter = { expiresAt: { $gt: new Date() } };
+    const filter = { expiresAt: { $gt: new Date() }, status: 'active' };
     let reports;
 
     if (lat && lng) {
-      // Geospatial query
       reports = await Report.aggregate([
         {
           $geoNear: {
@@ -137,21 +143,20 @@ async function getActiveReports(req, res) {
         {
           $project: {
             type: 1, description: 1, location: 1, locationName: 1,
-            routeName: 1, userName: 1, confirmations: 1,
+            routeId: 1, routeName: 1, routeCodigo: 1,
+            userName: 1, confirmations: 1, dismissals: 1,
             createdAt: 1, expiresAt: 1, distance: { $round: ['$distance', 0] },
           },
         },
       ]);
     } else {
-      // No location — just get recent active reports
       reports = await Report.find(filter)
-        .select('type description location locationName routeName userName confirmations createdAt expiresAt')
+        .select('type description location locationName routeId routeName routeCodigo userName confirmations dismissals createdAt expiresAt')
         .sort({ createdAt: -1 })
         .limit(50)
         .lean();
     }
 
-    // Enrich with type metadata
     const enriched = reports.map(r => ({
       ...r,
       ...(TYPE_META[r.type] || TYPE_META.otro),
@@ -159,11 +164,7 @@ async function getActiveReports(req, res) {
       minutesLeft: Math.max(0, Math.round((new Date(r.expiresAt).getTime() - Date.now()) / 60000)),
     }));
 
-    res.json({
-      success: true,
-      count: enriched.length,
-      data: enriched,
-    });
+    res.json({ success: true, count: enriched.length, data: enriched });
   } catch (error) {
     console.error('Error al obtener reportes:', error);
     res.status(500).json({ success: false, message: 'Error al obtener reportes' });
@@ -172,26 +173,20 @@ async function getActiveReports(req, res) {
 
 /**
  * POST /api/reports/:id/confirm
- * Confirmar un reporte (autenticado, máx 1 confirmación por usuario).
- * Otorga +2 XP al confirmador.
+ * Confirmar reporte (+2 XP, +15 min visibilidad, max 2h).
  */
 async function confirmReport(req, res) {
   try {
     const report = await Report.findById(req.params.id);
-    if (!report) {
-      return res.status(404).json({ success: false, message: 'Reporte no encontrado' });
+    if (!report || report.status !== 'active') {
+      return res.status(404).json({ success: false, message: 'Reporte no encontrado o inactivo' });
     }
-
     if (report.expiresAt < new Date()) {
       return res.status(410).json({ success: false, message: 'Este reporte ya expiró' });
     }
-
-    // Check if already confirmed by this user
     if (report.confirmedBy.includes(req.user._id)) {
       return res.status(409).json({ success: false, message: 'Ya confirmaste este reporte' });
     }
-
-    // Can't confirm your own report
     if (report.userId.toString() === req.user._id.toString()) {
       return res.status(409).json({ success: false, message: 'No puedes confirmar tu propio reporte' });
     }
@@ -199,20 +194,16 @@ async function confirmReport(req, res) {
     report.confirmations += 1;
     report.confirmedBy.push(req.user._id);
 
-    // Each confirmation extends expiry by 15 min (max 2 hours total)
     const maxExpiry = new Date(report.createdAt.getTime() + 2 * 60 * 60 * 1000);
     const newExpiry = new Date(report.expiresAt.getTime() + 15 * 60 * 1000);
     report.expiresAt = newExpiry < maxExpiry ? newExpiry : maxExpiry;
 
     await report.save();
 
-    // Award +2 XP for confirming
     try {
       const user = await User.findById(req.user._id);
       if (user) await user.awardXP(2);
-    } catch (xpErr) {
-      console.warn('XP award for confirm failed:', xpErr.message);
-    }
+    } catch (_) {}
 
     res.json({
       success: true,
@@ -220,21 +211,195 @@ async function confirmReport(req, res) {
       data: { confirmations: report.confirmations, expiresAt: report.expiresAt },
     });
   } catch (error) {
-    console.error('Error al confirmar reporte:', error);
+    console.error('Error al confirmar:', error);
     res.status(500).json({ success: false, message: 'Error al confirmar' });
   }
 }
 
 /**
+ * POST /api/reports/:id/dismiss
+ * Votar para remover un reporte.
+ * Body: { reason: 'invalido' | 'solucionado' | 'vencido' }
+ * Si alcanza DISMISS_THRESHOLD (3), se marca como dismissed.
+ */
+async function dismissReport(req, res) {
+  try {
+    const { reason } = req.body;
+    if (!reason || !Report.DISMISS_REASONS.includes(reason)) {
+      return res.status(400).json({
+        success: false,
+        message: `Razón requerida: ${Report.DISMISS_REASONS.join(', ')}`,
+      });
+    }
+
+    const report = await Report.findById(req.params.id);
+    if (!report || report.status !== 'active') {
+      return res.status(404).json({ success: false, message: 'Reporte no encontrado o ya removido' });
+    }
+
+    // Check already voted
+    const alreadyVoted = report.dismissedBy.some(
+      d => d.userId.toString() === req.user._id.toString()
+    );
+    if (alreadyVoted) {
+      return res.status(409).json({ success: false, message: 'Ya votaste para remover este reporte' });
+    }
+
+    report.dismissals += 1;
+    report.dismissedBy.push({ userId: req.user._id, reason });
+
+    // Auto-remove if threshold reached
+    if (report.dismissals >= Report.DISMISS_THRESHOLD) {
+      report.status = 'dismissed';
+      report.removeReason = `Removido por comunidad (${report.dismissals} votos)`;
+    }
+
+    await report.save();
+
+    const remaining = Math.max(0, Report.DISMISS_THRESHOLD - report.dismissals);
+
+    res.json({
+      success: true,
+      message: report.status === 'dismissed'
+        ? '🗑️ Reporte removido por la comunidad'
+        : `📊 Voto registrado. Faltan ${remaining} para remover.`,
+      data: {
+        dismissals: report.dismissals,
+        status: report.status,
+        remaining,
+      },
+    });
+  } catch (error) {
+    console.error('Error al votar dismiss:', error);
+    res.status(500).json({ success: false, message: 'Error al procesar el voto' });
+  }
+}
+
+/**
+ * GET /api/reports/affected/:routeId
+ * ¿Esta ruta tiene reportes activos? Retorna los reportes.
+ */
+async function getAffectedReports(req, res) {
+  try {
+    const reports = await Report.find({
+      routeId: req.params.id,
+      status: 'active',
+      expiresAt: { $gt: new Date() },
+    })
+    .select('type description routeName routeCodigo userName confirmations dismissals createdAt expiresAt')
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .lean();
+
+    const enriched = reports.map(r => ({
+      ...r,
+      ...(TYPE_META[r.type] || TYPE_META.otro),
+      minutesAgo: Math.round((Date.now() - new Date(r.createdAt).getTime()) / 60000),
+    }));
+
+    res.json({ success: true, count: enriched.length, data: enriched });
+  } catch (error) {
+    console.error('Error affected reports:', error);
+    res.status(500).json({ success: false, message: 'Error' });
+  }
+}
+
+/**
  * GET /api/reports/types
- * Tipos de reporte disponibles con metadatos.
  */
 async function getReportTypes(req, res) {
   const types = Report.REPORT_TYPES.map(id => ({
-    id,
-    ...(TYPE_META[id] || TYPE_META.otro),
+    id, ...(TYPE_META[id] || TYPE_META.otro),
   }));
-  res.json({ success: true, data: types });
+  const reasons = Report.DISMISS_REASONS.map(id => ({
+    id, label: DISMISS_LABELS[id] || id,
+  }));
+  res.json({ success: true, data: types, dismissReasons: reasons });
 }
 
-module.exports = { createReport, getActiveReports, confirmReport, getReportTypes };
+// ============================================
+// ADMIN ENDPOINTS
+// ============================================
+
+/**
+ * GET /api/reports/admin?status=active&type=desvio&page=1
+ * Lista paginada de reportes para el panel admin.
+ */
+async function adminGetReports(req, res) {
+  try {
+    const { status, type, page = 1 } = req.query;
+    const limit = 20;
+    const skip = (parseInt(page) - 1) * limit;
+
+    const filter = {};
+    if (status && status !== 'all') filter.status = status;
+    if (type && type !== 'all') filter.type = type;
+
+    const [reports, total] = await Promise.all([
+      Report.find(filter)
+        .select('type description location locationName routeId routeName routeCodigo userName userId confirmations dismissals status removeReason createdAt expiresAt')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Report.countDocuments(filter),
+    ]);
+
+    const enriched = reports.map(r => ({
+      ...r,
+      ...(TYPE_META[r.type] || TYPE_META.otro),
+      isExpired: new Date(r.expiresAt) < new Date(),
+      minutesAgo: Math.round((Date.now() - new Date(r.createdAt).getTime()) / 60000),
+    }));
+
+    // Stats summary
+    const stats = await Report.aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+    ]);
+
+    res.json({
+      success: true,
+      data: enriched,
+      total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+      stats: stats.reduce((acc, s) => { acc[s._id] = s.count; return acc; }, {}),
+    });
+  } catch (error) {
+    console.error('Error admin reports:', error);
+    res.status(500).json({ success: false, message: 'Error al obtener reportes' });
+  }
+}
+
+/**
+ * DELETE /api/reports/admin/:id
+ * Admin elimina un reporte con razón.
+ */
+async function adminDeleteReport(req, res) {
+  try {
+    const { reason } = req.body;
+
+    const report = await Report.findById(req.params.id);
+    if (!report) {
+      return res.status(404).json({ success: false, message: 'Reporte no encontrado' });
+    }
+
+    report.status = 'admin_removed';
+    report.removedBy = req.user._id;
+    report.removeReason = reason || 'Removido por administrador';
+    await report.save();
+
+    res.json({
+      success: true,
+      message: '🗑️ Reporte removido por admin',
+    });
+  } catch (error) {
+    console.error('Error admin delete report:', error);
+    res.status(500).json({ success: false, message: 'Error al eliminar reporte' });
+  }
+}
+
+module.exports = {
+  createReport, getActiveReports, confirmReport, dismissReport,
+  getReportTypes, getAffectedReports, adminGetReports, adminDeleteReport,
+};

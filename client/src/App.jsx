@@ -336,6 +336,7 @@ export default function App() {
           onPinModeChange={setPinMode}
           onPreviewOriginChange={setPreviewOrigin}
           onPreviewDestinationChange={setPreviewDestination}
+          activeReports={activeReports}
         />
 
         {/* Dark overlay behind sidebar on mobile */}
