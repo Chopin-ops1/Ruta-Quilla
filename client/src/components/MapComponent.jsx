@@ -536,6 +536,7 @@ export default function MapComponent({
   previewDestination,
   onMapClick,
   activeReports = [],
+  onReportClick,
 }) {
   const { isPremium } = useAuth();
 
@@ -966,44 +967,17 @@ export default function MapComponent({
               position={[coord[1], coord[0]]}
               icon={L.divIcon({
                 className: '',
-                html: `<div style="width:32px;height:32px;border-radius:50%;background:${report.color || '#F59E0B'};border:2px solid rgba(255,255,255,0.8);display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 10px rgba(0,0,0,0.4);animation:pulse 2s ease-in-out infinite">${report.emoji || '⚠️'}</div>`,
+                html: `<div style="width:32px;height:32px;border-radius:50%;background:${report.color || '#F59E0B'};border:2px solid rgba(255,255,255,0.8);display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 10px rgba(0,0,0,0.4);animation:pulse 2s ease-in-out infinite;cursor:pointer">${report.emoji || '⚠️'}</div>`,
                 iconSize: [32, 32],
                 iconAnchor: [16, 16],
               })}
-            >
-              <Popup>
-                <div style={{ minWidth: 200, maxWidth: 260 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                    <span style={{ fontSize: 18 }}>{report.emoji}</span>
-                    <strong style={{ fontSize: 13 }}>{report.label}</strong>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                    {report.routeCodigo && (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: '#F59E0B', background: 'rgba(245,158,11,0.15)', padding: '2px 6px', borderRadius: 4 }}>
-                        {report.routeCodigo}
-                      </span>
-                    )}
-                    <span style={{ fontSize: 11, color: '#1E293B' }}>🚌 {report.routeName}</span>
-                  </div>
-                  {report.description && (
-                    <p style={{ fontSize: 12, color: '#64748B', margin: '0 0 4px' }}>{report.description}</p>
-                  )}
-                  <div style={{ fontSize: 11, color: '#475569', display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <span>👤 {report.userName}</span>
-                    <span>⏰ hace {report.minutesAgo || '?'} min</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, fontSize: 10, marginBottom: 8 }}>
-                    {report.confirmations > 0 && (
-                      <span style={{ color: '#10B981' }}>✅ {report.confirmations} conf.</span>
-                    )}
-                    {report.dismissals > 0 && (
-                      <span style={{ color: '#F59E0B' }}>👎 {report.dismissals}/3 votos</span>
-                    )}
-                    <span style={{ color: '#94A3B8' }}>⏳ {report.minutesLeft || '?'} min restantes</span>
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
+              eventHandlers={{
+                click: (e) => {
+                  e.originalEvent?.stopPropagation?.();
+                  onReportClick?.(report);
+                },
+              }}
+            />
           );
         })}
 

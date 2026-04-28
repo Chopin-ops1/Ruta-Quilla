@@ -27,6 +27,7 @@ import MapQuickBar from './components/MapQuickBar';
 import RouteResultBar from './components/RouteResultBar';
 import IncidentReporter from './components/IncidentReporter';
 import CommunityHub from './components/CommunityHub';
+import ReportActionPanel from './components/ReportActionPanel';
 
 // Lazy load AdminPanel — only downloaded when admin navigates to /admin
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
@@ -93,6 +94,7 @@ export default function App() {
   // ---- Community state ----
   const [showCommunity, setShowCommunity] = useState(false);
   const [activeReports, setActiveReports] = useState([]);
+  const [selectedReport, setSelectedReport] = useState(null);
 
   const { isPremium, isAuthenticated, isAdmin, canNavigate, incrementUsage, remainingFreeSearches } = useAuth();
 
@@ -396,6 +398,7 @@ export default function App() {
                 setPreviewDestination({ ...coords });
               }}
               activeReports={activeReports}
+              onReportClick={setSelectedReport}
             />
           )}
         </main>
@@ -450,6 +453,15 @@ export default function App() {
         userPosition={userPosition}
         onReportCreated={loadActiveReports}
       />
+
+      {/* Report Action Panel (confirm / dismiss) */}
+      {selectedReport && (
+        <ReportActionPanel
+          report={selectedReport}
+          onClose={() => setSelectedReport(null)}
+          onActionDone={loadActiveReports}
+        />
+      )}
 
       {/* Community toggle button */}
       <button
