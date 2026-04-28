@@ -2,17 +2,19 @@
  * RutaQuilla - Community Routes
  * 
  * Rutas del sistema comunitario Quilla XP.
- * El leaderboard y la info de niveles son públicos.
+ * El leaderboard, feed y perfiles públicos no requieren auth.
  * El perfil propio requiere autenticación.
  */
 const express = require('express');
 const router = express.Router();
-const { getLeaderboard, getMyProfile, getLevelsInfo } = require('../controllers/communityController');
+const { getLeaderboard, getMyProfile, getLevelsInfo, getPublicProfile, getActivityFeed } = require('../controllers/communityController');
 const { verifyToken } = require('../middleware/authMiddleware');
 
 // Públicos — no requieren token
 router.get('/leaderboard', getLeaderboard);
 router.get('/levels', getLevelsInfo);
+router.get('/feed', getActivityFeed);
+router.get('/user/:id', getPublicProfile);
 
 // Privado — requiere token JWT
 router.get('/me', verifyToken, getMyProfile);

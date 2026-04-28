@@ -535,6 +535,7 @@ export default function MapComponent({
   previewOrigin,
   previewDestination,
   onMapClick,
+  activeReports = [],
 }) {
   const { isPremium } = useAuth();
 
@@ -955,6 +956,47 @@ export default function MapComponent({
             )}
           </>
         )}
+        {/* ======= INCIDENT REPORT MARKERS ======= */}
+        {activeReports.map(report => {
+          const coord = report.location?.coordinates;
+          if (!coord || coord.length < 2) return null;
+          return (
+            <Marker
+              key={report._id}
+              position={[coord[1], coord[0]]}
+              icon={L.divIcon({
+                className: '',
+                html: `<div style="width:32px;height:32px;border-radius:50%;background:${report.color || '#F59E0B'};border:2px solid rgba(255,255,255,0.8);display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 10px rgba(0,0,0,0.4);animation:pulse 2s ease-in-out infinite">${report.emoji || '⚠️'}</div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16],
+              })}
+            >
+              <Popup>
+                <div style={{ minWidth: 180 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    <span style={{ fontSize: 18 }}>{report.emoji}</span>
+                    <strong style={{ fontSize: 13 }}>{report.label}</strong>
+                  </div>
+                  {report.description && (
+                    <p style={{ fontSize: 12, color: '#64748B', margin: '0 0 4px' }}>{report.description}</p>
+                  )}
+                  {report.routeName && (
+                    <p style={{ fontSize: 11, color: '#94A3B8', margin: '0 0 4px' }}>🚌 Ruta: {report.routeName}</p>
+                  )}
+                  <div style={{ fontSize: 11, color: '#475569', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>👤 {report.userName}</span>
+                    <span>⏰ hace {report.minutesAgo || '?'} min</span>
+                  </div>
+                  {report.confirmations > 0 && (
+                    <p style={{ fontSize: 10, color: '#10B981', marginTop: 4 }}>
+                      ✅ {report.confirmations} confirmaci{report.confirmations === 1 ? 'ón' : 'ones'}
+                    </p>
+                  )}
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
 
         {/* ======= SPONSORED MARKERS ======= */}
         {!isPremium && sponsoredLocations.map(sponsor => (

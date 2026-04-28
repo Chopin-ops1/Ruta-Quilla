@@ -235,6 +235,18 @@ userSchema.methods.awardXP = async function(amount) {
 
   await this.save();
 
+  // Sprint 3: Email de incentivo al alcanzar 500 XP (Quilla Builder)
+  if (newBadges.includes('quilla_builder')) {
+    try {
+      const { sendQuillaBuilderEmail } = require('../services/emailService');
+      if (typeof sendQuillaBuilderEmail === 'function') {
+        sendQuillaBuilderEmail(this.email, this.name).catch(e =>
+          console.warn('Email Quilla Builder no enviado:', e.message)
+        );
+      }
+    } catch (_) { /* emailService may not have this function yet */ }
+  }
+
   return {
     newBadges,
     levelUp: this.level > previousLevel,

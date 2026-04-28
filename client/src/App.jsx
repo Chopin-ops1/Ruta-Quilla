@@ -14,7 +14,7 @@
 
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useAuth } from './context/AuthContext';
-import { routesAPI, mapsAPI } from './services/api';
+import { routesAPI, mapsAPI, reportAPI } from './services/api';
 import { getCurrentPosition } from './services/gpsService';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -25,6 +25,8 @@ import LegalPages from './components/LegalPages';
 import CookieConsent from './components/CookieConsent';
 import MapQuickBar from './components/MapQuickBar';
 import RouteResultBar from './components/RouteResultBar';
+import IncidentReporter from './components/IncidentReporter';
+import CommunityHub from './components/CommunityHub';
 
 // Lazy load AdminPanel — only downloaded when admin navigates to /admin
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
@@ -88,6 +90,10 @@ export default function App() {
   const [userPosition, setUserPosition] = useState(null);
   const [gpsTrack, setGpsTrack] = useState([]);
 
+  // ---- Community state ----
+  const [showCommunity, setShowCommunity] = useState(false);
+  const [activeReports, setActiveReports] = useState([]);
+
   const { isPremium, isAuthenticated, isAdmin, canNavigate, incrementUsage, remainingFreeSearches } = useAuth();
 
   // Navigate to admin panel
@@ -149,6 +155,22 @@ export default function App() {
     }
     loadSponsors();
   }, [isPremium]);
+
+  // Load active reports (incidents on the map)
+  const loadActiveReports = useCallback(async () => {
+    try {
+      const lat = userPosition?.lat || 10.9685;
+      const lng = userPosition?.lng || -74.7813;
+      const res = await reportAPI.getActive(lat, lng, 8000);
+      setActiveReports(res.data || []);
+    } catch (e) { console.warn('Reports load error:', e); }
+  }, [userPosition]);
+
+  useEffect(() => {
+    loadActiveReports();
+    const interval = setInterval(loadActiveReports, 60000); // Refresh every 1 min
+    return () => clearInterval(interval);
+  }, [loadActiveReports]);
 
   /**
    * Navigate: search for route options between origin and destination.
@@ -372,6 +394,7 @@ export default function App() {
                 setDestFromMap({ ...coords, _t: Date.now() });
                 setPreviewDestination({ ...coords });
               }}
+              activeReports={activeReports}
             />
           )}
         </main>
@@ -419,6 +442,46 @@ export default function App() {
         selectedOptionIdx={selectedOptionIdx}
         onSelectOptionIdx={handleSelectOptionIdx}
         onClear={handleClearNavigation}
+      />
+
+      {/* Incident Reporter (floating button + modal) */}
+      <IncidentReporter
+        userPosition={userPosition}
+        onReportCreated={loadActiveReports}
+      />
+
+      {/* Community toggle button */}
+      <button
+        onClick={() => setShowCommunity(true)}
+        style={{
+          position: 'fixed',
+          bottom: 80,
+          right: 74,
+          zIndex: 1100,
+          width: 50,
+          height: 50,
+          borderRadius: '50%',
+          border: 'none',
+          background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)',
+          boxShadow: '0 4px 20px rgba(139,92,246,0.4)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 20,
+          transition: 'transform 0.2s',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+        title="Comunidad Quilla"
+      >
+        🏆
+      </button>
+
+      {/* Community Hub (ranking + feed + profile) */}
+      <CommunityHub
+        isOpen={showCommunity}
+        onClose={() => setShowCommunity(false)}
       />
       </>
       )}

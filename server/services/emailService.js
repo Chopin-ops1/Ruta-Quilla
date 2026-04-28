@@ -170,8 +170,70 @@ async function verifyConnection() {
   }
 }
 
+/**
+ * Envía email de felicitación al alcanzar 500 XP (Quilla Builder).
+ * Incluye incentivo para apoyar el proyecto.
+ */
+async function sendQuillaBuilderEmail(to, userName) {
+  const mailOptions = {
+    from: `"RutaQuilla" <${process.env.ZOHO_EMAIL}>`,
+    to,
+    subject: `⚡ ¡${userName}, alcanzaste Quilla Builder! — RutaQuilla`,
+    html: `
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#0B1120;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0B1120;min-height:100vh;">
+    <tr><td align="center" style="padding:40px 16px;">
+      <table role="presentation" width="100%" style="max-width:480px;border-radius:24px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+        <tr><td style="height:4px;background:linear-gradient(90deg,#F59E0B,#06B6D4,#8B5CF6);"></td></tr>
+        <tr><td style="background:linear-gradient(145deg,#111827,#0B1120);padding:40px 36px;">
+          <div style="text-align:center;margin-bottom:28px;">
+            <div style="display:inline-block;width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#F59E0B,#D97706);text-align:center;line-height:64px;font-size:30px;box-shadow:0 8px 24px rgba(245,158,11,0.35);">⚡</div>
+          </div>
+          <h1 style="margin:0 0 8px;text-align:center;font-size:24px;font-weight:700;color:#F1F5F9;">¡Eres Quilla Builder!</h1>
+          <p style="margin:0 0 20px;text-align:center;font-size:14px;color:#64748B;line-height:1.6;">
+            <strong style="color:#F59E0B;">${userName}</strong>, alcanzaste <strong style="color:#F59E0B;">500 XP</strong> contribuyendo a la comunidad de transporte de Barranquilla.
+          </p>
+          <div style="background:rgba(245,158,11,0.06);border:2px solid rgba(245,158,11,0.2);border-radius:16px;padding:24px;text-align:center;margin-bottom:24px;">
+            <p style="margin:0 0 8px;font-size:28px;">🏆</p>
+            <p style="margin:0;font-size:14px;color:#E2E8F0;font-weight:600;">Has desbloqueado la insignia</p>
+            <p style="margin:4px 0 0;font-size:16px;color:#F59E0B;font-weight:700;">⚡ Quilla Builder</p>
+          </div>
+          <p style="margin:0 0 20px;font-size:13px;color:#94A3B8;text-align:center;line-height:1.6;">
+            Gracias a personas como tú, RutaQuilla está construyendo el mapa de transporte público más completo de Barranquilla. 🇨🇴
+          </p>
+          <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:12px;padding:16px;text-align:center;">
+            <p style="margin:0 0 6px;font-size:12px;color:#8B5CF6;font-weight:600;">¿Quieres apoyar el proyecto?</p>
+            <p style="margin:0;font-size:11px;color:#64748B;">Como Quilla Builder, tienes un <strong style="color:#F59E0B;">30% de descuento</strong> en Quilla-Pass. Contacta al equipo para activarlo.</p>
+          </div>
+        </td></tr>
+        <tr><td style="background:rgba(255,255,255,0.02);padding:20px 36px;border-top:1px solid rgba(255,255,255,0.06);">
+          <p style="margin:0;text-align:center;font-size:11px;color:#334155;"><strong style="color:#475569;">RutaQuilla</strong> — Transporte inteligente para Barranquilla 🇨🇴</p>
+        </td></tr>
+        <tr><td style="height:3px;background:linear-gradient(90deg,#F59E0B,#06B6D4,#8B5CF6);"></td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+    text: `¡Felicidades ${userName}! Alcanzaste 500 XP en RutaQuilla y desbloqueaste la insignia Quilla Builder. Gracias por contribuir al transporte público de Barranquilla.`,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`⚡ Email Quilla Builder enviado a ${to} (${info.messageId})`);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Error enviando email Quilla Builder:', error.message);
+    throw error;
+  }
+}
+
 module.exports = {
   generateVerificationCode,
   sendVerificationEmail,
+  sendQuillaBuilderEmail,
   verifyConnection,
 };

@@ -293,14 +293,22 @@ export const adminAPI = {
 
 // ---- Community (Quilla XP) ----
 export const communityAPI = {
-  /** Top contribuidores (público) */
   getLeaderboard: (limit = 10) => apiRequest(`/community/leaderboard?limit=${limit}`),
-
-  /** Perfil XP del usuario autenticado */
   getProfile: () => apiRequest('/community/me'),
-
-  /** Tabla de niveles e insignias disponibles */
   getLevels: () => apiRequest('/community/levels'),
+  getPublicProfile: (id) => apiRequest(`/community/user/${id}`),
+  getFeed: (limit = 20) => apiRequest(`/community/feed?limit=${limit}`),
 };
 
-export default { routesAPI, usersAPI, mapsAPI, healthAPI, adminAPI, communityAPI };
+// ---- Reports (Incidencias en tiempo real) ----
+export const reportAPI = {
+  create: (data) => apiRequest('/reports', { method: 'POST', body: JSON.stringify(data) }),
+  getActive: (lat, lng, radius = 5000) => {
+    const params = lat && lng ? `?lat=${lat}&lng=${lng}&radius=${radius}` : '';
+    return apiRequest(`/reports/active${params}`);
+  },
+  confirm: (id) => apiRequest(`/reports/${id}/confirm`, { method: 'POST' }),
+  getTypes: () => apiRequest('/reports/types'),
+};
+
+export default { routesAPI, usersAPI, mapsAPI, healthAPI, adminAPI, communityAPI, reportAPI };

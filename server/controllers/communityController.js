@@ -132,4 +132,115 @@ async function getLevelsInfo(req, res) {
   }
 }
 
-module.exports = { getLeaderboard, getMyProfile, getLevelsInfo };
+/**
+ * GET /api/community/user/:id
+ * Perfil público de cualquier usuario (solo info comunitaria).
+ */
+async function getPublicProfile(req, res) {
+  try {
+    const { XP_LEVELS, BADGE_DEFINITIONS } = User;
+
+    const user = await User.findById(req.params.id)
+      .select('name avatar xp level badges contributions createdAt')
+      .lean();
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    }
+
+    const rank = await User.countDocuments({ xp: { $gt: user.xp || 0 } }) + 1;
+    const levelInfo = XP_LEVELS.find(l => l.level === (user.level || 1)) || XP_LEVELS[0];
+
+    const badgesDetail = (user.badges || []).map(id => {
+      const def = BADGE_DEFINITIONS.find(b => b.id === id);
+      return def || { id, label: id, desc: '', xpBonus: 0 };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        _id: user._id,
+        name: user.name,
+        avatar: user.avatar || '',
+        xp: user.xp || 0,
+        level: user.level || 1,
+        levelName: levelInfo.name,
+        levelColor: levelInfo.color,
+        contributions: user.contributions || 0,
+        rank,
+        badges: badgesDetail,
+        memberSince: user.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error('Error en perfil público:', error);
+    res.status(500).json({ success: false, message: 'Error al obtener el perfil' });
+  }
+}
+
+/**
+ * GET /api/community/feed?limit=20
+ * Feed de actividad reciente: reportes + capturas aprobadas.
+ * Público.
+ */
+async function getActivityFeed(req, res) {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 20, 50);
+    const feed = [];
+
+    // Recent reports (active)
+    const Report = require('../models/ReportModel');
+    const reports = await Report.find({ expiresAt: { $gt: new Date() } })
+      .select('type description locationName routeName userName confirmations createdAt')
+      .sort({ createdAt: -1 })
+      .limit(Math.ceil(limit / 2))
+      .lean();
+
+    for (const r of reports) {
+      const typeLabels = {
+        desvio: '🔀 Desvío', cancelada: '🚫 Cancelada', trafico: '🚗 Tráfico',
+        peligro: '⚠️ Peligro', inundacion: '🌊 Inundación', accidente: '💥 Accidente', otro: '📌 Otro',
+      };
+      feed.push({
+        feedType: 'report',
+        icon: '📡',
+        text: `${r.userName} reportó: ${typeLabels[r.type] || r.type}`,
+        detail: r.description || r.locationName || '',
+        confirmations: r.confirmations,
+        createdAt: r.createdAt,
+      });
+    }
+
+    // Recent approved captures
+    const CapturedRoute = require('../models/CapturedRouteModel');
+    const captures = await CapturedRoute.find({ status: 'approved' })
+      .select('routeName company userName createdAt')
+      .sort({ createdAt: -1 })
+      .limit(Math.ceil(limit / 2))
+      .lean();
+
+    for (const c of captures) {
+      feed.push({
+        feedType: 'capture',
+        icon: '🗺️',
+        text: `${c.userName} capturó la ruta ${c.routeName}`,
+        detail: c.company || '',
+        createdAt: c.createdAt,
+      });
+    }
+
+    // Sort by date descending and limit
+    feed.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.json({
+      success: true,
+      count: Math.min(feed.length, limit),
+      data: feed.slice(0, limit),
+    });
+  } catch (error) {
+    console.error('Error en feed:', error);
+    res.status(500).json({ success: false, message: 'Error al obtener el feed' });
+  }
+}
+
+module.exports = { getLeaderboard, getMyProfile, getLevelsInfo, getPublicProfile, getActivityFeed };
