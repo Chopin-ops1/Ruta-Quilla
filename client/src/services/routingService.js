@@ -372,54 +372,105 @@ export async function snapToRoads(points, interpolate = true) {
 }
 
 /**
- * OSRM fallback for snap-to-roads: Snaps points to nearest road segments.
- * Uses overview=false to avoid routing detours, returning just the snapped points.
+ * OSRM fallback for snap-to-roads using the /match API (map matching).
+ *
+ * Unlike /route which finds the "fastest path" between points (and detours
+ * through parallel streets), /match takes a GPS trace and aligns it to the
+ * most likely road segments that were actually traversed.
+ *
+ * - Uses a tight 25m radius so it only snaps to nearby roads
+ * - Returns the full matched geometry that follows the actual street
+ * - Chunks in groups of 50 with 2-point overlap for continuity
  */
 async function snapToRoadsOSRM(points) {
   if (!points || points.length === 0) return points;
   if (points.length === 1) return points;
 
   try {
-    const chunkSize = 100;
-    const allSnapped = [];
+    const chunkSize = 50;
+    const overlap = 2;
+    const allSnappedCoords = [];
 
-    for (let i = 0; i < points.length; i += chunkSize) {
+    for (let i = 0; i < points.length; i += (chunkSize - overlap)) {
       const chunk = points.slice(i, Math.min(i + chunkSize, points.length));
-      
-      // Route API requires at least 2 coordinates. If only 1 left, use nearest.
-      if (chunk.length === 1) {
+      if (chunk.length < 2) {
+        // Single leftover point — snap with /nearest
         try {
           const url = `${OSRM_BASE}/nearest/v1/driving/${chunk[0].lng},${chunk[0].lat}?number=1`;
           const res = await fetch(url);
           const data = await res.json();
-          if (data.code === 'Ok' && data.waypoints?.length > 0) {
-            allSnapped.push({ lat: data.waypoints[0].location[1], lng: data.waypoints[0].location[0] });
+          if (data.code === 'Ok' && data.waypoints?.[0]) {
+            allSnappedCoords.push({ lat: data.waypoints[0].location[1], lng: data.waypoints[0].location[0] });
           } else {
-            allSnapped.push(chunk[0]);
+            allSnappedCoords.push(chunk[0]);
           }
-        } catch (e) {
-          allSnapped.push(chunk[0]);
+        } catch (_) {
+          allSnappedCoords.push(chunk[0]);
         }
-        continue;
+        break;
       }
 
       const coords = chunk.map(p => `${p.lng},${p.lat}`).join(';');
-      const url = `${OSRM_BASE}/route/v1/driving/${coords}?overview=false`;
-      
+      const radiuses = chunk.map(() => '25').join(';');
+      const url = `${OSRM_BASE}/match/v1/driving/${coords}?overview=full&geometries=geojson&radiuses=${radiuses}&tidy=true`;
+
       const res = await fetch(url);
       const data = await res.json();
-      
-      if (data.code === 'Ok' && data.waypoints?.length) {
-        allSnapped.push(...data.waypoints.map(w => ({ lat: w.location[1], lng: w.location[0] })));
+
+      if (data.code === 'Ok' && data.matchings?.length > 0) {
+        // Collect geometry coordinates from all matchings
+        for (const matching of data.matchings) {
+          const geomCoords = matching.geometry?.coordinates || [];
+          // Convert from [lng, lat] to {lat, lng}
+          const converted = geomCoords.map(c => ({ lat: c[1], lng: c[0] }));
+
+          if (allSnappedCoords.length > 0 && converted.length > 0) {
+            // Skip first few points if they overlap with previous chunk
+            // Find where the overlap ends by checking distance to last point
+            const lastPt = allSnappedCoords[allSnappedCoords.length - 1];
+            let startIdx = 0;
+            for (let j = 0; j < Math.min(converted.length, 10); j++) {
+              const dist = haversineM(lastPt.lat, lastPt.lng, converted[j].lat, converted[j].lng);
+              if (dist < 5) {
+                startIdx = j + 1;
+                break;
+              }
+            }
+            allSnappedCoords.push(...converted.slice(startIdx));
+          } else {
+            allSnappedCoords.push(...converted);
+          }
+        }
       } else {
-        // Fallback to original points if this chunk fails
-        allSnapped.push(...chunk);
+        // /match failed for this chunk — fallback to /route with overview=full
+        // to at least get road-following geometry
+        try {
+          const routeUrl = `${OSRM_BASE}/route/v1/driving/${coords}?overview=full&geometries=geojson`;
+          const routeRes = await fetch(routeUrl);
+          const routeData = await routeRes.json();
+          if (routeData.code === 'Ok' && routeData.routes?.[0]?.geometry?.coordinates?.length) {
+            const geomCoords = routeData.routes[0].geometry.coordinates;
+            const converted = geomCoords.map(c => ({ lat: c[1], lng: c[0] }));
+            if (allSnappedCoords.length > 0 && converted.length > 0) {
+              allSnappedCoords.push(...converted.slice(1));
+            } else {
+              allSnappedCoords.push(...converted);
+            }
+          } else {
+            allSnappedCoords.push(...chunk);
+          }
+        } catch (_) {
+          allSnappedCoords.push(...chunk);
+        }
       }
+
+      // If this chunk reached the end of points, stop
+      if (i + chunkSize >= points.length) break;
     }
-    
-    return allSnapped;
+
+    return allSnappedCoords.length > 0 ? allSnappedCoords : points;
   } catch (err) {
-    console.warn('OSRM snap fallback also failed:', err);
+    console.warn('OSRM snap (match) fallback failed:', err);
   }
 
   return points;

@@ -199,6 +199,16 @@ body {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
+/* Live navigation: pulsing red border for alight alert */
+@keyframes pulse-border {
+  0%, 100% { border-color: rgba(239, 68, 68, 0.5); box-shadow: 0 8px 32px rgba(239,68,68,0.2); }
+  50% { border-color: rgba(239, 68, 68, 1); box-shadow: 0 8px 32px rgba(239,68,68,0.5); }
+}
+
+.animate-pulse-border {
+  animation: pulse-border 1.2s ease-in-out infinite;
+}
+
 /* ---- Leaflet Overrides ---- */
 .leaflet-container {
   width: 100%;

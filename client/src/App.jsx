@@ -28,6 +28,7 @@ import RouteResultBar from './components/RouteResultBar';
 import IncidentReporter from './components/IncidentReporter';
 import CommunityHub from './components/CommunityHub';
 import ReportActionPanel from './components/ReportActionPanel';
+import LiveNavigation from './components/LiveNavigation';
 
 // Lazy load AdminPanel — only downloaded when admin navigates to /admin
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
@@ -95,6 +96,10 @@ export default function App() {
   const [showCommunity, setShowCommunity] = useState(false);
   const [activeReports, setActiveReports] = useState([]);
   const [selectedReport, setSelectedReport] = useState(null);
+
+  // ---- Live Navigation state ----
+  const [liveNavOption, setLiveNavOption] = useState(null);
+  const [liveNavPhase, setLiveNavPhase] = useState(null);
 
   const { isPremium, isAuthenticated, isAdmin, canNavigate, incrementUsage, remainingFreeSearches } = useAuth();
 
@@ -225,6 +230,22 @@ export default function App() {
     setPreviewOrigin(null);
     setPreviewDestination(null);
     setPinMode(null);
+  }, []);
+
+  /**
+   * Start live navigation with a selected route option.
+   */
+  const handleStartLiveNav = useCallback((option) => {
+    setLiveNavOption(option);
+    setLiveNavPhase(null);
+    setMenuOpen(false);
+    // GPS tracking will be handled by the LiveNavigation component
+    // via the existing userPosition updates
+  }, []);
+
+  const handleCancelLiveNav = useCallback(() => {
+    setLiveNavOption(null);
+    setLiveNavPhase(null);
   }, []);
 
   /**
@@ -441,18 +462,35 @@ export default function App() {
       />
 
       {/* Route result bar (replaces MapQuickBar when results exist) */}
-      <RouteResultBar
-        navigationResult={navigationResult}
-        selectedOptionIdx={selectedOptionIdx}
-        onSelectOptionIdx={handleSelectOptionIdx}
-        onClear={handleClearNavigation}
-      />
+      {!liveNavOption && (
+        <RouteResultBar
+          navigationResult={navigationResult}
+          selectedOptionIdx={selectedOptionIdx}
+          onSelectOptionIdx={handleSelectOptionIdx}
+          onClear={handleClearNavigation}
+          onStartLiveNav={handleStartLiveNav}
+        />
+      )}
 
-      {/* Incident Reporter (floating button + modal) */}
-      <IncidentReporter
-        userPosition={userPosition}
-        onReportCreated={loadActiveReports}
-      />
+      {/* Live Navigation overlay */}
+      {liveNavOption && navigationResult && (
+        <LiveNavigation
+          navigationOption={liveNavOption}
+          origin={navigationResult.origin}
+          destination={navigationResult.destination}
+          userPosition={userPosition}
+          onCancel={handleCancelLiveNav}
+          onPhaseChange={setLiveNavPhase}
+        />
+      )}
+
+      {/* Incident Reporter (floating button + modal) — hidden during live nav */}
+      {!liveNavOption && (
+        <IncidentReporter
+          userPosition={userPosition}
+          onReportCreated={loadActiveReports}
+        />
+      )}
 
       {/* Report Action Panel (confirm / dismiss) */}
       {selectedReport && (
@@ -463,7 +501,8 @@ export default function App() {
         />
       )}
 
-      {/* Community toggle button */}
+      {/* Community toggle button — hidden during live nav */}
+      {!liveNavOption && (
       <button
         onClick={() => setShowCommunity(true)}
         style={{
@@ -490,6 +529,7 @@ export default function App() {
       >
         🏆
       </button>
+      )}
 
       {/* Community Hub (ranking + feed + profile) */}
       <CommunityHub

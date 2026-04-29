@@ -22,6 +22,7 @@ export default function RouteResultBar({
   selectedOptionIdx = 0,
   onSelectOptionIdx,
   onClear,
+  onStartLiveNav,
 }) {
   const [showAll, setShowAll] = useState(false);
   const [expandedStep, setExpandedStep] = useState(null);
@@ -204,6 +205,28 @@ export default function RouteResultBar({
             </span>
           </div>
         </div>
+
+          {/* Start live navigation button */}
+          {onStartLiveNav && (
+            <button
+              onClick={() => onStartLiveNav(selectedOpt)}
+              style={{
+                width: '100%', marginTop: 8, padding: '11px 0',
+                borderRadius: 12, border: 'none',
+                background: 'linear-gradient(135deg, #10B981, #059669)',
+                color: '#fff',
+                fontSize: 13, fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                boxShadow: '0 4px 16px rgba(16,185,129,0.35)',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 24px rgba(16,185,129,0.5)'; }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(16,185,129,0.35)'; }}
+            >
+              <Navigation size={14} /> 🧭 Iniciar Ruta
+            </button>
+          )}
 
         {/* Button: show more options */}
         {options.length > 1 && (

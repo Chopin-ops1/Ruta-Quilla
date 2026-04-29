@@ -26,6 +26,7 @@ export default function MobileRouteResults({
   selectedOptionIdx = 0,
   onSelectOptionIdx,
   onClear,
+  onStartLiveNav,
 }) {
   const [expandedOption, setExpandedOption] = useState(null);
   const [sheetState, setSheetState] = useState('peek'); // 'peek' | 'half' | 'full'
@@ -391,6 +392,25 @@ export default function MobileRouteResults({
                           </div>
                         ))}
                       </div>
+                    )}
+
+                    {/* Live navigation button (inside expanded) */}
+                    {isExpanded && onStartLiveNav && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onStartLiveNav(opt); }}
+                        style={{
+                          width: '100%', marginTop: 8, padding: '10px 0',
+                          borderRadius: 11, border: 'none',
+                          background: 'linear-gradient(135deg, #10B981, #059669)',
+                          color: '#fff',
+                          fontSize: 12, fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                          boxShadow: '0 4px 16px rgba(16,185,129,0.35)',
+                        }}
+                      >
+                        <Navigation size={13} /> 🧭 Iniciar Ruta
+                      </button>
                     )}
 
                     {/* Expand hint */}
