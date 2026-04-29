@@ -19,7 +19,7 @@ import {
   Plus, Trash2, Save, Undo2, ArrowLeft, Route, Bus, Palette,
   MousePointer, MapPin, Zap, CheckCircle2, AlertTriangle,
   ChevronDown, Edit3, X, RotateCcw, Navigation,
-  LayoutDashboard, Radar, Users, Map
+  LayoutDashboard, Radar, Users, Map, Move
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { routesAPI, adminRoutesAPI } from '../services/api';
@@ -41,10 +41,10 @@ const OPERATOR_COLORS = {
   'Coochofal': '#14B8A6', 'Cootrasol': '#22D3EE', 'La Carolina': '#818CF8',
 };
 
-function createPointIcon(index, color) {
+function createPointIcon(index, color, isDraggable = false) {
   return L.divIcon({
     className: '',
-    html: `<div style="width:22px;height:22px;border-radius:50%;background:${color};border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#000;box-shadow:0 2px 8px rgba(0,0,0,0.4);font-family:Inter,sans-serif">${index + 1}</div>`,
+    html: `<div style="width:22px;height:22px;border-radius:50%;background:${color};border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#000;box-shadow:0 2px 8px rgba(0,0,0,0.4);font-family:Inter,sans-serif;cursor:${isDraggable ? 'grab' : 'default'};transition:transform 0.15s">${index + 1}</div>`,
     iconSize: [22, 22], iconAnchor: [11, 11],
   });
 }
@@ -102,6 +102,18 @@ function RouteEditorTab({ user }) {
     setActivePoints(prev => [...prev, point]);
     if (editMode === 'ida') setSnappedIda([]); else setSnappedRegreso([]);
   }, [editMode, setActivePoints]);
+
+  // Handler for dragging existing points to a new position
+  const handlePointDrag = useCallback((index, direction, newLatLng) => {
+    const setter = direction === 'ida' ? setIdaPoints : setRegresoPoints;
+    setter(prev => {
+      const updated = [...prev];
+      updated[index] = { lat: newLatLng.lat, lng: newLatLng.lng };
+      return updated;
+    });
+    // Invalidate snapped data since raw points changed
+    if (direction === 'ida') setSnappedIda([]); else setSnappedRegreso([]);
+  }, []);
 
   const handleUndo = useCallback(() => {
     setActivePoints(prev => prev.slice(0, -1));
@@ -235,11 +247,11 @@ function RouteEditorTab({ user }) {
           <AdminMapFit points={editMode === 'ida' ? idaPoints : regresoPoints} shouldFit={shouldFitMap} />
           {idaDisplay.length > 1 && <Polyline positions={idaDisplay} pathOptions={{ color: '#2ECC71', weight: 4, opacity: 0.85, dashArray: snappedIda.length > 1 ? null : '8, 8' }} />}
           {regresoDisplay.length > 1 && <Polyline positions={regresoDisplay} pathOptions={{ color: '#E74C3C', weight: 4, opacity: 0.85, dashArray: snappedRegreso.length > 1 ? null : '8, 8' }} />}
-          {editMode === 'ida' && idaPoints.map((p, i) => <Marker key={`ida-${i}`} position={[p.lat, p.lng]} icon={createPointIcon(i, '#2ECC71')} />)}
-          {editMode === 'regreso' && regresoPoints.map((p, i) => <Marker key={`reg-${i}`} position={[p.lat, p.lng]} icon={createPointIcon(i, '#E74C3C')} />)}
+          {editMode === 'ida' && idaPoints.map((p, i) => <Marker key={`ida-${i}`} position={[p.lat, p.lng]} icon={createPointIcon(i, '#2ECC71', true)} draggable={true} eventHandlers={{ dragend: (e) => handlePointDrag(i, 'ida', e.target.getLatLng()) }} />)}
+          {editMode === 'regreso' && regresoPoints.map((p, i) => <Marker key={`reg-${i}`} position={[p.lat, p.lng]} icon={createPointIcon(i, '#E74C3C', true)} draggable={true} eventHandlers={{ dragend: (e) => handlePointDrag(i, 'regreso', e.target.getLatLng()) }} />)}
           {editMode === 'idle' && routes.map(r => { const c = r.ida?.trazado?.coordinates; if (!c?.length) return null; return <Polyline key={r._id} positions={c.map(x => [x[1], x[0]])} pathOptions={{ color: r.color || '#666', weight: 3, opacity: 0.5 }}><Popup><strong>{r.nombre}</strong><br/>{r.operador}</Popup></Polyline>; })}
         </MapContainer>
-        {editMode !== 'idle' && <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '6px 16px', borderRadius: 10, background: editMode === 'ida' ? 'rgba(46,204,113,0.9)' : 'rgba(231,76,60,0.9)', color: '#fff', fontSize: 12, fontWeight: 600, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}><MapPin size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} />{editMode === 'ida' ? 'IDA' : 'VUELTA'} — {activePoints.length} pts</div>}
+        {editMode !== 'idle' && <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, padding: '6px 16px', borderRadius: 10, background: editMode === 'ida' ? 'rgba(46,204,113,0.9)' : 'rgba(231,76,60,0.9)', color: '#fff', fontSize: 12, fontWeight: 600, boxShadow: '0 4px 20px rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', gap: 8 }}><MapPin size={12} />{editMode === 'ida' ? 'IDA' : 'VUELTA'} — {activePoints.length} pts<span style={{ fontSize: 9, opacity: 0.8, display: 'flex', alignItems: 'center', gap: 3, borderLeft: '1px solid rgba(255,255,255,0.3)', paddingLeft: 8 }}><Move size={9} />Arrastra puntos</span></div>}
         {message && <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 1100, padding: '8px 18px', borderRadius: 10, background: message.type === 'error' ? 'rgba(239,68,68,0.9)' : 'rgba(16,185,129,0.9)', color: '#fff', fontSize: 12, fontWeight: 600, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>{message.text}</div>}
       </div>
     </div>
