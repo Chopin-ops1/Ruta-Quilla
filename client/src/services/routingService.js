@@ -372,17 +372,52 @@ export async function snapToRoads(points, interpolate = true) {
 }
 
 /**
- * OSRM fallback for snap-to-roads: routes through the points using driving profile.
+ * OSRM fallback for snap-to-roads: Snaps points to nearest road segments.
+ * Uses overview=false to avoid routing detours, returning just the snapped points.
  */
 async function snapToRoadsOSRM(points) {
-  if (!points || points.length < 2) return points;
+  if (!points || points.length === 0) return points;
+  if (points.length === 1) return points;
 
   try {
-    const latLngs = points.map(p => [p.lat, p.lng]);
-    const result = await getMultiStopRoute(latLngs);
-    if (result.coordinates?.length > 1) {
-      return result.coordinates.map(c => ({ lat: c[0], lng: c[1] }));
+    const chunkSize = 100;
+    const allSnapped = [];
+
+    for (let i = 0; i < points.length; i += chunkSize) {
+      const chunk = points.slice(i, Math.min(i + chunkSize, points.length));
+      
+      // Route API requires at least 2 coordinates. If only 1 left, use nearest.
+      if (chunk.length === 1) {
+        try {
+          const url = `${OSRM_BASE}/nearest/v1/driving/${chunk[0].lng},${chunk[0].lat}?number=1`;
+          const res = await fetch(url);
+          const data = await res.json();
+          if (data.code === 'Ok' && data.waypoints?.length > 0) {
+            allSnapped.push({ lat: data.waypoints[0].location[1], lng: data.waypoints[0].location[0] });
+          } else {
+            allSnapped.push(chunk[0]);
+          }
+        } catch (e) {
+          allSnapped.push(chunk[0]);
+        }
+        continue;
+      }
+
+      const coords = chunk.map(p => `${p.lng},${p.lat}`).join(';');
+      const url = `${OSRM_BASE}/route/v1/driving/${coords}?overview=false`;
+      
+      const res = await fetch(url);
+      const data = await res.json();
+      
+      if (data.code === 'Ok' && data.waypoints?.length) {
+        allSnapped.push(...data.waypoints.map(w => ({ lat: w.location[1], lng: w.location[0] })));
+      } else {
+        // Fallback to original points if this chunk fails
+        allSnapped.push(...chunk);
+      }
     }
+    
+    return allSnapped;
   } catch (err) {
     console.warn('OSRM snap fallback also failed:', err);
   }
