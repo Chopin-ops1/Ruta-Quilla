@@ -60,11 +60,14 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 36, height: 36, borderRadius: 12, flexShrink: 0,
-            background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 60%, #92400E 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            overflow: 'hidden',
             boxShadow: '0 4px 14px rgba(245,158,11,0.4)',
           }}>
-            <Bus size={20} color="#000" strokeWidth={2.5} />
+            <img
+              src="/logo.png"
+              alt="Ruta-Quilla Logo"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
           </div>
           <div>
             <h1 style={{

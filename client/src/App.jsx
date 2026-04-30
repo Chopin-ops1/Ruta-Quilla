@@ -29,6 +29,7 @@ import IncidentReporter from './components/IncidentReporter';
 import CommunityHub from './components/CommunityHub';
 import ReportActionPanel from './components/ReportActionPanel';
 import LiveNavigation from './components/LiveNavigation';
+import SocialBar from './components/SocialBar';
 
 // Lazy load AdminPanel — only downloaded when admin navigates to /admin
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
@@ -536,6 +537,9 @@ export default function App() {
         isOpen={showCommunity}
         onClose={() => setShowCommunity(false)}
       />
+
+      {/* Social media floating bar — hidden during live navigation */}
+      <SocialBar hidden={!!liveNavOption} />
       </>
       )}
     </div>
