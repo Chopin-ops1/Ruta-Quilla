@@ -336,7 +336,7 @@ async function promoteComposite(req, res) {
       'Sobusa': '#EAB308', 'Cootransnorte': '#8B5CF6', 'Embusa': '#EC4899',
       'Flota Angulo': '#F97316', 'Sodis': '#A855F7', 'Lolaya': '#EF4444',
       'Lucero San Felipe': '#F472B6', 'Coochofal': '#14B8A6', 'Cootrasol': '#22D3EE',
-      'La Carolina': '#818CF8',
+      'La Carolina': '#818CF8', 'Excolcar': '#3B82F6',
     };
 
     // Build official route from composite

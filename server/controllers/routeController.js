@@ -676,6 +676,7 @@ function getCompanyColor(company) {
     'Coochofal': '#14B8A6',
     'Cootrasol': '#22D3EE',
     'La Carolina': '#818CF8',
+    'Excolcar': '#3B82F6',
     'Otra': '#6B7280',
   };
   return colors[company] || colors['Otra'];

@@ -51,6 +51,7 @@ const routeSchema = new mongoose.Schema({
     type: String,
     required: [true, 'El nombre de la ruta es obligatorio'],
     trim: true,
+    maxlength: [100, 'El nombre no puede exceder los 100 caracteres'],
   },
   codigo: {
     type: String,
@@ -62,6 +63,7 @@ const routeSchema = new mongoose.Schema({
     required: [true, 'El operador de la ruta es obligatorio'],
     trim: true,
     index: true,
+    maxlength: [100, 'El operador no puede exceder los 100 caracteres'],
   },
   origen: {
     type: String,

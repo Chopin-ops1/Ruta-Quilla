@@ -19,7 +19,7 @@ const COMPANIES = [
   'Sobrusa', 'Coolitoral', 'Transmecar', 'Sobusa',
   'Cootransnorte', 'Embusa', 'Flota Angulo', 'Sodis',
   'Lolaya', 'Lucero San Felipe', 'Coochofal', 'Cootrasol',
-  'La Carolina', 'Alianza', 'Otra',
+  'La Carolina', 'Alianza', 'Excolcar', 'Otra',
 ];
 
 export default function GPSTracker({
@@ -259,9 +259,18 @@ export default function GPSTracker({
                 <label style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8', marginBottom: 4, display: 'block' }}>
                   Empresa de transporte
                 </label>
-                <select value={routeCompany} onChange={e => setRouteCompany(e.target.value)} className="input-field">
+                <select value={COMPANIES.includes(routeCompany) ? routeCompany : 'Otra'} onChange={e => setRouteCompany(e.target.value)} className="input-field" style={{ marginBottom: (!COMPANIES.includes(routeCompany) || routeCompany === 'Otra') ? 8 : 0 }}>
                   {COMPANIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
+                {(!COMPANIES.includes(routeCompany) || routeCompany === 'Otra') && (
+                  <input
+                    type="text"
+                    placeholder="Nombre de la empresa"
+                    value={routeCompany === 'Otra' ? '' : routeCompany}
+                    onChange={e => setRouteCompany(e.target.value)}
+                    className="input-field"
+                  />
+                )}
               </div>
 
               {/* Direction */}

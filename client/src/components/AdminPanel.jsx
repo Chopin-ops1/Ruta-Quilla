@@ -40,6 +40,7 @@ const OPERATOR_COLORS = {
   'Cootransnorte': '#8B5CF6', 'Embusa': '#EC4899', 'Flota Angulo': '#F97316',
   'Sodis': '#A855F7', 'Lolaya': '#EF4444', 'Lucero San Felipe': '#F472B6',
   'Coochofal': '#14B8A6', 'Cootrasol': '#22D3EE', 'La Carolina': '#818CF8',
+  'Excolcar': '#3B82F6',
 };
 
 function createPointIcon(index, color, isDraggable = false) {
@@ -181,12 +182,15 @@ function RouteEditorTab({ user }) {
         </p>
         <input type="text" placeholder="Nombre" value={nombre} onChange={e => setNombre(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: '#F1F5F9', fontSize: 12, outline: 'none' }} />
         <div style={{ display: 'flex', gap: 6 }}>
-          <select value={operador} onChange={e => setOperador(e.target.value)} style={{ flex: 1, padding: '8px', borderRadius: 8, fontSize: 11, background: 'rgba(255,255,255,0.04)', color: '#F1F5F9', border: '1px solid rgba(255,255,255,0.08)', outline: 'none' }}>
+          <select value={Object.keys(OPERATOR_COLORS).includes(operador) ? operador : 'Otra'} onChange={e => setOperador(e.target.value)} style={{ flex: 1, padding: '8px', borderRadius: 8, fontSize: 11, background: 'rgba(255,255,255,0.04)', color: '#F1F5F9', border: '1px solid rgba(255,255,255,0.08)', outline: 'none' }}>
             {Object.keys(OPERATOR_COLORS).map(op => <option key={op} value={op}>{op}</option>)}
             <option value="Otra">Otra</option>
           </select>
           <input type="color" value={color} onChange={e => setColor(e.target.value)} style={{ width: 38, height: 35, borderRadius: 8, border: 'none', cursor: 'pointer', background: 'transparent' }} />
         </div>
+        {(!Object.keys(OPERATOR_COLORS).includes(operador) || operador === 'Otra') && (
+          <input type="text" placeholder="Nombre de la empresa" value={operador === 'Otra' ? '' : operador} onChange={e => setOperador(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: '#F1F5F9', fontSize: 12, outline: 'none' }} />
+        )}
         <div style={{ display: 'flex', gap: 6 }}>
           <input type="number" placeholder="Tarifa" value={fare} onChange={e => setFare(parseInt(e.target.value) || 0)} style={{ flex: 1, padding: '8px', borderRadius: 8, fontSize: 11, background: 'rgba(255,255,255,0.04)', color: '#F1F5F9', border: '1px solid rgba(255,255,255,0.08)', outline: 'none' }} />
           <input type="text" placeholder="Código" value={codigo} onChange={e => setCodigo(e.target.value)} style={{ flex: 1, padding: '8px', borderRadius: 8, fontSize: 11, background: 'rgba(255,255,255,0.04)', color: '#F1F5F9', border: '1px solid rgba(255,255,255,0.08)', outline: 'none' }} />
