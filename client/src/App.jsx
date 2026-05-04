@@ -101,6 +101,9 @@ export default function App() {
   const [liveNavOption, setLiveNavOption] = useState(null);
   const [liveNavPhase, setLiveNavPhase] = useState(null);
 
+  // ---- Capture Config state ----
+  const [showCaptureConfig, setShowCaptureConfig] = useState(false);
+
   const { isPremium, isAuthenticated, isAdmin, canNavigate, incrementUsage, remainingFreeSearches } = useAuth();
 
   // Navigate to admin panel
@@ -294,9 +297,13 @@ export default function App() {
     if (isCapturing) {
       handleCaptureToggle(false);
     } else {
-      setIsCapturing(true);
+      if (!isAuthenticated) {
+        alert('Debes iniciar sesión para capturar rutas');
+        return;
+      }
+      setShowCaptureConfig(true);
     }
-  }, [isCapturing, handleCaptureToggle]);
+  }, [isCapturing, handleCaptureToggle, isAuthenticated]);
 
   const handleOpenLogin = useCallback((reason = null) => {
     setLoginReason(reason);
@@ -430,6 +437,8 @@ export default function App() {
         onCaptureToggle={handleCaptureToggle}
         onPositionUpdate={handlePositionUpdate}
         onTrackUpdate={handleTrackUpdate}
+        showConfigModal={showCaptureConfig}
+        onCloseConfigModal={() => setShowCaptureConfig(false)}
       />
 
       <LoginModal

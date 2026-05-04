@@ -27,6 +27,8 @@ export default function GPSTracker({
   onCaptureToggle,
   onPositionUpdate,
   onTrackUpdate,
+  showConfigModal,
+  onCloseConfigModal,
 }) {
   const { isAuthenticated } = useAuth();
   const [gpsPoints, setGpsPoints] = useState([]);
@@ -34,8 +36,6 @@ export default function GPSTracker({
   const [pointCount, setPointCount] = useState(0);
   const [error, setError] = useState(null);
 
-  // Pre-capture config modal
-  const [showConfig, setShowConfig] = useState(false);
   const [routeName, setRouteName] = useState('');
   const [routeCompany, setRouteCompany] = useState('Sobrusa');
   const [routeDirection, setRouteDirection] = useState('ida');
@@ -66,14 +66,14 @@ export default function GPSTracker({
         setShowSaveDialog(true);
       }
     } else {
-      // Show config first
+      // Show config first (this is handled by App.jsx now, so this might be unused, but kept for compatibility)
       if (!isAuthenticated) {
         alert('Debes iniciar sesión para capturar rutas');
         return;
       }
-      setShowConfig(true);
+      onCloseConfigModal?.(); // Just in case, though it's not the opener
     }
-  }, [isCapturing, onCaptureToggle, isAuthenticated]);
+  }, [isCapturing, onCaptureToggle, isAuthenticated, onCloseConfigModal]);
 
   /**
    * Start GPS capture after config is filled.
@@ -84,7 +84,7 @@ export default function GPSTracker({
       return;
     }
 
-    setShowConfig(false);
+    onCloseConfigModal?.();
     setError(null);
     setGpsPoints([]);
     pointsRef.current = [];
@@ -205,18 +205,18 @@ export default function GPSTracker({
 
   const signal = accuracy ? getSignalQuality(accuracy) : null;
 
-  if (!isCapturing && !showSaveDialog && !showConfig && !collabFeedback) return null;
+  if (!isCapturing && !showSaveDialog && !showConfigModal && !collabFeedback) return null;
 
   return (
     <>
       {/* ======= PRE-CAPTURE CONFIG MODAL ======= */}
-      {showConfig && (
+      {showConfigModal && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowConfig(false)} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => onCloseConfigModal?.()} />
           <div className="relative w-full max-w-sm rounded-2xl p-6 animate-slide-up"
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', boxShadow: '0 25px 60px rgba(0,0,0,0.6)' }}>
 
-            <button onClick={() => setShowConfig(false)} className="absolute top-3 right-3 btn-icon w-8 h-8">
+            <button onClick={() => onCloseConfigModal?.()} className="absolute top-3 right-3 btn-icon w-8 h-8">
               <X size={14} />
             </button>
 
@@ -326,10 +326,7 @@ export default function GPSTracker({
 
       {/* ======= RECORDING INDICATOR ======= */}
       {isCapturing && (
-        <div
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 md:left-[calc(320px+50%)] md:-translate-x-1/2 z-[1090] glass-strong rounded-2xl p-3 px-5 animate-slide-up"
-          style={{ minWidth: 280 }}
-        >
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 md:left-[calc(50%+160px)] z-[1090] glass-strong rounded-2xl p-3 px-4 animate-slide-up w-[90%] max-w-[340px]">
           <div className="flex items-center gap-3">
             <div className="gps-dot recording" />
             <div className="flex-1">
