@@ -24,8 +24,8 @@ function InputRow({ id, color, placeholder, value, onChange, onFocus, onBlur, ri
   return (
     <div
       style={{
-        display: 'flex', alignItems: 'center', gap: 10,
-        padding: '11px 12px',
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '11px 10px',
         borderRadius: 16,
         background: focused ? `${color}08` : 'rgba(255,255,255,0.03)',
         border: `1.5px solid ${focused ? color + '80' : 'rgba(255,255,255,0.07)'}`,
@@ -43,7 +43,7 @@ function InputRow({ id, color, placeholder, value, onChange, onFocus, onBlur, ri
         onBlur={onBlur}
         placeholder={placeholder}
         className="flex-1 bg-transparent outline-none"
-        style={{ fontSize: 13, color: '#F1F5F9', fontFamily: 'Inter, sans-serif' }}
+        style={{ fontSize: 13, color: '#F1F5F9', fontFamily: 'Inter, sans-serif', minWidth: 0 }}
         autoComplete="off"
       />
       {rightSlot}
@@ -261,14 +261,14 @@ export default function RouteNavigator({
             onBlur={() => { setOriginFocused(false); setTimeout(() => setShowOriginSugg(false), 200); }}
             focused={originFocused}
             rightSlot={
-              <div style={{ display: 'flex', gap: 4 }}>
+              <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
                 {/* GPS button */}
                 <button
                   onClick={handleGPS}
                   disabled={gpsLoading}
                   title="Usar mi ubicación GPS"
                   style={{
-                    width: 28, height: 28, borderRadius: 8, border: 'none',
+                    width: 26, height: 26, borderRadius: 7, border: 'none',
                     background: 'rgba(59,130,246,0.12)', color: '#60A5FA',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0,
@@ -283,7 +283,7 @@ export default function RouteNavigator({
                   onClick={() => onPinModeChange?.(pinMode === 'origin' ? null : 'origin')}
                   title="Marcar en el mapa"
                   style={{
-                    width: 28, height: 28, borderRadius: 8, border: 'none',
+                    width: 26, height: 26, borderRadius: 7, border: 'none',
                     background: pinMode === 'origin' ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)',
                     color: pinMode === 'origin' ? '#34D399' : '#64748B',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -309,7 +309,7 @@ export default function RouteNavigator({
           <InputRow
             id="destination-input"
             color="#EF4444"
-            placeholder="¿A dónde quieres ir?"
+            placeholder="Ej: C.C. Único, Portal del Prado..."
             value={destText}
             onChange={e => handleDestInput(e.target.value)}
             onFocus={() => {
@@ -326,9 +326,9 @@ export default function RouteNavigator({
               <button
                 onClick={() => onPinModeChange?.(pinMode === 'destination' ? null : 'destination')}
                 title="Marcar en el mapa"
-                style={{
-                  width: 28, height: 28, borderRadius: 8, border: 'none',
-                  background: pinMode === 'destination' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.05)',
+                  style={{
+                    width: 26, height: 26, borderRadius: 7, border: 'none',
+                    background: pinMode === 'destination' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.05)',
                   color: pinMode === 'destination' ? '#F87171' : '#64748B',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0,
@@ -611,7 +611,7 @@ export default function RouteNavigator({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
             {[
               { icon: <Crosshair size={11} />, color: '#34D399', text: 'Usa GPS para detectar tu ubicación' },
-              { icon: <Search size={11} />, color: '#60A5FA', text: 'Busca por nombre o dirección (ej: Calle 63B #38-15)' },
+              { icon: <Search size={11} />, color: '#60A5FA', text: 'Busca por nombre (ej: C.C. Único, Prado)' },
               { icon: <MapPin size={11} />, color: '#F87171', text: '🖱️ Click derecho o mantén presionado el mapa' },
             ].map((tip, i) => (
               <div key={i} style={{

@@ -10,7 +10,7 @@
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Navigation, Satellite, Signal, Save, X, AlertTriangle, Bus, ArrowRight, ArrowLeft, Play } from 'lucide-react';
+import { Navigation, Satellite, Signal, Save, X, AlertTriangle, Bus, ArrowRight, ArrowLeft, Play, Users, TrendingUp, CheckCircle2 } from 'lucide-react';
 import { startTracking, stopTracking, getSignalQuality, isGeolocationAvailable } from '../services/gpsService';
 import { routesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -116,6 +116,9 @@ export default function GPSTracker({
     onCaptureToggle?.(true);
   }, [routeName, onCaptureToggle, onPositionUpdate, onTrackUpdate]);
 
+  // Collaborative feedback state
+  const [collabFeedback, setCollabFeedback] = useState(null);
+
   /**
    * Save captured route to backend.
    */
@@ -133,7 +136,7 @@ export default function GPSTracker({
       const avgAccuracy = pointsRef.current.reduce((sum, p) => sum + p.accuracy, 0) / pointsRef.current.length;
       const durationSeconds = Math.round((Date.now() - (startTimeRef.current || Date.now())) / 1000);
 
-      await routesAPI.capture({
+      const result = await routesAPI.capture({
         routeName,
         company: routeCompany,
         direction: routeDirection,
@@ -142,23 +145,53 @@ export default function GPSTracker({
         durationSeconds,
       });
 
-      // Reset
-      setShowSaveDialog(false);
-      setRouteName('');
-      setRouteCompany('Sobrusa');
-      setRouteDirection('ida');
+      // Show collaborative feedback if available
+      if (result?.data?.collaborative) {
+        setCollabFeedback({
+          ...result.data.collaborative,
+          routeName,
+          company: routeCompany,
+          direction: routeDirection,
+          pointsCaptured: pointsRef.current.length,
+        });
+        setShowSaveDialog(false);
+      } else {
+        // Fallback to simple confirmation
+        setShowSaveDialog(false);
+        setCollabFeedback({
+          routeName,
+          company: routeCompany,
+          direction: routeDirection,
+          pointsCaptured: pointsRef.current.length,
+          contributionPercent: 100,
+          routeCompletion: 0,
+          totalContributors: 1,
+          totalSegments: 1,
+          mergeType: 'new',
+        });
+      }
+
+      // Reset capture state
       pointsRef.current = [];
       setGpsPoints([]);
       setPointCount(0);
       startTimeRef.current = null;
       onTrackUpdate?.([]);
-
-      alert('¡Ruta capturada! 🎉 Un administrador la revisará pronto.');
     } catch (err) {
       setError(err.message || 'Error al guardar la ruta');
     } finally {
       setSaving(false);
     }
+  };
+
+  /**
+   * Dismiss collaborative feedback and fully reset.
+   */
+  const dismissFeedback = () => {
+    setCollabFeedback(null);
+    setRouteName('');
+    setRouteCompany('Sobrusa');
+    setRouteDirection('ida');
   };
 
   // Cleanup
@@ -172,7 +205,7 @@ export default function GPSTracker({
 
   const signal = accuracy ? getSignalQuality(accuracy) : null;
 
-  if (!isCapturing && !showSaveDialog && !showConfig) return null;
+  if (!isCapturing && !showSaveDialog && !showConfig && !collabFeedback) return null;
 
   return (
     <>
@@ -407,6 +440,160 @@ export default function GPSTracker({
               ) : <Save size={14} />}
               {saving ? 'Guardando...' : 'Enviar para revisión'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ======= COLLABORATIVE FEEDBACK MODAL ======= */}
+      {collabFeedback && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={dismissFeedback} />
+          <div className="relative w-full max-w-sm rounded-2xl p-6 animate-slide-up"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', boxShadow: '0 25px 60px rgba(0,0,0,0.6)' }}>
+
+            <button onClick={dismissFeedback} className="absolute top-3 right-3 btn-icon w-8 h-8">
+              <X size={14} />
+            </button>
+
+            {/* Header con icono de éxito */}
+            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: 16, margin: '0 auto 12px',
+                background: 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,182,212,0.15))',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 0 30px rgba(16,185,129,0.2)',
+              }}>
+                <CheckCircle2 size={28} color="#10B981" />
+              </div>
+              <h3 style={{ fontSize: 17, fontWeight: 700, color: '#F1F5F9', margin: 0, fontFamily: 'Outfit, sans-serif' }}>
+                ¡Captura exitosa! 🎉
+              </h3>
+              <p style={{ fontSize: 11, color: '#64748B', margin: '4px 0 0' }}>
+                Tu recorrido fue fusionado con la ruta colaborativa
+              </p>
+            </div>
+
+            {/* Route info */}
+            <div style={{
+              padding: '10px 14px', borderRadius: 12, marginBottom: 14,
+              background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <Bus size={14} color="#F59E0B" />
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#F1F5F9' }}>
+                  {collabFeedback.routeName}
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: 10, fontSize: 10, color: '#94A3B8' }}>
+                <span>🏢 {collabFeedback.company}</span>
+                <span style={{
+                  fontWeight: 600,
+                  color: collabFeedback.direction === 'ida' ? '#34D399' : '#A78BFA',
+                }}>
+                  {collabFeedback.direction === 'ida' ? '→ IDA' : '← VUELTA'}
+                </span>
+                <span>📍 {collabFeedback.pointsCaptured} puntos</span>
+              </div>
+            </div>
+
+            {/* Contribution metrics */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+              {/* Tu contribución */}
+              <div style={{
+                flex: 1, padding: '10px 12px', borderRadius: 12,
+                background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)',
+                textAlign: 'center',
+              }}>
+                <TrendingUp size={16} color="#10B981" style={{ margin: '0 auto 4px' }} />
+                <div style={{ fontSize: 20, fontWeight: 800, color: '#10B981', fontFamily: 'Outfit, sans-serif' }}>
+                  {collabFeedback.contributionPercent}%
+                </div>
+                <div style={{ fontSize: 9, color: '#64748B', fontWeight: 600 }}>TU APORTE</div>
+              </div>
+
+              {/* Contribuidores */}
+              <div style={{
+                flex: 1, padding: '10px 12px', borderRadius: 12,
+                background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.15)',
+                textAlign: 'center',
+              }}>
+                <Users size={16} color="#A78BFA" style={{ margin: '0 auto 4px' }} />
+                <div style={{ fontSize: 20, fontWeight: 800, color: '#A78BFA', fontFamily: 'Outfit, sans-serif' }}>
+                  {collabFeedback.totalContributors}
+                </div>
+                <div style={{ fontSize: 9, color: '#64748B', fontWeight: 600 }}>
+                  {collabFeedback.totalContributors === 1 ? 'PIONERO 🏅' : 'CONTRIBUIDORES'}
+                </div>
+              </div>
+            </div>
+
+            {/* Route completion progress bar */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8' }}>Progreso de ruta</span>
+                <span style={{
+                  fontSize: 12, fontWeight: 700,
+                  color: collabFeedback.routeCompletion >= 90 ? '#10B981'
+                       : collabFeedback.routeCompletion >= 50 ? '#F59E0B' : '#06B6D4',
+                }}>
+                  {collabFeedback.routeCompletion}%
+                </span>
+              </div>
+              <div style={{
+                width: '100%', height: 8, borderRadius: 4,
+                background: 'rgba(255,255,255,0.05)',
+                overflow: 'hidden',
+              }}>
+                <div style={{
+                  width: `${collabFeedback.routeCompletion}%`,
+                  height: '100%',
+                  borderRadius: 4,
+                  background: collabFeedback.routeCompletion >= 90
+                    ? 'linear-gradient(90deg, #10B981, #34D399)'
+                    : collabFeedback.routeCompletion >= 50
+                    ? 'linear-gradient(90deg, #F59E0B, #FBBF24)'
+                    : 'linear-gradient(90deg, #06B6D4, #22D3EE)',
+                  transition: 'width 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: '0 0 8px rgba(16,185,129,0.3)',
+                }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                <span style={{ fontSize: 9, color: '#475569' }}>
+                  {collabFeedback.totalSegments} segmento{collabFeedback.totalSegments > 1 ? 's' : ''} capturado{collabFeedback.totalSegments > 1 ? 's' : ''}
+                </span>
+                <span style={{
+                  fontSize: 9, fontWeight: 600, padding: '1px 6px', borderRadius: 4,
+                  background: collabFeedback.mergeType === 'new' ? 'rgba(245,158,11,0.12)' : 'rgba(16,185,129,0.12)',
+                  color: collabFeedback.mergeType === 'new' ? '#F59E0B' : '#10B981',
+                }}>
+                  {{
+                    'new': '🆕 Primera captura',
+                    'append': '➕ Extendida al final',
+                    'prepend': '➕ Extendida al inicio',
+                    'replace': '🔄 Mejorada',
+                    'fill': '🧩 Vacío llenado',
+                    'encompass': '🌐 Ruta ampliada',
+                    'overlap_kept': '✅ Ya cubierto',
+                    'disjoint': '📌 Segmento separado',
+                  }[collabFeedback.mergeType] || '✅ Fusionada'}
+                </span>
+              </div>
+            </div>
+
+            {/* CTA */}
+            <button
+              onClick={dismissFeedback}
+              className="btn-primary w-full flex items-center justify-center gap-2"
+            >
+              <CheckCircle2 size={14} />
+              ¡Entendido!
+            </button>
+
+            <p style={{ fontSize: 9, color: '#334155', textAlign: 'center', margin: '10px 0 0' }}>
+              {collabFeedback.routeCompletion < 100
+                ? '🚌 ¡Invita a otros pasajeros a capturar los tramos faltantes!'
+                : '🎉 ¡La ruta está completa! Un admin la revisará pronto.'}
+            </p>
           </div>
         </div>
       )}

@@ -112,35 +112,86 @@ export default function Sidebar({
         transition: 'transform 0.3s ease-out',
         transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
         borderRight: '1px solid var(--glass-border)',
-        background: 'rgba(11, 17, 32, 0.92)',
+        background: 'rgba(11, 17, 32, 0.95)',
         backdropFilter: 'blur(32px) saturate(200%)',
         WebkitBackdropFilter: 'blur(32px) saturate(200%)',
       }}
     >
       <div className="h-full flex flex-col">
-        {/* Tabs */}
-        <div className="flex p-2 gap-1" style={{ borderBottom: '1px solid var(--border-color)' }}>
-          {[
-            { id: 'navigate', icon: Navigation, label: 'Navegar' },
-            { id: 'routes', icon: Route, label: 'Rutas' },
-            { id: 'favorites', icon: Star, label: 'Favoritos' },
-            { id: 'capture', icon: Navigation, label: 'Capturar' },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-lg text-xs font-medium transition-all duration-200"
-              style={{
-                background: activeTab === tab.id ? 'var(--bg-card)' : 'transparent',
-                color: activeTab === tab.id ? 'var(--primary-amber)' : 'var(--text-muted)',
-                border: activeTab === tab.id ? '1px solid var(--border-color)' : '1px solid transparent',
-              }}
-              id={`tab-${tab.id}`}
-            >
-              <tab.icon size={14} />
-              {tab.label}
-            </button>
-          ))}
+        {/* Tabs — Mobile-first segmented control */}
+        <div style={{
+          padding: '10px 10px 0',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+        }}>
+          <div style={{
+            display: 'flex',
+            gap: 4,
+            padding: 4,
+            borderRadius: 14,
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.04)',
+          }}>
+            {[
+              { id: 'navigate', icon: Navigation, label: 'Navegar', color: '#06B6D4' },
+              { id: 'routes', icon: Route, label: 'Rutas', color: '#10B981' },
+              { id: 'favorites', icon: Star, label: 'Favoritos', color: '#F59E0B' },
+              { id: 'capture', icon: Zap, label: 'Capturar', color: '#EC4899' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 3,
+                  padding: '10px 4px 8px',
+                  borderRadius: 11,
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                  position: 'relative',
+                  background: activeTab === tab.id
+                    ? `linear-gradient(135deg, ${tab.color}18, ${tab.color}08)`
+                    : 'transparent',
+                  boxShadow: activeTab === tab.id
+                    ? `0 2px 12px ${tab.color}15, inset 0 0 0 1px ${tab.color}25`
+                    : 'none',
+                }}
+                id={`tab-${tab.id}`}
+              >
+                <tab.icon
+                  size={activeTab === tab.id ? 17 : 15}
+                  color={activeTab === tab.id ? tab.color : '#475569'}
+                  style={{ transition: 'all 0.2s', flexShrink: 0 }}
+                />
+                <span style={{
+                  fontSize: 9,
+                  fontWeight: activeTab === tab.id ? 700 : 500,
+                  color: activeTab === tab.id ? tab.color : '#475569',
+                  letterSpacing: activeTab === tab.id ? '0.02em' : '0',
+                  transition: 'all 0.2s',
+                  lineHeight: 1,
+                }}>
+                  {tab.label}
+                </span>
+                {/* Active dot indicator */}
+                {activeTab === tab.id && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 3,
+                    width: 14,
+                    height: 2,
+                    borderRadius: 2,
+                    background: tab.color,
+                    boxShadow: `0 0 8px ${tab.color}80`,
+                  }} />
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Tab content */}
@@ -167,23 +218,28 @@ export default function Sidebar({
           {activeTab === 'routes' && (
             <div className="animate-fade-in">
               {/* Search + Filters */}
-              <div className="p-3 space-y-2" style={{ borderBottom: '1px solid var(--border-color)' }}>
+              <div style={{ padding: '14px 14px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 {/* Quick search */}
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
-                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)' }}>
-                  <Bus size={12} style={{ color: 'var(--text-muted)' }} />
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 12px', borderRadius: 14, marginBottom: 10,
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.07)',
+                  transition: 'border-color 0.2s',
+                }}>
+                  <Bus size={14} style={{ color: '#475569', flexShrink: 0 }} />
                   <input
                     type="text"
                     placeholder="Buscar ruta o empresa..."
                     value={searchText}
                     onChange={e => setSearchText(e.target.value)}
-                    className="flex-1 bg-transparent text-xs outline-none"
-                    style={{ color: 'var(--text-primary)' }}
+                    className="flex-1 bg-transparent outline-none"
+                    style={{ color: '#F1F5F9', fontSize: 12, minWidth: 0 }}
                   />
                 </div>
 
                 {/* Type filters */}
-                <div className="flex gap-1.5">
+                <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
                   {[
                     { value: 'all', label: 'Todas' },
                     { value: 'official', label: 'Oficiales' },
@@ -192,11 +248,13 @@ export default function Sidebar({
                     <button
                       key={opt.value}
                       onClick={() => setFilterType(opt.value)}
-                      className="text-xs px-3 py-2 rounded-full font-medium transition-all"
                       style={{
-                        background: filterType === opt.value ? 'var(--bg-card)' : 'transparent',
-                        color: filterType === opt.value ? 'var(--accent-cyan)' : 'var(--text-muted)',
-                        border: `1px solid ${filterType === opt.value ? 'var(--accent-cyan)' : 'var(--border-color)'}`,
+                        padding: '7px 14px', borderRadius: 10,
+                        fontSize: 11, fontWeight: 600,
+                        cursor: 'pointer', transition: 'all 0.2s',
+                        border: `1px solid ${filterType === opt.value ? '#06B6D4' + '40' : 'rgba(255,255,255,0.07)'}`,
+                        background: filterType === opt.value ? 'rgba(6,182,212,0.1)' : 'rgba(255,255,255,0.02)',
+                        color: filterType === opt.value ? '#06B6D4' : '#64748B',
                       }}
                     >
                       {opt.label}
@@ -209,11 +267,12 @@ export default function Sidebar({
                   <select
                     value={filterCompany}
                     onChange={e => setFilterCompany(e.target.value)}
-                    className="w-full text-xs px-3 py-2.5 rounded-lg outline-none"
                     style={{
-                      background: 'var(--bg-surface)',
-                      color: 'var(--text-secondary)',
-                      border: '1px solid var(--border-color)',
+                      width: '100%', padding: '9px 12px', borderRadius: 10,
+                      fontSize: 11, outline: 'none', marginBottom: 10,
+                      background: 'rgba(255,255,255,0.03)',
+                      color: '#94A3B8',
+                      border: '1px solid rgba(255,255,255,0.07)',
                     }}
                   >
                     <option value="all">Todas las empresas ({routes.length})</option>
@@ -226,14 +285,17 @@ export default function Sidebar({
                 )}
 
                 {/* Layer toggles */}
-                <div className="flex gap-1.5 mt-1">
+                <div style={{ display: 'flex', gap: 6 }}>
                   <button
                     onClick={() => onToggleLayer?.('official')}
-                    className="flex items-center gap-1 text-xs px-3 py-2 rounded-full transition-all"
                     style={{
-                      background: layerVisibility?.official ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
-                      color: layerVisibility?.official ? '#34D399' : 'var(--text-muted)',
-                      border: `1px solid ${layerVisibility?.official ? 'rgba(16, 185, 129, 0.3)' : 'var(--border-color)'}`,
+                      flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      gap: 6, padding: '8px 10px', borderRadius: 10,
+                      fontSize: 10, fontWeight: 600, cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      background: layerVisibility?.official ? 'rgba(16,185,129,0.08)' : 'rgba(255,255,255,0.02)',
+                      color: layerVisibility?.official ? '#34D399' : '#475569',
+                      border: `1px solid ${layerVisibility?.official ? 'rgba(16,185,129,0.25)' : 'rgba(255,255,255,0.06)'}`,
                     }}
                   >
                     {layerVisibility?.official ? <Eye size={12} /> : <EyeOff size={12} />}
@@ -241,11 +303,14 @@ export default function Sidebar({
                   </button>
                   <button
                     onClick={() => onToggleLayer?.('community')}
-                    className="flex items-center gap-1 text-xs px-3 py-2 rounded-full transition-all"
                     style={{
-                      background: layerVisibility?.community ? 'rgba(139, 92, 246, 0.1)' : 'transparent',
-                      color: layerVisibility?.community ? '#A78BFA' : 'var(--text-muted)',
-                      border: `1px solid ${layerVisibility?.community ? 'rgba(139, 92, 246, 0.3)' : 'var(--border-color)'}`,
+                      flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      gap: 6, padding: '8px 10px', borderRadius: 10,
+                      fontSize: 10, fontWeight: 600, cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      background: layerVisibility?.community ? 'rgba(139,92,246,0.08)' : 'rgba(255,255,255,0.02)',
+                      color: layerVisibility?.community ? '#A78BFA' : '#475569',
+                      border: `1px solid ${layerVisibility?.community ? 'rgba(139,92,246,0.25)' : 'rgba(255,255,255,0.06)'}`,
                     }}
                   >
                     {layerVisibility?.community ? <Eye size={12} /> : <EyeOff size={12} />}
@@ -474,50 +539,105 @@ export default function Sidebar({
 
           {/* ---- Tab: Captura GPS ---- */}
           {activeTab === 'capture' && (
-            <div className="p-4 space-y-4 animate-fade-in">
-              <div>
-                <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
+            <div className="animate-fade-in" style={{ padding: '16px 14px' }}>
+              {/* Hero section */}
+              <div style={{
+                textAlign: 'center', padding: '20px 16px 16px',
+                borderRadius: 16, marginBottom: 14,
+                background: 'linear-gradient(135deg, rgba(236,72,153,0.08), rgba(139,92,246,0.06))',
+                border: '1px solid rgba(236,72,153,0.12)',
+              }}>
+                <div style={{
+                  width: 48, height: 48, borderRadius: 14, margin: '0 auto 10px',
+                  background: 'linear-gradient(135deg, rgba(236,72,153,0.15), rgba(245,158,11,0.15))',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 0 20px rgba(236,72,153,0.15)',
+                }}>
+                  <Bus size={22} color="#EC4899" />
+                </div>
+                <h3 style={{
+                  fontSize: 15, fontWeight: 700, color: '#F1F5F9', margin: '0 0 4px',
+                  fontFamily: 'Outfit, sans-serif',
+                }}>
                   Capturar Ruta GPS
                 </h3>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  Sube a un bus y activa el rastreo para contribuir la ruta a la comunidad.
+                <p style={{ fontSize: 11, color: '#64748B', margin: 0, lineHeight: 1.4 }}>
+                  Sube a un bus y contribuye la ruta para toda la comunidad 🚌
                 </p>
               </div>
 
-              <div className="p-3 rounded-xl space-y-2" style={{
-                background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
+              {/* GPS status card */}
+              <div style={{
+                padding: '12px 14px', borderRadius: 14, marginBottom: 12,
+                background: 'rgba(255,255,255,0.02)',
+                border: `1px solid ${isCapturing ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                transition: 'border-color 0.3s',
               }}>
-                <div className="flex items-center gap-2">
-                  <div className={`gps-dot ${isCapturing ? 'recording' : 'inactive'}`} />
-                  <span className="text-xs font-medium" style={{
-                    color: isCapturing ? 'var(--danger)' : 'var(--text-muted)'
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  <div className={`gps-dot ${isCapturing ? 'recording' : 'inactive'}`}
+                    style={{ width: 10, height: 10, flexShrink: 0 }} />
+                  <span style={{
+                    fontSize: 12, fontWeight: 600,
+                    color: isCapturing ? '#F87171' : '#64748B',
                   }}>
-                    {isCapturing ? 'Grabando ruta...' : 'GPS listo'}
+                    {isCapturing ? '● Grabando ruta...' : 'GPS listo para capturar'}
                   </span>
                 </div>
-                <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                  • Captura cada 5 segundos<br />
-                  • Filtro de precisión: ≤ 20 metros<br />
-                  • Los datos se envían al parar
-                </p>
+
+                {/* Feature list */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {[
+                    { icon: '⏱️', text: 'Captura automática cada 5 segundos' },
+                    { icon: '🎯', text: 'Filtro de precisión: ≤ 20 metros' },
+                    { icon: '🤝', text: 'Se fusiona con capturas de otros usuarios' },
+                  ].map((f, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#475569' }}>
+                      <span style={{ fontSize: 12, lineHeight: 1 }}>{f.icon}</span>
+                      {f.text}
+                    </div>
+                  ))}
+                </div>
               </div>
 
+              {/* Capture button — large mobile-friendly */}
               <button
                 onClick={() => onStartCapture?.()}
-                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-medium text-sm transition-all ${
-                  isCapturing ? 'text-white' : ''
-                }`}
                 style={{
+                  width: '100%',
+                  padding: '14px 16px',
+                  borderRadius: 14,
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
+                  color: '#fff',
+                  transition: 'all 0.3s',
                   background: isCapturing
                     ? 'linear-gradient(135deg, #EF4444, #DC2626)'
-                    : 'linear-gradient(135deg, #10B981, #059669)',
-                  border: 'none', cursor: 'pointer',
+                    : 'linear-gradient(135deg, #EC4899, #8B5CF6)',
+                  boxShadow: isCapturing
+                    ? '0 4px 20px rgba(239,68,68,0.3)'
+                    : '0 4px 20px rgba(236,72,153,0.25)',
                 }}
                 id="capture-btn"
               >
-                <Navigation size={16} />
+                {isCapturing ? <Navigation size={18} /> : <Zap size={18} />}
                 {isCapturing ? 'Detener captura' : 'Iniciar captura'}
               </button>
+
+              {!isAuthenticated && (
+                <p style={{
+                  fontSize: 10, color: '#F59E0B', textAlign: 'center', marginTop: 10,
+                  background: 'rgba(245,158,11,0.06)', padding: '8px 12px', borderRadius: 10,
+                  border: '1px solid rgba(245,158,11,0.1)',
+                }}>
+                  ⚠️ Debes iniciar sesión para capturar rutas
+                </p>
+              )}
             </div>
           )}
         </div>

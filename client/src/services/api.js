@@ -289,6 +289,22 @@ export const adminAPI = {
     const params = new URLSearchParams({ routeName, ...(company ? { company } : {}) }).toString();
     return apiRequest(`/admin/captures/compare?${params}`);
   },
+
+  /** List composite routes (collaborative captures) */
+  getComposites: (filters = {}) => {
+    const params = new URLSearchParams(filters).toString();
+    return apiRequest(`/admin/composites${params ? `?${params}` : ''}`);
+  },
+
+  /** Get composite route detail */
+  getCompositeById: (id) => apiRequest(`/admin/composites/${id}`),
+
+  /** Promote composite route to official */
+  promoteComposite: (id, data = {}) =>
+    apiRequest(`/admin/composites/${id}/promote`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };
 
 // ---- Community (Quilla XP) ----

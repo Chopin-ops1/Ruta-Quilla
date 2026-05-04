@@ -14,6 +14,7 @@
 
 const Route = require('../models/RouteModel');
 const CapturedRoute = require('../models/CapturedRouteModel');
+const { mergeSegment } = require('../services/mergeService');
 
 /**
  * POST /api/routes/capture
@@ -114,10 +115,47 @@ async function captureRoute(req, res) {
 
     await capture.save();
 
+    // ---- Collaborative Merge ----
+    // Fusionar este segmento con el CompositeRoute correspondiente
+    let mergeResult = null;
+    try {
+      mergeResult = await mergeSegment({
+        routeName,
+        company,
+        direction,
+        coordinates: cleanedCoordinates,
+        captureId: capture._id,
+        userId: req.user._id,
+        userName: req.user.name,
+        averageAccuracy: averageAccuracy || 0,
+        pointCount: cleanedCoordinates.length,
+      });
+
+      // Vincular la captura con su composite
+      capture.compositeRouteId = mergeResult.composite._id;
+      await capture.save();
+    } catch (mergeErr) {
+      // El merge es best-effort: si falla, la captura individual ya está guardada
+      console.error('⚠️ Error en merge colaborativo (captura guardada igualmente):', mergeErr.message);
+    }
+
     res.status(201).json({
       success: true,
       message: 'Ruta capturada exitosamente. Un administrador la revisará pronto.',
-      data: { id: capture._id, status: capture.status },
+      data: {
+        id: capture._id,
+        status: capture.status,
+        // Collaborative merge feedback
+        collaborative: mergeResult ? {
+          compositeId: mergeResult.composite._id,
+          mergeType: mergeResult.mergeType,
+          contributionPercent: mergeResult.contributionPercent,
+          totalContributors: mergeResult.composite.contributorCount,
+          routeCompletion: mergeResult.composite.completionEstimate,
+          compositeStatus: mergeResult.composite.status,
+          totalSegments: mergeResult.composite.segments.length,
+        } : null,
+      },
     });
   } catch (error) {
     console.error('Error al capturar ruta:', error);

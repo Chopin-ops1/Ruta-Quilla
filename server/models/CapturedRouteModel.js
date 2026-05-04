@@ -85,6 +85,13 @@ const capturedRouteSchema = new mongoose.Schema({
     required: true,
   },
 
+  // ---- Composite route linkage ----
+  compositeRouteId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'CompositeRoute',
+    default: null,
+  },
+
   // ---- Review status ----
   status: {
     type: String,

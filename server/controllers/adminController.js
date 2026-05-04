@@ -252,6 +252,198 @@ async function getUsers(req, res) {
   }
 }
 
+/**
+ * GET /api/admin/composites
+ * List all composite routes (collaborative captures in progress).
+ * Query: ?status=building&company=Sobrusa&routeName=C20
+ */
+async function getCompositeRoutes(req, res) {
+  try {
+    const CompositeRoute = require('../models/CompositeRouteModel');
+    const { status, company, routeName } = req.query;
+    const filter = {};
+    const validStatuses = ['building', 'complete', 'promoted'];
+    if (status && validStatuses.includes(status)) filter.status = status;
+    if (company) filter.company = company;
+    if (routeName) filter.routeName = { $regex: escapeRegex(routeName), $options: 'i' };
+
+    const composites = await CompositeRoute.find(filter)
+      .sort({ lastContribution: -1 })
+      .populate('segments.userId', 'name email')
+      .populate('promotedBy', 'name email')
+      .lean();
+
+    res.json({ success: true, count: composites.length, data: composites });
+  } catch (error) {
+    console.error('Error al listar composites:', error);
+    res.status(500).json({ success: false, message: 'Error al listar rutas colaborativas' });
+  }
+}
+
+/**
+ * GET /api/admin/composites/:id
+ * Get full detail of a composite route with all segments.
+ */
+async function getCompositeById(req, res) {
+  try {
+    const CompositeRoute = require('../models/CompositeRouteModel');
+    const composite = await CompositeRoute.findById(req.params.id)
+      .populate('segments.userId', 'name email contributions')
+      .populate('segments.captureId', 'geometry averageAccuracy pointCount durationSeconds createdAt')
+      .populate('promotedBy', 'name email')
+      .populate('promotedRouteId', 'nombre operador');
+
+    if (!composite) {
+      return res.status(404).json({ success: false, message: 'Ruta colaborativa no encontrada' });
+    }
+
+    res.json({ success: true, data: composite });
+  } catch (error) {
+    console.error('Error al obtener composite:', error);
+    res.status(500).json({ success: false, message: 'Error al obtener ruta colaborativa' });
+  }
+}
+
+/**
+ * POST /api/admin/composites/:id/promote
+ * Promote a composite route to an official Route.
+ *
+ * Body: { origen?: string, destino?: string, color?: string, fare?: number }
+ *
+ * Creates a new Route document from the merged geometry and
+ * marks the CompositeRoute as 'promoted'.
+ *
+ * XP: Awards 100 XP to each unique contributor.
+ */
+async function promoteComposite(req, res) {
+  try {
+    const CompositeRoute = require('../models/CompositeRouteModel');
+    const composite = await CompositeRoute.findById(req.params.id);
+    if (!composite) {
+      return res.status(404).json({ success: false, message: 'Ruta colaborativa no encontrada' });
+    }
+
+    if (composite.status === 'promoted') {
+      return res.status(400).json({ success: false, message: 'Esta ruta ya fue promovida a oficial' });
+    }
+
+    const { origen, destino, color, fare, codigo, codigoAMBQ } = req.body;
+    const coords = composite.mergedGeometry.coordinates;
+
+    // Assign color based on company
+    const companyColors = {
+      'Sobrusa': '#F59E0B', 'Coolitoral': '#06B6D4', 'Transmecar': '#10B981',
+      'Sobusa': '#EAB308', 'Cootransnorte': '#8B5CF6', 'Embusa': '#EC4899',
+      'Flota Angulo': '#F97316', 'Sodis': '#A855F7', 'Lolaya': '#EF4444',
+      'Lucero San Felipe': '#F472B6', 'Coochofal': '#14B8A6', 'Cootrasol': '#22D3EE',
+      'La Carolina': '#818CF8',
+    };
+
+    // Build official route from composite
+    const routeData = {
+      nombre: composite.routeName,
+      operador: composite.company,
+      color: color || companyColors[composite.company] || '#06B6D4',
+      type: 'community', // Source is community collaboration
+      fare: fare || 2600,
+      fuente: 'manual',
+      activa: true,
+      trazadoIncompleto: false,
+      geometriaOSM: false,
+      audit: {
+        revisadoManualmente: true,
+        observaciones: `Promovida desde ruta colaborativa (${composite.contributorCount} contribuidores). Admin: ${req.user.email}`,
+      },
+    };
+
+    // Set ida or regreso based on direction
+    const segment = {
+      puntoPartida: {
+        nombre: origen || 'Inicio',
+        coordenadas: { type: 'Point', coordinates: coords[0] },
+      },
+      puntoFinal: {
+        nombre: destino || 'Final',
+        coordenadas: { type: 'Point', coordinates: coords[coords.length - 1] },
+      },
+      trazado: { type: 'LineString', coordinates: coords },
+    };
+
+    if (composite.direction === 'ida') {
+      routeData.ida = segment;
+      // Mirror as regreso
+      routeData.regreso = {
+        puntoPartida: {
+          nombre: destino || 'Inicio Vuelta',
+          coordenadas: { type: 'Point', coordinates: coords[coords.length - 1] },
+        },
+        puntoFinal: {
+          nombre: origen || 'Fin Vuelta',
+          coordenadas: { type: 'Point', coordinates: coords[0] },
+        },
+        trazado: { type: 'LineString', coordinates: [...coords].reverse() },
+      };
+    } else {
+      routeData.regreso = segment;
+      routeData.ida = {
+        puntoPartida: {
+          nombre: destino || 'Inicio Ida',
+          coordenadas: { type: 'Point', coordinates: coords[coords.length - 1] },
+        },
+        puntoFinal: {
+          nombre: origen || 'Fin Ida',
+          coordenadas: { type: 'Point', coordinates: coords[0] },
+        },
+        trazado: { type: 'LineString', coordinates: [...coords].reverse() },
+      };
+    }
+
+    if (origen) routeData.origen = origen;
+    if (destino) routeData.destino = destino;
+    if (codigo) routeData.codigo = codigo;
+    if (codigoAMBQ) routeData.codigoAMBQ = codigoAMBQ;
+
+    const route = new Route(routeData);
+    await route.save();
+
+    // Mark composite as promoted
+    composite.status = 'promoted';
+    composite.promotedRouteId = route._id;
+    composite.promotedAt = new Date();
+    composite.promotedBy = req.user._id;
+    await composite.save();
+
+    // Award XP to all unique contributors
+    const uniqueUserIds = [...new Set(composite.segments.map(s => s.userId.toString()))];
+    let xpResults = [];
+    for (const uid of uniqueUserIds) {
+      try {
+        const contributor = await User.findById(uid);
+        if (contributor) {
+          contributor.contributions += 1;
+          const xpResult = await contributor.awardXP(100);
+          xpResults.push({ userId: uid, userName: contributor.name, ...xpResult });
+        }
+      } catch (xpErr) {
+        console.error(`Error awarding XP to ${uid}:`, xpErr.message);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Ruta "${composite.routeName}" promovida a oficial con ${composite.contributorCount} contribuidores`,
+      data: {
+        route,
+        composite,
+        xpAwarded: xpResults,
+      },
+    });
+  } catch (error) {
+    console.error('Error al promover composite:', error);
+    res.status(500).json({ success: false, message: 'Error al promover ruta colaborativa' });
+  }
+}
+
 module.exports = {
   getDashboardStats,
   getCapturedRoutes,
@@ -260,4 +452,7 @@ module.exports = {
   compareCaptures,
   getTrafficStats,
   getUsers,
+  getCompositeRoutes,
+  getCompositeById,
+  promoteComposite,
 };

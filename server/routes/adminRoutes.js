@@ -12,6 +12,9 @@ const {
   compareCaptures,
   getTrafficStats,
   getUsers,
+  getCompositeRoutes,
+  getCompositeById,
+  promoteComposite,
 } = require('../controllers/adminController');
 const { verifyToken, requireAdmin } = require('../middleware/authMiddleware');
 const { validateObjectId } = require('../middleware/security');
@@ -34,4 +37,10 @@ router.get('/captures', getCapturedRoutes);
 router.get('/captures/:id', validateObjectId, getCaptureById);
 router.put('/captures/:id/review', validateObjectId, reviewCapture);
 
+// Composite routes (collaborative captures)
+router.get('/composites', getCompositeRoutes);
+router.get('/composites/:id', validateObjectId, getCompositeById);
+router.post('/composites/:id/promote', validateObjectId, promoteComposite);
+
 module.exports = router;
+
