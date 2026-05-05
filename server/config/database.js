@@ -3,25 +3,22 @@
  * RutaQuilla - Configuración de Base de Datos
  * ============================================
  * 
- * Utiliza mongodb-memory-server para ejecutar una instancia
- * de MongoDB en memoria. Esto elimina la necesidad de tener
- * MongoDB instalado localmente o configurar Atlas.
+ * Estrategia de conexión:
+ * 1. Si MONGO_URI existe en .env → conectar a MongoDB Atlas (persistente)
+ * 2. Si no existe → usar mongodb-memory-server (datos en RAM, se pierden al reiniciar)
  * 
- * Nota: Los datos se pierden al reiniciar el servidor.
- * El seed se ejecuta automáticamente al iniciar.
+ * En producción siempre debe usarse MONGO_URI (Atlas).
+ * En desarrollo se recomienda también usar MONGO_URI para
+ * evitar pérdida de datos al reiniciar el servidor.
  */
 
 const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
 
 let mongoServer = null;
 
 /**
- * Inicializa MongoDB en memoria y conecta Mongoose.
- * 
- * mongodb-memory-server descarga automáticamente un binario
- * de MongoDB la primera vez que se ejecuta (~300MB).
- * Las ejecuciones posteriores usan el binario cacheado.
+ * Inicializa la conexión a MongoDB.
+ * Prioriza MONGO_URI (Atlas) sobre memoria.
  * 
  * @returns {Promise<void>}
  */
@@ -30,32 +27,53 @@ async function connectDatabase() {
     let mongoUri = process.env.MONGO_URI;
 
     if (mongoUri) {
-      console.log('🔄 Iniciando conexión a MongoDB (Producción/Atlas)...');
+      // ---- Conexión persistente (Atlas / cualquier MongoDB externo) ----
+      console.log('🔄 Conectando a MongoDB Atlas...');
+
+      await mongoose.connect(mongoUri, {
+        maxPoolSize: 10,
+        minPoolSize: 2,
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        // Retry on initial connection failure
+        retryWrites: true,
+      });
+
+      console.log('✅ Conectado a MongoDB Atlas (datos persistentes)');
     } else {
-      console.log('🔄 Iniciando MongoDB en memoria (Desarrollo)...');
+      // ---- Fallback: MongoDB en memoria (solo si no hay URI) ----
+      console.log('⚠️  MONGO_URI no definido. Usando MongoDB en memoria (datos NO persisten)');
+      console.log('   → Configura MONGO_URI en .env para persistencia');
+
+      // Dynamic import to avoid loading the heavy binary when not needed
+      const { MongoMemoryServer } = require('mongodb-memory-server');
       mongoServer = await MongoMemoryServer.create({
         instance: { dbName: 'rutaquilla' },
       });
       mongoUri = mongoServer.getUri();
       console.log(`📦 MongoDB Memory Server iniciado en: ${mongoUri}`);
+
+      await mongoose.connect(mongoUri, {
+        maxPoolSize: 10,
+        minPoolSize: 2,
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+      });
+
+      console.log('✅ Conectado a MongoDB en memoria');
     }
 
-    // Connect Mongoose
-    await mongoose.connect(mongoUri, {
-      maxPoolSize: 10,
-      minPoolSize: 2,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    });
-
-    console.log(mongoServer ? '✅ Conectado a MongoDB en memoria' : '✅ Conectado a MongoDB remoto exitosamente');
-
+    // ---- Event listeners for connection stability ----
     mongoose.connection.on('error', (err) => {
-      console.error('❌ Error de conexión MongoDB:', err);
+      console.error('❌ Error de conexión MongoDB:', err.message);
     });
 
     mongoose.connection.on('disconnected', () => {
-      console.log('⚠️  MongoDB desconectado');
+      console.warn('⚠️  MongoDB desconectado. Mongoose intentará reconectar automáticamente.');
+    });
+
+    mongoose.connection.on('reconnected', () => {
+      console.log('🔄 MongoDB reconectado exitosamente');
     });
 
   } catch (error) {
@@ -82,4 +100,11 @@ async function disconnectDatabase() {
   }
 }
 
-module.exports = { connectDatabase, disconnectDatabase };
+/**
+ * Check if the database is currently connected and responsive.
+ */
+function isDatabaseConnected() {
+  return mongoose.connection.readyState === 1; // 1 = connected
+}
+
+module.exports = { connectDatabase, disconnectDatabase, isDatabaseConnected };

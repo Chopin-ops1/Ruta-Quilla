@@ -5,11 +5,13 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { Bus, User, Crown, LogOut, Menu, X, ChevronDown, Zap, Search, Shield } from 'lucide-react';
+import { Bus, User, Crown, LogOut, Menu, X, ChevronDown, Zap, Search, Shield, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLegal, onAdminClick }) {
   const { user, isAuthenticated, isPremium, logout, remainingFreeSearches, maxFreeSearches } = useAuth();
+  const { theme, toggleTheme, isDark } = useTheme();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef(null);
 
@@ -31,11 +33,11 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
         height: 58,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 16px',
-        background: 'rgba(7, 11, 22, 0.88)',
+        background: 'var(--header-bg)',
         backdropFilter: 'blur(24px) saturate(180%)',
         WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+        borderBottom: '1px solid var(--subtle-border)',
+        boxShadow: `0 4px 24px var(--shadow-color)`,
       }}
     >
       {/* Left: Logo + hamburger */}
@@ -45,8 +47,8 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
           id="menu-toggle-btn"
           style={{
             width: 36, height: 36, borderRadius: 10, border: 'none',
-            background: menuOpen ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.06)',
-            color: menuOpen ? '#F59E0B' : '#94A3B8',
+            background: menuOpen ? 'rgba(245,158,11,0.15)' : 'var(--subtle-bg)',
+            color: menuOpen ? '#F59E0B' : 'var(--btn-text-color)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', transition: 'all 0.2s',
             flexShrink: 0,
@@ -72,12 +74,12 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
           <div>
             <h1 style={{
               fontFamily: 'Outfit, sans-serif', fontSize: 17, fontWeight: 800,
-              color: '#F1F5F9', lineHeight: 1, letterSpacing: '-0.3px',
+              color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '-0.3px',
               margin: 0,
             }}>
               Ruta<span style={{ color: '#F59E0B' }}>Quilla</span>
             </h1>
-            <p style={{ fontSize: 10, color: '#475569', margin: 0, lineHeight: 1, marginTop: 2 }}>
+            <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: 0, lineHeight: 1, marginTop: 2 }}>
               Barranquilla Transit
             </p>
           </div>
@@ -177,6 +179,33 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
           </svg>
         </a>
 
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          id="theme-toggle-btn"
+          aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+          title={isDark ? 'Modo claro' : 'Modo oscuro'}
+          style={{
+            width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'var(--subtle-bg)',
+            border: '1px solid var(--subtle-border-strong)',
+            color: isDark ? '#FBBF24' : '#6366F1',
+            cursor: 'pointer',
+            transition: 'all 0.25s ease',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = isDark ? 'rgba(251,191,36,0.15)' : 'rgba(99,102,241,0.12)';
+            e.currentTarget.style.transform = 'translateY(-1px)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'var(--subtle-bg)';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          {isDark ? <Sun size={15} /> : <Moon size={15} />}
+        </button>
+
         {/* Admin button */}
         {onAdminClick && (
           <button
@@ -225,28 +254,28 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
                 display: 'flex', alignItems: 'center', gap: 8,
                 padding: '6px 10px 6px 6px',
                 borderRadius: 14,
-                background: showUserMenu ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.04)',
-                border: `1px solid ${showUserMenu ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}`,
+                background: showUserMenu ? 'var(--subtle-bg-hover)' : 'var(--subtle-bg)',
+                border: `1px solid ${showUserMenu ? 'var(--subtle-border-strong)' : 'var(--subtle-border)'}`,
                 cursor: 'pointer', transition: 'all 0.2s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
-              onMouseLeave={e => { if (!showUserMenu) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--subtle-bg-hover)'; }}
+              onMouseLeave={e => { if (!showUserMenu) e.currentTarget.style.background = 'var(--subtle-bg)'; }}
             >
               {/* Avatar */}
               <div style={{
                 width: 28, height: 28, borderRadius: 10, flexShrink: 0,
                 background: isPremium
                   ? 'linear-gradient(135deg, #F59E0B, #D97706)'
-                  : 'rgba(255,255,255,0.08)',
-                border: isPremium ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                  : 'var(--subtle-bg-hover)',
+                border: isPremium ? 'none' : '1px solid var(--subtle-border-strong)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 boxShadow: isPremium ? '0 2px 10px rgba(245,158,11,0.3)' : 'none',
               }}>
-                {isPremium ? <Crown size={13} color="#000" /> : <User size={13} color="#94A3B8" />}
+                {isPremium ? <Crown size={13} color="#000" /> : <User size={13} color="var(--btn-text-color)" />}
               </div>
 
               <div className="hidden sm:block" style={{ textAlign: 'left' }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: '#F1F5F9', lineHeight: 1.2 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.2 }}>
                   {user?.name?.split(' ')[0]}
                 </div>
                 {isPremium && (
@@ -265,28 +294,28 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
                 style={{
                   position: 'absolute', right: 0, top: 'calc(100% + 8px)',
                   width: 220, borderRadius: 18, overflow: 'hidden',
-                  background: 'rgba(15, 20, 38, 0.97)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+                  background: 'var(--dropdown-bg)',
+                  border: '1px solid var(--subtle-border-strong)',
+                  boxShadow: '0 20px 60px var(--shadow-color)',
                   backdropFilter: 'blur(24px)',
                 }}
               >
                 {/* User info */}
-                <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--subtle-border)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{
                       width: 38, height: 38, borderRadius: 12,
-                      background: isPremium ? 'linear-gradient(135deg, #F59E0B, #D97706)' : 'rgba(255,255,255,0.07)',
+                      background: isPremium ? 'linear-gradient(135deg, #F59E0B, #D97706)' : 'var(--subtle-bg-hover)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       boxShadow: isPremium ? '0 4px 12px rgba(245,158,11,0.3)' : 'none',
                     }}>
                       {isPremium ? <Crown size={18} color="#000" /> : <User size={18} color="#94A3B8" />}
                     </div>
                     <div>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: '#F1F5F9', margin: 0 }}>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
                         {user?.name}
                       </p>
-                      <p style={{ fontSize: 11, color: '#475569', margin: 0, marginTop: 1 }}>
+                      <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, marginTop: 1 }}>
                         {user?.email}
                       </p>
                     </div>
@@ -297,7 +326,7 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
                     border: '1px solid rgba(6,182,212,0.12)',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   }}>
-                    <span style={{ fontSize: 11, color: '#94A3B8' }}>Contribuciones</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Contribuciones</span>
                     <span style={{ fontSize: 13, fontWeight: 700, color: '#06B6D4' }}>
                       {user?.contributions || 0}
                     </span>
@@ -311,10 +340,10 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
                     width: '100%', padding: '10px 16px',
                     display: 'flex', alignItems: 'center', gap: 10,
                     border: 'none', background: 'transparent',
-                    color: '#94A3B8', fontSize: 12, fontWeight: 500,
+                    color: 'var(--text-secondary)', fontSize: 12, fontWeight: 500,
                     cursor: 'pointer', transition: 'background 0.15s',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--subtle-bg)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                 >
                   <Shield size={14} /> Privacidad y Legal
@@ -330,7 +359,7 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
                     border: 'none', background: 'transparent',
                     color: '#F87171', fontSize: 13, fontWeight: 500,
                     cursor: 'pointer', transition: 'background 0.15s',
-                    borderTop: '1px solid rgba(255,255,255,0.04)',
+                    borderTop: '1px solid var(--subtle-border)',
                   }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}

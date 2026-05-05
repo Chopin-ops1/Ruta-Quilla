@@ -22,6 +22,7 @@ import {
 } from 'react-leaflet';
 import L from 'leaflet';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { getWalkingRoute, getMultiStopRoute } from '../services/routingService';
 import POILayer from './POILayer';
 
@@ -539,6 +540,15 @@ export default function MapComponent({
   onReportClick,
 }) {
   const { isPremium } = useAuth();
+  const { isDark } = useTheme();
+
+  // Map tile URLs based on theme
+  const baseTileUrl = isDark
+    ? 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/voyager_nolabels/{z}/{x}/{y}{r}.png';
+  const labelsTileUrl = isDark
+    ? 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/voyager_only_labels/{z}/{x}/{y}{r}.png';
 
   // Walking route geometries (fetched from OSRM)
   const [walkToBoard, setWalkToBoard] = useState([]);
@@ -690,10 +700,11 @@ export default function MapComponent({
         zoomControl={true}
         attributionControl={true}
       >
-        {/* Base map: dark tiles WITHOUT labels */}
+        {/* Base map: tiles WITHOUT labels (dynamic dark/light) */}
         <TileLayer
+          key={`base-${isDark ? 'dark' : 'light'}`}
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
+          url={baseTileUrl}
           maxZoom={19}
           subdomains="abcd"
         />
@@ -701,9 +712,10 @@ export default function MapComponent({
         {/* Create labels pane on top of everything */}
         <LabelsPane />
 
-        {/* Labels layer: ALWAYS on top of polylines */}
+        {/* Labels layer: ALWAYS on top of polylines (dynamic dark/light) */}
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
+          key={`labels-${isDark ? 'dark' : 'light'}`}
+          url={labelsTileUrl}
           maxZoom={19}
           subdomains="abcd"
           pane="labels"

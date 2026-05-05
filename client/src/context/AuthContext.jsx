@@ -42,9 +42,14 @@ export function AuthProvider({ children }) {
           const response = await usersAPI.getProfile();
           setUser(response.data);
         } catch (err) {
-          // Token inválido o expirado
-          removeToken();
-          setUser(null);
+          // Only clear session on auth errors (401/403).
+          // Network errors or server errors are transient — keep the session alive.
+          if (err?.status === 401 || err?.status === 403) {
+            removeToken();
+            setUser(null);
+          } else {
+            console.warn('⚠️ Error transitorio al verificar sesión, manteniendo sesión:', err?.message || err);
+          }
         }
       }
       setLoading(false);
@@ -132,6 +137,9 @@ export function AuthProvider({ children }) {
     removeToken();
     setUser(null);
     setError(null);
+    // Clear app-level localStorage to fully clean the session
+    localStorage.removeItem(USAGE_KEY);
+    localStorage.removeItem('rutaquilla_favorites');
   }, []);
 
   /**

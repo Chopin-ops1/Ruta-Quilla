@@ -106,6 +106,38 @@ export default function App() {
 
   const { isPremium, isAuthenticated, isAdmin, canNavigate, incrementUsage, remainingFreeSearches } = useAuth();
 
+  /**
+   * Full state reset on logout.
+   * When the user logs out, clear all navigation/capture/app state
+   * so no residual data from the previous session is visible.
+   */
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setNavigationResult(null);
+      setSelectedRoute(null);
+      setSelectedOptionIdx(0);
+      setIsNavigating(false);
+      setGpsTrack([]);
+      setIsCapturing(false);
+      setShowCaptureConfig(false);
+      setOriginFromMap(null);
+      setDestFromMap(null);
+      setPreviewOrigin(null);
+      setPreviewDestination(null);
+      setPinMode(null);
+      setLiveNavOption(null);
+      setLiveNavPhase(null);
+      setShowCommunity(false);
+      setSelectedReport(null);
+      // Return to main page if on admin
+      if (currentPage === 'admin') {
+        window.history.pushState({}, '', '/');
+        setCurrentPage('main');
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
+
   // Navigate to admin panel
   const goToAdmin = useCallback(() => {
     window.history.pushState({}, '', '/admin');
@@ -128,6 +160,7 @@ export default function App() {
         setRoutes(response.data || []);
       } catch (err) {
         console.error('Error cargando rutas:', err);
+        // Keep existing routes on error — don't wipe the list
       } finally {
         setLoading(false);
       }

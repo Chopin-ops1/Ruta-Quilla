@@ -112,7 +112,7 @@ export default function Sidebar({
         transition: 'transform 0.3s ease-out',
         transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
         borderRight: '1px solid var(--glass-border)',
-        background: 'rgba(11, 17, 32, 0.95)',
+        background: 'var(--glass-bg)',
         backdropFilter: 'blur(32px) saturate(200%)',
         WebkitBackdropFilter: 'blur(32px) saturate(200%)',
       }}
@@ -121,15 +121,15 @@ export default function Sidebar({
         {/* Tabs — Mobile-first segmented control */}
         <div style={{
           padding: '10px 10px 0',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          borderBottom: '1px solid var(--subtle-border)',
         }}>
           <div style={{
             display: 'flex',
             gap: 4,
             padding: 4,
             borderRadius: 14,
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.04)',
+            background: 'var(--subtle-bg)',
+            border: '1px solid var(--subtle-border)',
           }}>
             {[
               { id: 'navigate', icon: Navigation, label: 'Navegar', color: '#06B6D4' },
@@ -218,13 +218,13 @@ export default function Sidebar({
           {activeTab === 'routes' && (
             <div className="animate-fade-in">
               {/* Search + Filters */}
-              <div style={{ padding: '14px 14px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ padding: '14px 14px 12px', borderBottom: '1px solid var(--subtle-border)' }}>
                 {/* Quick search */}
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   padding: '10px 12px', borderRadius: 14, marginBottom: 10,
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.07)',
+                  background: 'var(--subtle-bg)',
+                  border: '1px solid var(--subtle-border-strong)',
                   transition: 'border-color 0.2s',
                 }}>
                   <Bus size={14} style={{ color: '#475569', flexShrink: 0 }} />
@@ -234,7 +234,7 @@ export default function Sidebar({
                     value={searchText}
                     onChange={e => setSearchText(e.target.value)}
                     className="flex-1 bg-transparent outline-none"
-                    style={{ color: '#F1F5F9', fontSize: 12, minWidth: 0 }}
+                    style={{ color: 'var(--text-primary)', fontSize: 12, minWidth: 0 }}
                   />
                 </div>
 

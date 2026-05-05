@@ -229,8 +229,11 @@ app.use((err, req, res, next) => {
 /**
  * Función de seed automático: Poblado de datos de demostración
  * 
- * Se ejecuta al iniciar el servidor si la base de datos
- * está vacía (mongodb-memory-server pierde datos al reiniciar).
+ * SEGURIDAD: Este seed es idempotente — no borra ni re-crea datos existentes.
+ * - Si ya hay rutas en la DB → se salta (no sobreescribe datos de Atlas)
+ * - Si la DB está vacía (memory server o Atlas fresco) → inserta datos seed
+ * - Usuarios demo: solo se crean si NO existen ya (por email)
+ *   Esto evita que los _id cambien y se invaliden los tokens JWT activos.
  */
 async function seedDatabase() {
   const Route = require('./models/RouteModel');
@@ -238,54 +241,62 @@ async function seedDatabase() {
 
   const routeCount = await Route.countDocuments();
   
-  if (routeCount === 0) {
-    console.log('📦 Base de datos vacía. Ejecutando seed automático...');
-    
-    try {
-      // Cargar rutas
-      const fs = require('fs');
-      const path = require('path');
-      const seedData = require('./data/seed.json');
-      let routesList = [];
-      try {
-        const v5Path = path.join(__dirname, 'data', 'routes_v5.json');
-        const newRoutesPath = path.join(__dirname, 'data', 'routes_new.json');
-        if (fs.existsSync(v5Path)) {
-          routesList = JSON.parse(fs.readFileSync(v5Path, 'utf8'));
-          console.log(`  📂 Cargadas ${routesList.length} rutas desde routes_v5.json (v5 geocodificadas)`);
-        } else if (fs.existsSync(newRoutesPath)) {
-          routesList = JSON.parse(fs.readFileSync(newRoutesPath, 'utf8'));
-          console.log(`  📂 Cargadas ${routesList.length} rutas desde routes_new.json`);
-        } else {
-          routesList = seedData.routes || [];
-          console.log(`  📂 Cargadas ${routesList.length} rutas desde seed.json`);
-        }
-      } catch (e) {
-        console.log('⚠️ Error al cargar rutas:', e.message);
-        routesList = seedData.routes || [];
-      }
-      
-      // Insertar rutas
-      if (routesList.length > 0) {
-        await Route.insertMany(routesList);
-        console.log(`  ✅ ${routesList.length} rutas insertadas en DB`);
-      }
+  if (routeCount > 0) {
+    console.log(`📊 Base de datos ya tiene ${routeCount} rutas — seed omitido`);
+    return;
+  }
 
-      // Crear usuarios de demo
-      if (seedData.users && seedData.users.length > 0) {
-        for (const userData of seedData.users) {
+  console.log('📦 Base de datos vacía. Ejecutando seed automático...');
+  
+  try {
+    // Cargar rutas
+    const fs = require('fs');
+    const path = require('path');
+    const seedData = require('./data/seed.json');
+    let routesList = [];
+    try {
+      const v5Path = path.join(__dirname, 'data', 'routes_v5.json');
+      const newRoutesPath = path.join(__dirname, 'data', 'routes_new.json');
+      if (fs.existsSync(v5Path)) {
+        routesList = JSON.parse(fs.readFileSync(v5Path, 'utf8'));
+        console.log(`  📂 Cargadas ${routesList.length} rutas desde routes_v5.json (v5 geocodificadas)`);
+      } else if (fs.existsSync(newRoutesPath)) {
+        routesList = JSON.parse(fs.readFileSync(newRoutesPath, 'utf8'));
+        console.log(`  📂 Cargadas ${routesList.length} rutas desde routes_new.json`);
+      } else {
+        routesList = seedData.routes || [];
+        console.log(`  📂 Cargadas ${routesList.length} rutas desde seed.json`);
+      }
+    } catch (e) {
+      console.log('⚠️ Error al cargar rutas:', e.message);
+      routesList = seedData.routes || [];
+    }
+    
+    // Insertar rutas
+    if (routesList.length > 0) {
+      await Route.insertMany(routesList);
+      console.log(`  ✅ ${routesList.length} rutas insertadas en DB`);
+    }
+
+    // Crear usuarios de demo (solo si no existen por email)
+    // Esto es crucial: si re-creamos usuarios, sus _id cambian y todos
+    // los tokens JWT activos quedan inválidos → se cierra sesión a todos.
+    if (seedData.users && seedData.users.length > 0) {
+      let created = 0;
+      for (const userData of seedData.users) {
+        const exists = await User.findOne({ email: userData.email.toLowerCase() });
+        if (!exists) {
           const user = new User(userData);
           await user.save(); // Usa el pre-save hook para hashear passwords
+          created++;
         }
-        console.log(`  ✅ ${seedData.users.length} usuarios de demo creados`);
       }
-
-      console.log('🌱 Seed completado exitosamente');
-    } catch (error) {
-      console.error('❌ Error en seed:', error.message);
+      console.log(`  ✅ ${created}/${seedData.users.length} usuarios de demo creados (${seedData.users.length - created} ya existían)`);
     }
-  } else {
-    console.log(`📊 Base de datos ya tiene ${routeCount} rutas`);
+
+    console.log('🌱 Seed completado exitosamente');
+  } catch (error) {
+    console.error('❌ Error en seed:', error.message);
   }
 }
 
@@ -329,6 +340,18 @@ async function startServer() {
 
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
     process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+
+    // Prevent server crashes from killing the process
+    // An uncaught exception in a route handler would normally crash Node.js,
+    // causing a full restart → memory DB wipe → all sessions invalidated.
+    process.on('uncaughtException', (err) => {
+      console.error('🔴 Uncaught Exception (servidor NO reiniciado):', err.message);
+      console.error(err.stack);
+    });
+
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('🔴 Unhandled Promise Rejection (servidor NO reiniciado):', reason);
+    });
 
   } catch (error) {
     console.error('❌ Error al iniciar el servidor:', error);
