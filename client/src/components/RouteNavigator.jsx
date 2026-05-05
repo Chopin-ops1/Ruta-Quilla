@@ -27,8 +27,8 @@ function InputRow({ id, color, placeholder, value, onChange, onFocus, onBlur, ri
         display: 'flex', alignItems: 'center', gap: 8,
         padding: '11px 10px',
         borderRadius: 16,
-        background: focused ? `${color}08` : 'rgba(255,255,255,0.03)',
-        border: `1.5px solid ${focused ? color + '80' : 'rgba(255,255,255,0.07)'}`,
+        background: focused ? `${color}08` : 'var(--subtle-bg)',
+        border: `1.5px solid ${focused ? color + '80' : 'var(--subtle-border)'}`,
         transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)',
         boxShadow: focused ? `0 0 0 4px ${color}14` : 'none',
       }}
@@ -43,7 +43,7 @@ function InputRow({ id, color, placeholder, value, onChange, onFocus, onBlur, ri
         onBlur={onBlur}
         placeholder={placeholder}
         className="flex-1 bg-transparent outline-none"
-        style={{ fontSize: 13, color: '#F1F5F9', fontFamily: 'Inter, sans-serif', minWidth: 0 }}
+        style={{ fontSize: 13, color: 'var(--text-primary)', fontFamily: 'Inter, sans-serif', minWidth: 0 }}
         autoComplete="off"
       />
       {rightSlot}
@@ -59,7 +59,7 @@ function SuggestionDropdown({ items, onSelect, accentColor }) {
       style={{
         position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
         zIndex: 200, borderRadius: 14, overflow: 'hidden',
-        background: 'rgba(13,18,35,0.98)',
+        background: 'var(--dropdown-bg)',
         border: '1px solid rgba(255,255,255,0.09)',
         boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
         backdropFilter: 'blur(16px)',
@@ -77,15 +77,15 @@ function SuggestionDropdown({ items, onSelect, accentColor }) {
             cursor: 'pointer', transition: 'background 0.15s',
             textAlign: 'left',
           }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--subtle-bg)'; }}
           onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
         >
           <MapPin size={13} style={{ color: accentColor, flexShrink: 0 }} />
           <div>
-            <p style={{ fontSize: 12, color: '#F1F5F9', margin: 0, lineHeight: 1.4 }}>
+            <p style={{ fontSize: 12, color: 'var(--text-primary)', margin: 0, lineHeight: 1.4 }}>
               {s.displayName?.split(',')[0]}
             </p>
-            <p style={{ fontSize: 10, color: '#475569', margin: 0, marginTop: 1 }}>
+            <p style={{ fontSize: 10, color: 'var(--text-secondary)', margin: 0, marginTop: 1 }}>
               {s.displayName?.split(',').slice(1, 3).join(',')}
             </p>
           </div>
@@ -234,11 +234,11 @@ export default function RouteNavigator({
 
       {/* ---- Origin + Dest inputs ---- */}
       <div style={{
-        background: 'rgba(255,255,255,0.02)',
+        background: 'var(--subtle-bg)',
         border: '1px solid rgba(255,255,255,0.06)',
         borderRadius: 20, padding: '12px 12px 10px',
       }}>
-        <p style={{ fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>
+        <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>
           🧭 Planifica tu viaje
         </p>
 
@@ -284,7 +284,7 @@ export default function RouteNavigator({
                   title="Marcar en el mapa"
                   style={{
                     width: 26, height: 26, borderRadius: 7, border: 'none',
-                    background: pinMode === 'origin' ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)',
+                    background: pinMode === 'origin' ? 'rgba(16,185,129,0.2)' : 'var(--subtle-bg)',
                     color: pinMode === 'origin' ? '#34D399' : '#64748B',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0,
@@ -300,8 +300,8 @@ export default function RouteNavigator({
 
         {/* Connector line */}
         <div style={{ display: 'flex', alignItems: 'center', padding: '3px 0 3px 9px', gap: 6 }}>
-          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.08)', borderRadius: 1 }} />
-          <span style={{ fontSize: 9, color: '#334155', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>en bus hasta</span>
+          <div style={{ width: 1, height: 14, background: 'var(--subtle-border-strong)', borderRadius: 1 }} />
+          <span style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>en bus hasta</span>
         </div>
 
         {/* DESTINO */}
@@ -328,7 +328,7 @@ export default function RouteNavigator({
                 title="Marcar en el mapa"
                   style={{
                     width: 26, height: 26, borderRadius: 7, border: 'none',
-                    background: pinMode === 'destination' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.05)',
+                    background: pinMode === 'destination' ? 'rgba(239,68,68,0.2)' : 'var(--subtle-bg)',
                   color: pinMode === 'destination' ? '#F87171' : '#64748B',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0,
@@ -351,8 +351,8 @@ export default function RouteNavigator({
               flex: 1, padding: '11px 0', borderRadius: 13, border: 'none',
               background: canSearch
                 ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
-                : 'rgba(255,255,255,0.05)',
-              color: canSearch ? '#000' : '#475569',
+                : 'var(--subtle-bg)',
+              color: canSearch ? '#000' : 'var(--text-secondary)',
               fontSize: 13, fontWeight: 700,
               cursor: canSearch ? 'pointer' : 'not-allowed',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
@@ -395,7 +395,7 @@ export default function RouteNavigator({
             display: 'flex', alignItems: 'center', gap: 7,
           }}>
             <Crosshair size={11} style={{ color: pinMode === 'origin' ? '#34D399' : '#F87171' }} />
-            <span style={{ fontSize: 11, color: '#94A3B8' }}>
+            <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
               Toca el mapa para marcar {pinMode === 'origin' ? 'el origen' : 'el destino'}
             </span>
           </div>
@@ -409,17 +409,17 @@ export default function RouteNavigator({
             <div style={{ textAlign: 'center', padding: '28px 0' }}>
               <div style={{
                 width: 52, height: 52, borderRadius: 16, margin: '0 auto 12px',
-                background: 'rgba(255,255,255,0.04)',
+                background: 'var(--subtle-bg)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 <Bus size={24} color="#334155" />
               </div>
-              <p style={{ fontSize: 13, color: '#475569', fontWeight: 500 }}>Sin rutas para este trayecto</p>
-              <p style={{ fontSize: 11, color: '#334155', marginTop: 4 }}>Prueba con diferentes puntos</p>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500 }}>Sin rutas para este trayecto</p>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Prueba con diferentes puntos</p>
             </div>
           ) : (
             <div>
-              <p style={{ fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8, paddingLeft: 2 }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8, paddingLeft: 2 }}>
                 {options.length} opción{options.length > 1 ? 'es' : ''} encontrada{options.length > 1 ? 's' : ''}
               </p>
 
@@ -442,8 +442,8 @@ export default function RouteNavigator({
                     >
                       <div style={{
                         borderRadius: 18, overflow: 'hidden',
-                        background: isSelected ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)',
-                        border: `1.5px solid ${isSelected ? opt.route.color + '50' : 'rgba(255,255,255,0.06)'}`,
+                        background: isSelected ? 'var(--subtle-bg)' : 'var(--subtle-bg)',
+                        border: `1.5px solid ${isSelected ? opt.route.color + '50' : 'var(--subtle-border)'}`,
                         boxShadow: isSelected ? `0 4px 20px ${opt.route.color}18` : 'none',
                         transition: 'all 0.25s',
                       }}>
@@ -483,7 +483,7 @@ export default function RouteNavigator({
                               <Bus size={15} style={{ color: opt.route.color }} />
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{ fontSize: 13, fontWeight: 600, color: '#F1F5F9', margin: 0, lineHeight: 1.3 }}>
+                              <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0, lineHeight: 1.3 }}>
                                 {opt.route.name || opt.route.nombre}
                               </p>
                               <p style={{ fontSize: 10, color: opt.route.color, margin: 0, marginTop: 1 }}>
@@ -513,12 +513,12 @@ export default function RouteNavigator({
                                 <Clock size={12} color="#F59E0B" />
                               </div>
                               <span style={{ fontSize: 15, fontWeight: 700, color: '#F59E0B' }}>~{opt.totalMinutes}</span>
-                              <span style={{ fontSize: 10, color: '#475569' }}>min</span>
+                              <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>min</span>
                             </div>
-                            <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.07)' }} />
+                            <div style={{ width: 1, height: 16, background: 'var(--subtle-border)' }} />
                             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                               <Footprints size={12} color="#60A5FA" />
-                              <span style={{ fontSize: 12, color: '#475569' }}>{opt.totalWalkMinutes} min a pie</span>
+                              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{opt.totalWalkMinutes} min a pie</span>
                             </div>
                             <div style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 600, color: '#F59E0B' }}>
                               ${opt.route.fare?.toLocaleString()}
@@ -561,7 +561,7 @@ export default function RouteNavigator({
                                   </div>
                                   <div>
                                     <p style={{ fontSize: 12, fontWeight: 500, color: step.color, margin: 0 }}>{step.label}</p>
-                                    <p style={{ fontSize: 10, color: '#475569', margin: 0, marginTop: 1 }}>{step.sub}</p>
+                                    <p style={{ fontSize: 10, color: 'var(--text-secondary)', margin: 0, marginTop: 1 }}>{step.sub}</p>
                                   </div>
                                 </div>
                               ))}
@@ -589,7 +589,7 @@ export default function RouteNavigator({
       {!navigationResult && (
         <div style={{
           borderRadius: 18,
-          background: 'rgba(255,255,255,0.02)',
+          background: 'var(--subtle-bg)',
           border: '1px solid rgba(255,255,255,0.05)',
           padding: '20px 16px',
         }}>
@@ -601,10 +601,10 @@ export default function RouteNavigator({
           }}>
             <Navigation size={22} color="#F59E0B" />
           </div>
-          <p style={{ textAlign: 'center', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 4 }}>
+          <p style={{ textAlign: 'center', fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
             ¿A dónde quieres ir?
           </p>
-          <p style={{ textAlign: 'center', fontSize: 11, color: '#334155', lineHeight: 1.5, marginBottom: 14 }}>
+          <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 14 }}>
             Ingresa tus puntos para encontrar las mejores rutas de bus en Barranquilla.
           </p>
 
@@ -626,7 +626,7 @@ export default function RouteNavigator({
                 }}>
                   {tip.icon}
                 </div>
-                <span style={{ fontSize: 11, color: '#64748B' }}>{tip.text}</span>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tip.text}</span>
               </div>
             ))}
           </div>

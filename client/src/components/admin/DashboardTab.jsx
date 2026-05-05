@@ -6,17 +6,17 @@ function StatCard({ icon, label, value, color, sub }) {
   return (
     <div style={{
       padding: '14px', borderRadius: 14,
-      background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+      background: 'var(--subtle-bg)', border: '1px solid rgba(255,255,255,0.06)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <div style={{
           width: 28, height: 28, borderRadius: 8,
           background: `${color}12`, display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>{icon}</div>
-        <span style={{ fontSize: 10, color: '#64748B', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
+        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
       </div>
       <p style={{ fontSize: 24, fontWeight: 800, color, margin: 0 }}>{value}</p>
-      {sub && <p style={{ fontSize: 10, color: '#475569', margin: '2px 0 0' }}>{sub}</p>}
+      {sub && <p style={{ fontSize: 10, color: 'var(--text-secondary)', margin: '2px 0 0' }}>{sub}</p>}
     </div>
   );
 }
@@ -78,12 +78,12 @@ function TrafficChart({ data }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
           <Activity size={13} color="#F59E0B" />
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#F1F5F9', fontFamily: 'Outfit, sans-serif' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'Outfit, sans-serif' }}>
             Tráfico API
           </span>
           <span style={{
-            fontSize: 9, fontWeight: 600, color: '#64748B',
-            background: 'rgba(255,255,255,0.05)', borderRadius: 6, padding: '2px 6px',
+            fontSize: 9, fontWeight: 600, color: 'var(--text-muted)',
+            background: 'var(--subtle-bg)', borderRadius: 6, padding: '2px 6px',
           }}>24h</span>
           {/* Live pulse */}
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -216,11 +216,11 @@ function TrafficChart({ data }) {
             boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
             zIndex: 10,
           }}>
-            <p style={{ margin: 0, fontSize: 9, color: '#64748B', fontWeight: 600 }}>{tooltip.d.label}</p>
+            <p style={{ margin: 0, fontSize: 9, color: 'var(--text-muted)', fontWeight: 600 }}>{tooltip.d.label}</p>
             <p style={{ margin: '2px 0 0', fontSize: 15, fontWeight: 800, color: '#F59E0B', lineHeight: 1 }}>
               {tooltip.d.count.toLocaleString('es-CO')}
             </p>
-            <p style={{ margin: 0, fontSize: 9, color: '#475569' }}>requests</p>
+            <p style={{ margin: 0, fontSize: 9, color: 'var(--text-secondary)' }}>requests</p>
           </div>
         )}
       </div>
@@ -250,7 +250,7 @@ export default function DashboardTab() {
 
   useEffect(() => { loadData(); const t = setInterval(loadData, 30000); return () => clearInterval(t); }, []);
 
-  if (loading) return <p style={{ padding: 20, color: '#475569', fontSize: 12 }}>Cargando dashboard...</p>;
+  if (loading) return <p style={{ padding: 20, color: 'var(--text-secondary)', fontSize: 12 }}>Cargando dashboard...</p>;
   if (!stats) return <p style={{ padding: 20, color: '#EF4444', fontSize: 12 }}>Error al cargar</p>;
 
   return (
@@ -272,17 +272,17 @@ export default function DashboardTab() {
         <div style={{ padding: '12px 14px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <Trophy size={13} color="#F59E0B" />
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#F1F5F9', fontFamily: 'Outfit, sans-serif' }}>Ranking Quilla XP</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'Outfit, sans-serif' }}>Ranking Quilla XP</span>
           </div>
-          <span style={{ fontSize: 9, color: '#475569', background: 'rgba(255,255,255,0.05)', borderRadius: 6, padding: '2px 7px', fontWeight: 600 }}>TOP 5</span>
+          <span style={{ fontSize: 9, color: 'var(--text-secondary)', background: 'var(--subtle-bg)', borderRadius: 6, padding: '2px 7px', fontWeight: 600 }}>TOP 5</span>
         </div>
 
         {leaderboard.length === 0 ? (
-          <p style={{ fontSize: 11, color: '#475569', padding: '8px 14px 14px', margin: 0 }}>Sin contribuidores aún</p>
+          <p style={{ fontSize: 11, color: 'var(--text-secondary)', padding: '8px 14px 14px', margin: 0 }}>Sin contribuidores aún</p>
         ) : (
           <div style={{ padding: '0 14px 12px' }}>
             {leaderboard.map((u, i) => {
-              const rankColors = ['#F59E0B', '#94A3B8', '#CD7F32', '#64748B', '#64748B'];
+              const rankColors = ['#F59E0B', 'var(--text-secondary)', '#CD7F32', 'var(--text-muted)', 'var(--text-muted)'];
               const rankIcons = ['🥇', '🥈', '🥉', '4°', '5°'];
               const initials = u.name?.charAt(0)?.toUpperCase() || '?';
               const xpMax = leaderboard[0]?.xp || 1;
@@ -316,7 +316,7 @@ export default function DashboardTab() {
                       </span>
                     </div>
                     {/* XP progress bar */}
-                    <div style={{ height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                    <div style={{ height: 3, borderRadius: 2, background: 'var(--subtle-border)', overflow: 'hidden' }}>
                       <div style={{ width: `${barW}%`, height: '100%', background: `linear-gradient(90deg, ${u.levelColor}99, ${u.levelColor})`, borderRadius: 2, transition: 'width 0.6s ease' }} />
                     </div>
                   </div>
@@ -337,16 +337,16 @@ export default function DashboardTab() {
       </div>
 
       {/* User breakdown */}
-      <div style={{ padding: 14, borderRadius: 14, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: '#F1F5F9', marginBottom: 8 }}>👥 Distribución de usuarios</p>
+      <div style={{ padding: 14, borderRadius: 14, background: 'var(--subtle-bg)', border: '1px solid rgba(255,255,255,0.06)' }}>
+        <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>👥 Distribución de usuarios</p>
         {[
-          { label: 'Free', count: stats.users.free, color: '#64748B' },
+          { label: 'Free', count: stats.users.free, color: 'var(--text-muted)' },
           { label: 'Premium', count: stats.users.premium, color: '#F59E0B' },
           { label: 'Admin', count: stats.users.admin, color: '#EF4444' },
         ].map(r => (
           <div key={r.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: r.color }} />
-            <span style={{ fontSize: 11, color: '#94A3B8', flex: 1 }}>{r.label}</span>
+            <span style={{ fontSize: 11, color: 'var(--text-secondary)', flex: 1 }}>{r.label}</span>
             <span style={{ fontSize: 12, fontWeight: 700, color: r.color }}>{r.count}</span>
           </div>
         ))}
@@ -354,16 +354,16 @@ export default function DashboardTab() {
 
       {/* Recent captures */}
       {stats.recentCaptures?.length > 0 && (
-        <div style={{ padding: 14, borderRadius: 14, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: '#F1F5F9', marginBottom: 8 }}>📡 Capturas recientes</p>
+        <div style={{ padding: 14, borderRadius: 14, background: 'var(--subtle-bg)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>📡 Capturas recientes</p>
           {stats.recentCaptures.map((c, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: i < stats.recentCaptures.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
               {c.status === 'pending' ? <AlertTriangle size={11} color="#FBBF24" /> : c.status === 'approved' ? <CheckCircle2 size={11} color="#10B981" /> : <XCircle size={11} color="#EF4444" />}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: 11, color: '#E2E8F0', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.routeName}</p>
-                <p style={{ fontSize: 9, color: '#475569', margin: 0 }}>{c.userName} · {c.company}</p>
+                <p style={{ fontSize: 9, color: 'var(--text-secondary)', margin: 0 }}>{c.userName} · {c.company}</p>
               </div>
-              <span style={{ fontSize: 9, color: '#334155' }}>{new Date(c.createdAt).toLocaleDateString('es-CO')}</span>
+              <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>{new Date(c.createdAt).toLocaleDateString('es-CO')}</span>
             </div>
           ))}
         </div>

@@ -99,7 +99,7 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
             background: '#10B981',
             boxShadow: '0 0 8px rgba(16,185,129,0.7)',
           }} />
-          <span style={{ fontSize: 11, fontWeight: 600, color: '#34D399', letterSpacing: '0.03em' }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--success)', letterSpacing: '0.03em' }}>
             En línea
           </span>
         </div>
@@ -134,7 +134,7 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
           border: '1px solid rgba(6,182,212,0.15)',
         }}>
           <Zap size={11} color="#06B6D4" />
-          <span style={{ fontSize: 11, fontWeight: 500, color: '#22D3EE' }}>
+          <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--accent-cyan)' }}>
             Transporte BQ
           </span>
         </div>
@@ -153,9 +153,9 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
           style={{
             width: 34, height: 34, borderRadius: 10, flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'rgba(255,255,255,0.05)',
+            background: 'var(--subtle-bg)',
             border: '1px solid rgba(255,255,255,0.08)',
-            color: '#94A3B8',
+            color: 'var(--text-secondary)',
             textDecoration: 'none',
             transition: 'all 0.25s ease',
           }}
@@ -167,9 +167,9 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
             e.currentTarget.style.transform = 'translateY(-1px)';
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+            e.currentTarget.style.background = 'var(--subtle-bg)';
             e.currentTarget.style.border = '1px solid rgba(255,255,255,0.08)';
-            e.currentTarget.style.color = '#94A3B8';
+            e.currentTarget.style.color = 'var(--text-secondary)';
             e.currentTarget.style.boxShadow = 'none';
             e.currentTarget.style.transform = 'translateY(0)';
           }}

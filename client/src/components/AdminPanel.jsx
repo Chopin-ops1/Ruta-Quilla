@@ -179,62 +179,62 @@ function RouteEditorTab({ user }) {
     <div style={{ display: 'flex', height: '100%' }}>
       {/* Editor sidebar */}
       <div style={{ width: 320, flexShrink: 0, overflowY: 'auto', borderRight: '1px solid rgba(255,255,255,0.06)', padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <p style={{ fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+        <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           {editingRouteId ? '✏️ Editando' : '🆕 Nueva Ruta'}
         </p>
-        <input type="text" placeholder="Nombre" value={nombre} onChange={e => setNombre(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: '#F1F5F9', fontSize: 12, outline: 'none' }} />
+        <input type="text" placeholder="Nombre" value={nombre} onChange={e => setNombre(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'var(--subtle-bg)', color: 'var(--text-primary)', fontSize: 12, outline: 'none' }} />
         <div style={{ display: 'flex', gap: 6 }}>
-          <select value={Object.keys(OPERATOR_COLORS).includes(operador) ? operador : 'Otra'} onChange={e => setOperador(e.target.value)} style={{ flex: 1, padding: '8px', borderRadius: 8, fontSize: 11, background: 'rgba(255,255,255,0.04)', color: '#F1F5F9', border: '1px solid rgba(255,255,255,0.08)', outline: 'none' }}>
+          <select value={Object.keys(OPERATOR_COLORS).includes(operador) ? operador : 'Otra'} onChange={e => setOperador(e.target.value)} style={{ flex: 1, padding: '8px', borderRadius: 8, fontSize: 11, background: 'var(--subtle-bg)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.08)', outline: 'none' }}>
             {Object.keys(OPERATOR_COLORS).map(op => <option key={op} value={op}>{op}</option>)}
             <option value="Otra">Otra</option>
           </select>
           <input type="color" value={color} onChange={e => setColor(e.target.value)} style={{ width: 38, height: 35, borderRadius: 8, border: 'none', cursor: 'pointer', background: 'transparent' }} />
         </div>
         {(!Object.keys(OPERATOR_COLORS).includes(operador) || operador === 'Otra') && (
-          <input type="text" placeholder="Nombre de la empresa" value={operador === 'Otra' ? '' : operador} onChange={e => setOperador(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: '#F1F5F9', fontSize: 12, outline: 'none' }} />
+          <input type="text" placeholder="Nombre de la empresa" value={operador === 'Otra' ? '' : operador} onChange={e => setOperador(e.target.value)} style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'var(--subtle-bg)', color: 'var(--text-primary)', fontSize: 12, outline: 'none' }} />
         )}
         <div style={{ display: 'flex', gap: 6 }}>
-          <input type="number" placeholder="Tarifa" value={fare} onChange={e => setFare(parseInt(e.target.value) || 0)} style={{ flex: 1, padding: '8px', borderRadius: 8, fontSize: 11, background: 'rgba(255,255,255,0.04)', color: '#F1F5F9', border: '1px solid rgba(255,255,255,0.08)', outline: 'none' }} />
-          <input type="text" placeholder="Código" value={codigo} onChange={e => setCodigo(e.target.value)} style={{ flex: 1, padding: '8px', borderRadius: 8, fontSize: 11, background: 'rgba(255,255,255,0.04)', color: '#F1F5F9', border: '1px solid rgba(255,255,255,0.08)', outline: 'none' }} />
+          <input type="number" placeholder="Tarifa" value={fare} onChange={e => setFare(parseInt(e.target.value) || 0)} style={{ flex: 1, padding: '8px', borderRadius: 8, fontSize: 11, background: 'var(--subtle-bg)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.08)', outline: 'none' }} />
+          <input type="text" placeholder="Código" value={codigo} onChange={e => setCodigo(e.target.value)} style={{ flex: 1, padding: '8px', borderRadius: 8, fontSize: 11, background: 'var(--subtle-bg)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.08)', outline: 'none' }} />
         </div>
         {/* Mode tabs */}
         <div style={{ display: 'flex', gap: 6 }}>
           {[{ mode: 'ida', label: 'Ida', color: '#2ECC71', count: idaPoints.length }, { mode: 'regreso', label: 'Vuelta', color: '#E74C3C', count: regresoPoints.length }].map(t => (
-            <button key={t.mode} onClick={() => setEditMode(t.mode)} style={{ flex: 1, padding: '8px', borderRadius: 8, border: `1px solid ${editMode === t.mode ? t.color + '50' : 'transparent'}`, background: editMode === t.mode ? `${t.color}20` : 'rgba(255,255,255,0.04)', color: editMode === t.mode ? t.color : '#64748B', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+            <button key={t.mode} onClick={() => setEditMode(t.mode)} style={{ flex: 1, padding: '8px', borderRadius: 8, border: `1px solid ${editMode === t.mode ? t.color + '50' : 'transparent'}`, background: editMode === t.mode ? `${t.color}20` : 'var(--subtle-bg)', color: editMode === t.mode ? t.color : '#64748B', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
               {t.label} ({t.count})
             </button>
           ))}
         </div>
         {/* Actions */}
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-          <button onClick={handleUndo} disabled={!activePoints.length} style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: '#94A3B8', fontSize: 10, cursor: activePoints.length ? 'pointer' : 'not-allowed', opacity: activePoints.length ? 1 : 0.4, display: 'flex', alignItems: 'center', gap: 4 }}><Undo2 size={10} /> Deshacer</button>
+          <button onClick={handleUndo} disabled={!activePoints.length} style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.08)', background: 'var(--subtle-bg)', color: 'var(--text-secondary)', fontSize: 10, cursor: activePoints.length ? 'pointer' : 'not-allowed', opacity: activePoints.length ? 1 : 0.4, display: 'flex', alignItems: 'center', gap: 4 }}><Undo2 size={10} /> Deshacer</button>
           <button onClick={handleSnapToRoads} disabled={activePoints.length < 2} style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.1)', color: '#F59E0B', fontSize: 10, cursor: activePoints.length >= 2 ? 'pointer' : 'not-allowed', opacity: activePoints.length >= 2 ? 1 : 0.4, display: 'flex', alignItems: 'center', gap: 4 }}><Zap size={10} /> Snap</button>
           <button onClick={resetEditor} style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.08)', color: '#F87171', fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}><RotateCcw size={10} /> Reset</button>
         </div>
-        <button onClick={handleSave} disabled={saving || idaPoints.length < 2 || !nombre} style={{ width: '100%', padding: '10px', borderRadius: 10, border: 'none', background: (saving || idaPoints.length < 2 || !nombre) ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg, #F59E0B, #D97706)', color: (saving || idaPoints.length < 2 || !nombre) ? '#475569' : '#000', fontSize: 12, fontWeight: 700, cursor: (saving || idaPoints.length < 2 || !nombre) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+        <button onClick={handleSave} disabled={saving || idaPoints.length < 2 || !nombre} style={{ width: '100%', padding: '10px', borderRadius: 10, border: 'none', background: (saving || idaPoints.length < 2 || !nombre) ? 'var(--subtle-bg)' : 'linear-gradient(135deg, #F59E0B, #D97706)', color: (saving || idaPoints.length < 2 || !nombre) ? 'var(--text-secondary)' : '#000', fontSize: 12, fontWeight: 700, cursor: (saving || idaPoints.length < 2 || !nombre) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
           <Save size={12} /> {saving ? 'Guardando...' : editingRouteId ? 'Actualizar' : 'Guardar'}
         </button>
 
         {/* Route list */}
         <div style={{ marginTop: 8 }}>
-          <p style={{ fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: 6 }}>📋 Rutas ({routes.length})</p>
-          {loadingRoutes ? <p style={{ fontSize: 11, color: '#475569' }}>Cargando...</p> :
+          <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: 6 }}>📋 Rutas ({routes.length})</p>
+          {loadingRoutes ? <p style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Cargando...</p> :
            routes.map(route => (
-            <div key={route._id} style={{ marginBottom: 4, borderRadius: 10, background: expandedRoute === route._id ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)', border: `1px solid ${expandedRoute === route._id ? (route.color || '#333') + '40' : 'rgba(255,255,255,0.05)'}` }}>
+            <div key={route._id} style={{ marginBottom: 4, borderRadius: 10, background: expandedRoute === route._id ? 'var(--subtle-bg)' : 'var(--subtle-bg)', border: `1px solid ${expandedRoute === route._id ? (route.color || '#333') + '40' : 'var(--subtle-bg)'}` }}>
               <button onClick={() => setExpandedRoute(expandedRoute === route._id ? null : route._id)} style={{ width: '100%', padding: '8px 10px', border: 'none', background: 'none', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', textAlign: 'left' }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: route.color || '#6B7280' }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 11, fontWeight: 600, color: '#F1F5F9', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{route.nombre}</p>
-                  <p style={{ fontSize: 9, color: '#475569', margin: 0 }}>{route.operador}</p>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{route.nombre}</p>
+                  <p style={{ fontSize: 9, color: 'var(--text-secondary)', margin: 0 }}>{route.operador}</p>
                 </div>
-                <ChevronDown size={10} style={{ color: '#475569', transform: expandedRoute === route._id ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                <ChevronDown size={10} style={{ color: 'var(--text-secondary)', transform: expandedRoute === route._id ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
               </button>
               {expandedRoute === route._id && (
                 <div style={{ padding: '0 10px 8px', display: 'flex', gap: 4 }}>
                   <button onClick={() => handleEdit(route)} style={{ flex: 1, padding: '6px', borderRadius: 6, border: '1px solid rgba(6,182,212,0.2)', background: 'rgba(6,182,212,0.08)', color: '#06B6D4', fontSize: 10, fontWeight: 600, cursor: 'pointer' }}>Editar</button>
                   {showDeleteConfirm === route._id ? (
                     <><button onClick={() => handleDelete(route._id)} style={{ flex: 1, padding: '6px', borderRadius: 6, border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(239,68,68,0.15)', color: '#EF4444', fontSize: 10, fontWeight: 600, cursor: 'pointer' }}>Confirmar</button>
-                    <button onClick={() => setShowDeleteConfirm(null)} style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#94A3B8', fontSize: 10, cursor: 'pointer' }}>✕</button></>
+                    <button onClick={() => setShowDeleteConfirm(null)} style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'var(--subtle-bg)', color: 'var(--text-secondary)', fontSize: 10, cursor: 'pointer' }}>✕</button></>
                   ) : (
                     <button onClick={() => setShowDeleteConfirm(route._id)} style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.08)', color: '#F87171', fontSize: 10, cursor: 'pointer' }}><Trash2 size={10} /></button>
                   )}
@@ -291,7 +291,7 @@ export default function AdminPanel({ onBack }) {
       }}>
         <button onClick={onBack} style={{
           width: 36, height: 36, borderRadius: 10, border: 'none',
-          background: 'rgba(255,255,255,0.06)', color: '#94A3B8',
+          background: 'var(--subtle-border)', color: 'var(--text-secondary)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', marginBottom: 16,
         }}>
@@ -302,7 +302,7 @@ export default function AdminPanel({ onBack }) {
           <button key={tab.id} onClick={() => setActiveTab(tab.id)} title={tab.label} style={{
             width: 40, height: 40, borderRadius: 10, border: 'none',
             background: activeTab === tab.id ? 'rgba(245,158,11,0.12)' : 'transparent',
-            color: activeTab === tab.id ? '#F59E0B' : '#475569',
+            color: activeTab === tab.id ? '#F59E0B' : 'var(--text-secondary)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', marginBottom: 4, transition: 'all 0.2s',
           }}>
@@ -323,11 +323,11 @@ export default function AdminPanel({ onBack }) {
           padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)',
           display: 'flex', alignItems: 'center', gap: 10,
         }}>
-          <h1 style={{ fontSize: 14, fontWeight: 700, color: '#F1F5F9', margin: 0, fontFamily: 'Outfit, sans-serif' }}>
+          <h1 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: 'Outfit, sans-serif' }}>
             Admin <span style={{ color: '#F59E0B' }}>{TABS.find(t => t.id === activeTab)?.label}</span>
           </h1>
           <div style={{ flex: 1 }} />
-          <span style={{ fontSize: 10, color: '#475569' }}>{user?.email}</span>
+          <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>{user?.email}</span>
         </div>
 
         {/* Tab content — editor needs hidden (map), others need scrollable */}

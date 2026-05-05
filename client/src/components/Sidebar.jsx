@@ -164,13 +164,13 @@ export default function Sidebar({
               >
                 <tab.icon
                   size={activeTab === tab.id ? 17 : 15}
-                  color={activeTab === tab.id ? tab.color : '#475569'}
+                  color={activeTab === tab.id ? tab.color : 'var(--text-secondary)'}
                   style={{ transition: 'all 0.2s', flexShrink: 0 }}
                 />
                 <span style={{
                   fontSize: 9,
                   fontWeight: activeTab === tab.id ? 700 : 500,
-                  color: activeTab === tab.id ? tab.color : '#475569',
+                  color: activeTab === tab.id ? tab.color : 'var(--text-secondary)',
                   letterSpacing: activeTab === tab.id ? '0.02em' : '0',
                   transition: 'all 0.2s',
                   lineHeight: 1,
@@ -227,7 +227,7 @@ export default function Sidebar({
                   border: '1px solid var(--subtle-border-strong)',
                   transition: 'border-color 0.2s',
                 }}>
-                  <Bus size={14} style={{ color: '#475569', flexShrink: 0 }} />
+                  <Bus size={14} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
                   <input
                     type="text"
                     placeholder="Buscar ruta o empresa..."
@@ -252,8 +252,8 @@ export default function Sidebar({
                         padding: '7px 14px', borderRadius: 10,
                         fontSize: 11, fontWeight: 600,
                         cursor: 'pointer', transition: 'all 0.2s',
-                        border: `1px solid ${filterType === opt.value ? '#06B6D4' + '40' : 'rgba(255,255,255,0.07)'}`,
-                        background: filterType === opt.value ? 'rgba(6,182,212,0.1)' : 'rgba(255,255,255,0.02)',
+                        border: `1px solid ${filterType === opt.value ? '#06B6D4' + '40' : 'var(--subtle-border)'}`,
+                        background: filterType === opt.value ? 'rgba(6,182,212,0.1)' : 'var(--subtle-bg)',
                         color: filterType === opt.value ? '#06B6D4' : '#64748B',
                       }}
                     >
@@ -270,8 +270,8 @@ export default function Sidebar({
                     style={{
                       width: '100%', padding: '9px 12px', borderRadius: 10,
                       fontSize: 11, outline: 'none', marginBottom: 10,
-                      background: 'rgba(255,255,255,0.03)',
-                      color: '#94A3B8',
+                      background: 'var(--subtle-bg)',
+                      color: 'var(--text-secondary)',
                       border: '1px solid rgba(255,255,255,0.07)',
                     }}
                   >
@@ -293,9 +293,9 @@ export default function Sidebar({
                       gap: 6, padding: '8px 10px', borderRadius: 10,
                       fontSize: 10, fontWeight: 600, cursor: 'pointer',
                       transition: 'all 0.2s',
-                      background: layerVisibility?.official ? 'rgba(16,185,129,0.08)' : 'rgba(255,255,255,0.02)',
-                      color: layerVisibility?.official ? '#34D399' : '#475569',
-                      border: `1px solid ${layerVisibility?.official ? 'rgba(16,185,129,0.25)' : 'rgba(255,255,255,0.06)'}`,
+                      background: layerVisibility?.official ? 'rgba(16,185,129,0.08)' : 'var(--subtle-bg)',
+                      color: layerVisibility?.official ? '#34D399' : 'var(--text-secondary)',
+                      border: `1px solid ${layerVisibility?.official ? 'rgba(16,185,129,0.25)' : 'var(--subtle-border)'}`,
                     }}
                   >
                     {layerVisibility?.official ? <Eye size={12} /> : <EyeOff size={12} />}
@@ -308,9 +308,9 @@ export default function Sidebar({
                       gap: 6, padding: '8px 10px', borderRadius: 10,
                       fontSize: 10, fontWeight: 600, cursor: 'pointer',
                       transition: 'all 0.2s',
-                      background: layerVisibility?.community ? 'rgba(139,92,246,0.08)' : 'rgba(255,255,255,0.02)',
-                      color: layerVisibility?.community ? '#A78BFA' : '#475569',
-                      border: `1px solid ${layerVisibility?.community ? 'rgba(139,92,246,0.25)' : 'rgba(255,255,255,0.06)'}`,
+                      background: layerVisibility?.community ? 'rgba(139,92,246,0.08)' : 'var(--subtle-bg)',
+                      color: layerVisibility?.community ? '#A78BFA' : 'var(--text-secondary)',
+                      border: `1px solid ${layerVisibility?.community ? 'rgba(139,92,246,0.25)' : 'var(--subtle-border)'}`,
                     }}
                   >
                     {layerVisibility?.community ? <Eye size={12} /> : <EyeOff size={12} />}
@@ -505,11 +505,11 @@ export default function Sidebar({
                         onClick={() => onRouteSelect?.(route)}
                         className="w-full text-left p-3 rounded-xl transition-all duration-200"
                         style={{
-                          background: selectedRoute?._id === route._id ? 'var(--bg-card)' : 'rgba(255,255,255,0.02)',
+                          background: selectedRoute?._id === route._id ? 'var(--bg-card)' : 'var(--subtle-bg)',
                           border: `1px solid ${selectedRoute?._id === route._id ? (route.color || '#555') + '40' : 'var(--border-color)'}`,
                         }}
                         onMouseEnter={e => { if (selectedRoute?._id !== route._id) e.currentTarget.style.background = 'var(--bg-card)'; }}
-                        onMouseLeave={e => { if (selectedRoute?._id !== route._id) e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
+                        onMouseLeave={e => { if (selectedRoute?._id !== route._id) e.currentTarget.style.background = 'var(--subtle-bg)'; }}
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-3 h-3 rounded-full flex-shrink-0"
@@ -556,12 +556,12 @@ export default function Sidebar({
                   <Bus size={22} color="#EC4899" />
                 </div>
                 <h3 style={{
-                  fontSize: 15, fontWeight: 700, color: '#F1F5F9', margin: '0 0 4px',
+                  fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px',
                   fontFamily: 'Outfit, sans-serif',
                 }}>
                   Capturar Ruta GPS
                 </h3>
-                <p style={{ fontSize: 11, color: '#64748B', margin: 0, lineHeight: 1.4 }}>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, lineHeight: 1.4 }}>
                   Sube a un bus y contribuye la ruta para toda la comunidad 🚌
                 </p>
               </div>
@@ -569,8 +569,8 @@ export default function Sidebar({
               {/* GPS status card */}
               <div style={{
                 padding: '12px 14px', borderRadius: 14, marginBottom: 12,
-                background: 'rgba(255,255,255,0.02)',
-                border: `1px solid ${isCapturing ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                background: 'var(--subtle-bg)',
+                border: `1px solid ${isCapturing ? 'rgba(239,68,68,0.2)' : 'var(--subtle-border)'}`,
                 transition: 'border-color 0.3s',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
@@ -591,7 +591,7 @@ export default function Sidebar({
                     { icon: '🎯', text: 'Filtro de precisión: ≤ 20 metros' },
                     { icon: '🤝', text: 'Se fusiona con capturas de otros usuarios' },
                   ].map((f, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#475569' }}>
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--text-secondary)' }}>
                       <span style={{ fontSize: 12, lineHeight: 1 }}>{f.icon}</span>
                       {f.text}
                     </div>
