@@ -14,6 +14,7 @@ import {
   ChevronDown, ChevronRight, Zap, Crown, Bus
 } from 'lucide-react';
 import { adminAPI } from '../../services/api';
+import { useTheme } from '../../context/ThemeContext';
 
 const SEG_COLORS = ['#06B6D4', '#F59E0B', '#10B981', '#8B5CF6', '#EC4899', '#F97316'];
 
@@ -42,6 +43,7 @@ function MapFitter({ coordinates }) {
 }
 
 export default function CompositesTab() {
+  const { isDark } = useTheme();
   const [composites, setComposites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
@@ -182,7 +184,11 @@ export default function CompositesTab() {
                 zoom={13}
                 style={{ width: '100%', height: '100%' }}
               >
-                <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" maxZoom={19} subdomains="abcd" />
+                <TileLayer
+                  url={isDark ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"}
+                  maxZoom={19}
+                  subdomains="abcd"
+                />
                 <MapFitter coordinates={mergedCoords} />
 
                 {/* Merged geometry — thick background line */}

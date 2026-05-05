@@ -545,10 +545,10 @@ export default function MapComponent({
   // Map tile URLs based on theme
   const baseTileUrl = isDark
     ? 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.basemaps.cartocdn.com/voyager_nolabels/{z}/{x}/{y}{r}.png';
+    : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png';
   const labelsTileUrl = isDark
     ? 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.basemaps.cartocdn.com/voyager_only_labels/{z}/{x}/{y}{r}.png';
+    : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png';
 
   // Walking route geometries (fetched from OSRM)
   const [walkToBoard, setWalkToBoard] = useState([]);

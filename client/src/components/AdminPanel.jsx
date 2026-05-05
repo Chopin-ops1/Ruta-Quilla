@@ -22,6 +22,7 @@ import {
   LayoutDashboard, Radar, Users, Map, Move, GitMerge
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { routesAPI, adminRoutesAPI } from '../services/api';
 import { snapToRoads, reverseGeocode } from '../services/routingService';
 
@@ -68,6 +69,7 @@ function AdminMapFit({ points, shouldFit }) {
 
 /* ========== ROUTE EDITOR TAB (extracted from old AdminPanel) ========== */
 function RouteEditorTab({ user }) {
+  const { isDark } = useTheme();
   const [routes, setRoutes] = useState([]);
   const [loadingRoutes, setLoadingRoutes] = useState(true);
   const [editMode, setEditMode] = useState('idle');
@@ -246,8 +248,8 @@ function RouteEditorTab({ user }) {
       {/* Map */}
       <div style={{ flex: 1, position: 'relative' }}>
         <MapContainer center={BARRANQUILLA_CENTER} zoom={DEFAULT_ZOOM} style={{ width: '100%', height: '100%' }}>
-          <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png" maxZoom={19} subdomains="abcd" />
-          <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png" maxZoom={19} subdomains="abcd" />
+          <TileLayer url={isDark ? "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png" : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png"} maxZoom={19} subdomains="abcd" />
+          <TileLayer url={isDark ? "https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png" : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"} maxZoom={19} subdomains="abcd" />
           <AdminMapClick onAddPoint={handleAddPoint} isDrawing={editMode !== 'idle'} />
           <AdminMapFit points={editMode === 'ida' ? idaPoints : regresoPoints} shouldFit={shouldFitMap} />
           {idaDisplay.length > 1 && <Polyline positions={idaDisplay} pathOptions={{ color: '#2ECC71', weight: 4, opacity: 0.85, dashArray: snappedIda.length > 1 ? null : '8, 8' }} />}

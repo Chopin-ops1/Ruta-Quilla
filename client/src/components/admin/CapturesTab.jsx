@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, useMap } from '
 import L from 'leaflet';
 import { Bus, CheckCircle2, XCircle, GitCompare } from 'lucide-react';
 import { adminAPI } from '../../services/api';
+import { useTheme } from '../../context/ThemeContext';
 
 const COLORS = ['#F59E0B', '#06B6D4', '#10B981', '#EF4444', '#8B5CF6', '#EC4899', '#F97316'];
 
@@ -73,6 +74,7 @@ function CompareResizer({ captures }) {
 }
 
 export default function CapturesTab() {
+  const { isDark } = useTheme();
   const [captures, setCaptures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending');
@@ -191,7 +193,7 @@ export default function CapturesTab() {
                 style={{ width: '100%', height: '100%' }}
               >
                 <TileLayer
-                  url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                  url={isDark ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"}
                   maxZoom={19}
                   subdomains="abcd"
                   attribution='&copy; <a href="https://carto.com/">CARTO</a>'
