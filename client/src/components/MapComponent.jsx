@@ -542,13 +542,15 @@ export default function MapComponent({
   const { isPremium } = useAuth();
   const { isDark } = useTheme();
 
-  // Map tile URLs based on theme
+  // Map tile URLs based on theme (100% gratis, sin API key)
   const baseTileUrl = isDark
-    ? 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png';
+    ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  // Labels layer: OSM tiles already include labels, so we only need a separate
+  // labels layer for dark mode (Stadia dark doesn't have a labels-only variant)
   const labelsTileUrl = isDark
-    ? 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png';
+    ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
   // Walking route geometries (fetched from OSRM)
   const [walkToBoard, setWalkToBoard] = useState([]);
@@ -700,26 +702,26 @@ export default function MapComponent({
         zoomControl={true}
         attributionControl={true}
       >
-        {/* Base map: tiles WITHOUT labels (dynamic dark/light) */}
+        {/* Base map: tiles WITH labels (dynamic dark/light) */}
         <TileLayer
           key={`base-${isDark ? 'dark' : 'light'}`}
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url={baseTileUrl}
           maxZoom={19}
-          subdomains="abcd"
         />
 
         {/* Create labels pane on top of everything */}
         <LabelsPane />
 
-        {/* Labels layer: ALWAYS on top of polylines (dynamic dark/light) */}
-        <TileLayer
-          key={`labels-${isDark ? 'dark' : 'light'}`}
-          url={labelsTileUrl}
-          maxZoom={19}
-          subdomains="abcd"
-          pane="labels"
-        />
+        {/* Labels layer: on dark mode uses same tiles, on light mode OSM already has labels */}
+        {isDark && (
+          <TileLayer
+            key={`labels-dark`}
+            url={labelsTileUrl}
+            maxZoom={19}
+            pane="labels"
+          />
+        )}
 
         <MapClickHandler pinMode={pinMode} onMapClick={onMapClick} />
         <MapPositioner

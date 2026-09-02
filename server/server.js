@@ -64,8 +64,9 @@ app.use(helmet({
       imgSrc: [
         "'self'", 'data:', 'blob:',
         '*.openstreetmap.org',
-        '*.cartocdn.com',
         '*.tile.openstreetmap.org',
+        'tiles.stadiamaps.com',
+        '*.cartocdn.com',
         '*.googleapis.com',
         '*.gstatic.com',
         '*.google.com',

@@ -185,9 +185,8 @@ export default function CompositesTab() {
                 style={{ width: '100%', height: '100%' }}
               >
                 <TileLayer
-                  url={isDark ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"}
+                  url={isDark ? "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png" : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"}
                   maxZoom={19}
-                  subdomains="abcd"
                 />
                 <MapFitter coordinates={mergedCoords} />
 
