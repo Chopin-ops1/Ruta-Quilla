@@ -248,7 +248,7 @@ function RouteEditorTab({ user }) {
       {/* Map */}
       <div style={{ flex: 1, position: 'relative' }}>
         <MapContainer center={BARRANQUILLA_CENTER} zoom={DEFAULT_ZOOM} style={{ width: '100%', height: '100%' }} className={isDark ? 'dark-map-tiles' : ''}>
-          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" maxZoom={19} attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" maxZoom={19} detectRetina={true} attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
           <AdminMapClick onAddPoint={handleAddPoint} isDrawing={editMode !== 'idle'} />
           <AdminMapFit points={editMode === 'ida' ? idaPoints : regresoPoints} shouldFit={shouldFitMap} />
           {idaDisplay.length > 1 && <Polyline positions={idaDisplay} pathOptions={{ color: '#2ECC71', weight: 4, opacity: 0.85, dashArray: snappedIda.length > 1 ? null : '8, 8' }} />}
