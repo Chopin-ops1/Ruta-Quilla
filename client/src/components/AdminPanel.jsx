@@ -52,6 +52,20 @@ function createPointIcon(index, color, isDraggable = false) {
   });
 }
 
+function AdminThemeSync({ isDark }) {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    if (!container) return;
+    if (isDark) {
+      container.classList.add('dark-map-tiles');
+    } else {
+      container.classList.remove('dark-map-tiles');
+    }
+  }, [isDark, map]);
+  return null;
+}
+
 function AdminMapClick({ onAddPoint, isDrawing }) {
   useMapEvents({ click(e) { if (isDrawing) onAddPoint({ lat: e.latlng.lat, lng: e.latlng.lng }); } });
   return null;
@@ -248,6 +262,7 @@ function RouteEditorTab({ user }) {
       {/* Map */}
       <div style={{ flex: 1, position: 'relative' }}>
         <MapContainer center={BARRANQUILLA_CENTER} zoom={DEFAULT_ZOOM} style={{ width: '100%', height: '100%' }} className={isDark ? 'dark-map-tiles' : ''}>
+          <AdminThemeSync isDark={isDark} />
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" maxZoom={19} attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
           <AdminMapClick onAddPoint={handleAddPoint} isDrawing={editMode !== 'idle'} />
           <AdminMapFit points={editMode === 'ida' ? idaPoints : regresoPoints} shouldFit={shouldFitMap} />

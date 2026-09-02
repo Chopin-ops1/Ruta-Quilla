@@ -524,6 +524,20 @@ function DecoratedPolyline({ positions, color, opacity, children }) {
   );
 }
 
+function ThemeSync({ isDark }) {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    if (!container) return;
+    if (isDark) {
+      container.classList.add('dark-map-tiles');
+    } else {
+      container.classList.remove('dark-map-tiles');
+    }
+  }, [isDark, map]);
+  return null;
+}
+
 export default function MapComponent({
   navigationResult,
   selectedRoute,
@@ -695,6 +709,7 @@ export default function MapComponent({
         zoomControl={true}
         attributionControl={true}
       >
+        <ThemeSync isDark={isDark} />
         {/* Base map: OpenStreetMap completo con todos los POIs y nombres de vías */}
         <TileLayer
           key="base-osm"
