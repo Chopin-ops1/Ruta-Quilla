@@ -191,9 +191,10 @@ export default function CapturesTab() {
                 center={[10.9685, -74.7813]}
                 zoom={13}
                 style={{ width: '100%', height: '100%' }}
+                className={isDark ? 'dark-map-tiles' : ''}
               >
                 <TileLayer
-                  url={isDark ? "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png" : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"}
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   maxZoom={19}
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 />

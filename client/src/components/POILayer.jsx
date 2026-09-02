@@ -19,7 +19,7 @@ import {
   POI_CATEGORIES,
 } from '../services/poiService';
 
-const MIN_ZOOM = 14;
+const MIN_ZOOM = 13;
 const DEBOUNCE_MS = 800;
 
 // SVG icons per category (minimalista, stroke-based)

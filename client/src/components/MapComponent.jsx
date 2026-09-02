@@ -542,15 +542,8 @@ export default function MapComponent({
   const { isPremium } = useAuth();
   const { isDark } = useTheme();
 
-  // Map tile URLs based on theme (100% gratis, sin API key)
-  const baseTileUrl = isDark
-    ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-  // Labels layer: OSM tiles already include labels, so we only need a separate
-  // labels layer for dark mode (Stadia dark doesn't have a labels-only variant)
-  const labelsTileUrl = isDark
-    ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  // Map tile URLs: OpenStreetMap oficial (100% gratis, sin API key, con todos los POIs y calles de Barranquilla)
+  const baseTileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
   // Walking route geometries (fetched from OSRM)
   const [walkToBoard, setWalkToBoard] = useState([]);
@@ -698,30 +691,20 @@ export default function MapComponent({
       <MapContainer
         center={BARRANQUILLA_CENTER}
         zoom={DEFAULT_ZOOM}
-        className="w-full h-full"
+        className={`w-full h-full ${isDark ? 'dark-map-tiles' : ''}`}
         zoomControl={true}
         attributionControl={true}
       >
-        {/* Base map: tiles WITH labels (dynamic dark/light) */}
+        {/* Base map: OpenStreetMap completo con todos los POIs y nombres de vías */}
         <TileLayer
-          key={`base-${isDark ? 'dark' : 'light'}`}
+          key="base-osm"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url={baseTileUrl}
           maxZoom={19}
         />
 
-        {/* Create labels pane on top of everything */}
+        {/* Labels pane on top of route overlays if needed */}
         <LabelsPane />
-
-        {/* Labels layer: on dark mode uses same tiles, on light mode OSM already has labels */}
-        {isDark && (
-          <TileLayer
-            key={`labels-dark`}
-            url={labelsTileUrl}
-            maxZoom={19}
-            pane="labels"
-          />
-        )}
 
         <MapClickHandler pinMode={pinMode} onMapClick={onMapClick} />
         <MapPositioner
