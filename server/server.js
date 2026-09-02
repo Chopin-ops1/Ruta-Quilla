@@ -109,7 +109,12 @@ app.use(compression({
  */
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
-    ? ['https://rutaquilla.me', 'https://www.rutaquilla.me']
+    ? [
+        'https://rutaquilla.me',
+        'https://www.rutaquilla.me',
+        // Render.com static site (actualizar con la URL real después del deploy)
+        process.env.CLIENT_URL,
+      ].filter(Boolean)
     : ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
@@ -179,6 +184,23 @@ app.use('/api/maps', mapRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/reports', reportRoutes);
+
+// Endpoint de ping ultraligero para health checks de Render
+// y para cron jobs de keep-alive (respuesta mínima, sin consulta a DB)
+//
+// KEEP-ALIVE SETUP (evitar que Render duerma el server):
+// 1. Ir a https://cron-job.org (gratis, sin tarjeta)
+// 2. Crear cuenta → "Create Cron Job"
+// 3. URL: https://rutaquilla-api.onrender.com/api/ping
+// 4. Schedule: Every 14 minutes (*/14 * * * *)
+// 5. Activar → listo, el server nunca se duerme
+app.get('/api/ping', (req, res) => {
+  // Log discreto para verificar que el keep-alive funciona
+  if (process.env.NODE_ENV === 'production') {
+    console.log(`🏓 ping @ ${new Date().toLocaleTimeString('es-CO', { timeZone: 'America/Bogota' })}`);
+  }
+  res.status(200).send('pong');
+});
 
 // Endpoint de salud del servidor
 app.get('/api/health', (req, res) => {

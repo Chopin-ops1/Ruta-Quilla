@@ -10,7 +10,12 @@
  * - Cache básico con localStorage
  */
 
-const API_BASE = '/api';
+/**
+ * En producción (Render), el frontend y backend están en dominios distintos.
+ * VITE_API_URL apunta al backend (ej: https://rutaquilla-api.onrender.com/api).
+ * En desarrollo, usamos '/api' que el proxy de Vite redirige a localhost:5000.
+ */
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 /**
  * Obtiene el token JWT del localStorage.

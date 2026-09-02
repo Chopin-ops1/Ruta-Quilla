@@ -1,0 +1,34 @@
+# ============================================
+# RutaQuilla - Render.com Blueprint
+# ============================================
+# Equivalente al app.yaml de DigitalOcean.
+# Deploy: Dashboard → New → Blueprint → seleccionar este repo.
+#
+# Tier gratuito:
+# - Web Service: 750 hrs/mes gratis (spin-down tras 15 min inactivo)
+# - Static Site: ilimitado y gratis
+# ============================================
+
+services:
+  # ---- Backend: Node.js + Express ----
+  - type: web
+    name: rutaquilla-api
+    runtime: node
+    region: oregon  # Región más cercana con tier gratis
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    healthCheckPath: /api/ping
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false  # Se configura manualmente en el dashboard (secreto)
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: ZOHO_EMAIL
+        sync: false
+      - key: ZOHO_PASSWORD
+        sync: false
