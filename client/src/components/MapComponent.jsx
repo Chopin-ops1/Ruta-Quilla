@@ -695,13 +695,12 @@ export default function MapComponent({
         zoomControl={true}
         attributionControl={true}
       >
-        {/* Base map: OpenStreetMap completo con todos los POIs y nombres de vías en alta resolución (HiDPI/Retina) */}
+        {/* Base map: OpenStreetMap completo con todos los POIs y nombres de vías */}
         <TileLayer
           key="base-osm"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url={baseTileUrl}
           maxZoom={19}
-          detectRetina={true}
         />
 
         {/* Labels pane on top of route overlays if needed */}

@@ -48,27 +48,31 @@ const CATEGORY_SVG = {
 function buildPOIIcon(category, name, zoom) {
   const color = getCategoryColor(category);
   const svgPath = CATEGORY_SVG[category] || `<circle cx="12" cy="12" r="4" stroke-width="2"/>`;
-  const showLabel = zoom >= 16;
-  const label = name.length > 18 ? name.slice(0, 16) + '…' : name;
+  const showLabel = zoom >= 14;
+  const isHighZoom = zoom >= 16;
+  const label = name.length > 22 ? name.slice(0, 20) + '…' : name;
+  const fontSize = isHighZoom ? '12px' : '11px';
+  const maxWidth = isHighZoom ? '150px' : '120px';
 
   const html = `
     <div style="
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 3px;
+      gap: 4px;
       pointer-events: none;
+      width: ${maxWidth};
     ">
       <div style="
-        width: 26px; height: 26px;
+        width: 28px; height: 28px;
         border-radius: 8px;
-        background: rgba(10,14,26,0.92);
-        border: 1.5px solid ${color}80;
+        background: rgba(10,14,26,0.95);
+        border: 1.5px solid ${color};
         display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 2px 10px ${color}40, 0 0 0 1px rgba(255,255,255,0.04) inset;
-        backdrop-filter: blur(4px);
+        box-shadow: 0 2px 10px ${color}55, 0 0 0 1px rgba(255,255,255,0.1) inset;
+        flex-shrink: 0;
       ">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
           stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           ${svgPath}
         </svg>
@@ -76,18 +80,20 @@ function buildPOIIcon(category, name, zoom) {
       ${showLabel ? `
         <div style="
           white-space: nowrap;
-          font-family: Inter, sans-serif;
-          font-size: 9.5px;
+          font-family: 'Inter', -apple-system, sans-serif;
+          font-size: ${fontSize};
           font-weight: 600;
-          color: #F1F5F9;
-          background: rgba(10,14,26,0.85);
-          padding: 1.5px 5px;
-          border-radius: 4px;
-          border: 1px solid rgba(255,255,255,0.08);
+          color: #FFFFFF;
+          background: rgba(10,14,26,0.92);
+          padding: 2.5px 7px;
+          border-radius: 5px;
+          border: 1px solid rgba(255,255,255,0.18);
+          box-shadow: 0 2px 6px rgba(0,0,0,0.5);
           letter-spacing: 0.01em;
-          max-width: 90px;
+          max-width: ${maxWidth};
           overflow: hidden;
           text-overflow: ellipsis;
+          text-align: center;
           pointer-events: none;
         ">${label}</div>
       ` : ''}
@@ -97,9 +103,9 @@ function buildPOIIcon(category, name, zoom) {
   return L.divIcon({
     className: '',
     html,
-    iconSize: showLabel ? [26, 48] : [26, 26],
-    iconAnchor: showLabel ? [13, 26] : [13, 13],
-    popupAnchor: [0, -30],
+    iconSize: showLabel ? [150, 56] : [28, 28],
+    iconAnchor: showLabel ? [75, 14] : [14, 14],
+    popupAnchor: [0, -20],
   });
 }
 
