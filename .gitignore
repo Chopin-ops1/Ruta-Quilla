@@ -39,3 +39,19 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Archivos de scratch / temporales
+scratch*.py
+scratch*.js
+
+# Presentación académica (proteger propiedad intelectual)
+presentacion/
+
+# Seguridad adicional — prevenir leaks accidentales
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+credentials.json
+service-account*.json
