@@ -27,6 +27,7 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const path = require('path');
+const fs = require('fs');
 
 const { connectDatabase, disconnectDatabase } = require('./config/database');
 
@@ -214,12 +215,27 @@ app.get('/api/health', (req, res) => {
 });
 
 // ============================================
-// Servir Frontend en Producción
+// Servir Frontend en Producción (si existe client/dist)
 // ============================================
-if (process.env.NODE_ENV === 'production') {
+const clientDistIndex = path.join(__dirname, '..', 'client', 'dist', 'index.html');
+if (process.env.NODE_ENV === 'production' && fs.existsSync(clientDistIndex)) {
   app.use(express.static(path.join(__dirname, '..', 'client', 'dist')));
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'client', 'dist', 'index.html'));
+    res.sendFile(clientDistIndex);
+  });
+} else {
+  // Cuando el backend corre como API independiente (ej. en Render)
+  app.get('/', (req, res) => {
+    res.json({
+      success: true,
+      service: 'RutaQuilla API Server',
+      status: 'active',
+      endpoints: {
+        ping: '/api/ping',
+        health: '/api/health',
+        routes: '/api/routes',
+      },
+    });
   });
 }
 
