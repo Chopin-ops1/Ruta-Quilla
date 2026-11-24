@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     trim: true,
     match: [
-      /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+      /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,
       'Por favor ingresa un email válido',
     ],
   },
@@ -87,6 +87,25 @@ const userSchema = new mongoose.Schema({
   },
   verificationCodeExpiry: {
     type: Date,
+    select: false,
+  },
+  verificationAttempts: {
+    type: Number,
+    default: 0,
+    select: false,
+  },
+  // ---- Password Reset ----
+  resetCode: {
+    type: String,
+    select: false,
+  },
+  resetCodeExpiry: {
+    type: Date,
+    select: false,
+  },
+  resetAttempts: {
+    type: Number,
+    default: 0,
     select: false,
   },
 

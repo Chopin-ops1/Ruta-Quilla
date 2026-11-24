@@ -1,26 +1,28 @@
 /**
  * ============================================
- * RutaQuilla - Routing Service v2
+ * RutaQuilla - Routing Service v3
  * ============================================
  *
- * Integra servicios para:
+ * Integra servicios gratuitos y rápidos:
  * 1. OSRM: Rutas reales que siguen las calles (caminar/conducir)
- * 2. Google Maps Geocoding: Búsqueda de direcciones con alta precisión
- * 3. Google Roads: Snap to Roads para trazar rutas precisas
- * 4. Nominatim: Fallback gratuito si no hay API key de Google
+ * 2. Búsqueda híbrida: Catálogo local de Barranquilla (0 ms) + proxy backend (Geoapify opcional / Photon / Nominatim)
+ * 3. Reverse geocoding con caché y fallback
  */
 
+import { searchLocalPlaces } from '../data/barranquillaPlaces';
+import { mapsAPI } from './api';
+
 const OSRM_BASE = 'https://router.project-osrm.org';
+const PHOTON_BASE = 'https://photon.komoot.io';
 const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org';
 const GOOGLE_GEOCODE_BASE = 'https://maps.googleapis.com/maps/api/geocode/json';
-const GOOGLE_PLACES_BASE = 'https://maps.googleapis.com/maps/api/place/autocomplete/json';
 const GOOGLE_ROADS_BASE = 'https://roads.googleapis.com/v1/snapToRoads';
 
-// API key from Vite env (set in .env as VITE_GOOGLE_MAPS_API_KEY)
+// API key from Vite env (optional legacy support)
 const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
-// Barranquilla bounding box for Nominatim search bias
-const BARRANQUILLA_VIEWBOX = '-75.05,10.85,-74.70,11.10';
+// Barranquilla bounding box for search bias
+const BARRANQUILLA_VIEWBOX = '-75.15,10.78,-74.68,11.12';
 const BARRANQUILLA_CENTER = { lat: 10.9685, lng: -74.7813 };
 
 /**
@@ -181,20 +183,109 @@ export async function getMultiStopRoute(waypoints) {
 }
 
 // ============================================
-// Place Search (Google Maps or Nominatim fallback)
+// Place Search (Hybrid: Local Barranquilla Catalog + Backend Proxy / Photon / Nominatim)
 // ============================================
 
+function normalizePlaceName(str) {
+  return String(str || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
 /**
- * Search for places — uses Google Geocoding if API key is available,
- * otherwise falls back to Nominatim (OpenStreetMap).
+ * Hybrid search for places in Barranquilla:
+ * 1. Instant local catalog lookup
+ * 2. Backend geocode proxy (Geoapify optional -> Photon -> Nominatim), or direct Photon fallback
+ * 3. Merge & deduplicate results within 90m or matching names
  */
 export async function searchPlaces(query) {
   if (!query || query.trim().length < 2) return [];
 
-  if (hasGoogleKey()) {
-    return searchPlacesGoogle(query);
+  const trimmed = query.trim();
+  const localResults = searchLocalPlaces(trimmed, 5);
+
+  let remoteResults = [];
+  if (trimmed.length >= 3 || localResults.length < 3) {
+    if (hasGoogleKey()) {
+      remoteResults = await searchPlacesGoogle(trimmed);
+    } else {
+      try {
+        const res = await mapsAPI.geocode(trimmed);
+        remoteResults = Array.isArray(res?.data) ? res.data : [];
+      } catch (err) {
+        console.warn('Backend geocode unavailable, falling back to Photon:', err?.message || err);
+        remoteResults = await searchPlacesPhoton(trimmed);
+        if (remoteResults.length === 0) {
+          remoteResults = await searchPlacesNominatim(trimmed);
+        }
+      }
+    }
   }
-  return searchPlacesNominatim(query);
+
+  // Merge local first + deduplicated remote
+  const merged = [...localResults];
+  for (const rem of remoteResults) {
+    if (!rem || !Number.isFinite(rem.lat) || !Number.isFinite(rem.lng)) continue;
+    const remNorm = normalizePlaceName(rem.displayName);
+    const isDuplicate = merged.some((m) => {
+      const dist = haversineM(m.lat, m.lng, rem.lat, rem.lng);
+      if (dist < 90) return true;
+      return normalizePlaceName(m.displayName) === remNorm;
+    });
+    if (!isDuplicate) {
+      merged.push(rem);
+    }
+    if (merged.length >= 6) break;
+  }
+
+  return merged.slice(0, 6);
+}
+
+/**
+ * Direct Photon (OSM) search fallback if backend proxy is unavailable.
+ */
+async function searchPlacesPhoton(query) {
+  try {
+    const params = new URLSearchParams({
+      q: query,
+      lat: BARRANQUILLA_CENTER.lat.toString(),
+      lon: BARRANQUILLA_CENTER.lng.toString(),
+      bbox: BARRANQUILLA_VIEWBOX,
+      limit: '6',
+    });
+
+    const res = await fetch(`${PHOTON_BASE}/api/?${params}`);
+    const data = await res.json();
+
+    return (data.features || []).map((f) => {
+      const props = f.properties || {};
+      const [lng, lat] = f.geometry?.coordinates || [];
+      const streetLine = props.street
+        ? `${props.street}${props.housenumber ? ` #${props.housenumber}` : ''}`
+        : '';
+      const displayName = props.name || streetLine || props.district || props.city || 'Barranquilla';
+      const area = props.locality || props.district;
+      const city = props.city || props.county || 'Barranquilla';
+      const subtitle = [streetLine && props.name ? streetLine : null, area !== displayName ? area : null, city !== displayName ? city : null]
+        .filter(Boolean)
+        .join(', ');
+
+      return {
+        displayName,
+        subtitle: subtitle || 'Barranquilla, Atlántico',
+        lat: Number(lat),
+        lng: Number(lng),
+        type: props.osm_value || props.type || 'place',
+        category: props.osm_key || 'place',
+        source: 'photon',
+      };
+    }).filter((item) => Number.isFinite(item.lat) && Number.isFinite(item.lng));
+  } catch (err) {
+    console.warn('Direct Photon search failed:', err);
+    return [];
+  }
 }
 
 /**
@@ -272,45 +363,124 @@ async function searchPlacesNominatim(query) {
 // Reverse Geocoding
 // ============================================
 
+const reverseGeocodeCache = new Map();
+const reverseGeocodeInFlight = new Map();
+const MAX_REVERSE_CACHE = 100;
+
 export async function reverseGeocode(lat, lng) {
-  if (hasGoogleKey()) {
-    try {
-      const params = new URLSearchParams({
-        latlng: `${lat},${lng}`,
-        key: GOOGLE_API_KEY,
-        language: 'es',
-      });
-
-      const res = await fetch(`${GOOGLE_GEOCODE_BASE}?${params}`);
-      const data = await res.json();
-
-      if (data.status === 'OK' && data.results?.length) {
-        return data.results[0].formatted_address
-          .replace(', Colombia', '')
-          .replace(', Atlántico', '');
-      }
-    } catch (err) {
-      console.warn('Google reverse geocode failed:', err);
-    }
+  const numLat = Number(lat);
+  const numLng = Number(lng);
+  if (!Number.isFinite(numLat) || !Number.isFinite(numLng)) {
+    return '';
   }
 
-  // Nominatim fallback
+  const cacheKey = `${numLat.toFixed(5)},${numLng.toFixed(5)}`;
+  if (reverseGeocodeCache.has(cacheKey)) {
+    return reverseGeocodeCache.get(cacheKey);
+  }
+  if (reverseGeocodeInFlight.has(cacheKey)) {
+    return reverseGeocodeInFlight.get(cacheKey);
+  }
+
+  const requestPromise = (async () => {
+    let resolvedName = null;
+
+    if (hasGoogleKey()) {
+      try {
+        const params = new URLSearchParams({
+          latlng: `${numLat},${numLng}`,
+          key: GOOGLE_API_KEY,
+          language: 'es',
+        });
+
+        const res = await fetch(`${GOOGLE_GEOCODE_BASE}?${params}`);
+        const data = await res.json();
+
+        if (data.status === 'OK' && data.results?.length) {
+          resolvedName = data.results[0].formatted_address
+            .replace(', Colombia', '')
+            .replace(', Atlántico', '');
+        }
+      } catch (err) {
+        console.warn('Google reverse geocode failed:', err);
+      }
+    }
+
+    if (!resolvedName) {
+      // Backend reverse geocode proxy (cached, Photon/Nominatim cascade)
+      try {
+        const res = await mapsAPI.reverse(numLat, numLng);
+        if (res?.data?.displayName) {
+          resolvedName = res.data.displayName;
+        }
+      } catch (_) {
+        resolvedName = null;
+      }
+    }
+
+    if (!resolvedName) {
+      // Direct Photon reverse fallback
+      try {
+        const params = new URLSearchParams({
+          lat: numLat.toString(),
+          lon: numLng.toString(),
+        });
+        const res = await fetch(`${PHOTON_BASE}/reverse?${params}`);
+        const data = await res.json();
+        const props = data?.features?.[0]?.properties;
+        if (props) {
+          const streetLine = props.street
+            ? `${props.street}${props.housenumber ? ` #${props.housenumber}` : ''}`
+            : '';
+          const primary = props.name || streetLine || props.district || props.city;
+          const area = props.locality || props.district;
+          if (primary) {
+            resolvedName = area && area !== primary ? `${primary}, ${area}` : primary;
+          }
+        }
+      } catch (_) {
+        resolvedName = null;
+      }
+    }
+
+    if (!resolvedName) {
+      // Nominatim fallback
+      try {
+        const params = new URLSearchParams({
+          lat: numLat.toString(),
+          lon: numLng.toString(),
+          format: 'json',
+          addressdetails: '1',
+        });
+
+        const res = await fetch(`${NOMINATIM_BASE}/reverse?${params}`, {
+          headers: { 'Accept-Language': 'es' },
+        });
+
+        const data = await res.json();
+        resolvedName = formatNominatimName(data) || null;
+      } catch (_) {
+        resolvedName = null;
+      }
+    }
+
+    if (resolvedName) {
+      if (reverseGeocodeCache.size >= MAX_REVERSE_CACHE) {
+        const oldestKey = reverseGeocodeCache.keys().next().value;
+        reverseGeocodeCache.delete(oldestKey);
+      }
+      reverseGeocodeCache.set(cacheKey, resolvedName);
+      return resolvedName;
+    }
+
+    return `${numLat.toFixed(4)}, ${numLng.toFixed(4)}`;
+  })();
+
+  reverseGeocodeInFlight.set(cacheKey, requestPromise);
   try {
-    const params = new URLSearchParams({
-      lat: lat.toString(),
-      lon: lng.toString(),
-      format: 'json',
-      addressdetails: '1',
-    });
-
-    const res = await fetch(`${NOMINATIM_BASE}/reverse?${params}`, {
-      headers: { 'Accept-Language': 'es' },
-    });
-
-    const data = await res.json();
-    return formatNominatimName(data) || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-  } catch (err) {
-    return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    return await requestPromise;
+  } finally {
+    reverseGeocodeInFlight.delete(cacheKey);
   }
 }
 

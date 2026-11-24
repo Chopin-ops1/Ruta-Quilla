@@ -12,17 +12,19 @@
  * - Páginas legales y banner de cookies
  */
 
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+import { Trophy } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
+import { useToast } from './context/ToastContext';
 import { routesAPI, mapsAPI, reportAPI } from './services/api';
-import { getCurrentPosition } from './services/gpsService';
+import { getCurrentPosition, startTracking, stopTracking } from './services/gpsService';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import MapComponent from './components/MapComponent';
 import GPSTracker from './components/GPSTracker';
 import LoginModal from './components/LoginModal';
 import LegalPages from './components/LegalPages';
-import CookieConsent from './components/CookieConsent';
+import StorageNotice from './components/StorageNotice';
 import MapQuickBar from './components/MapQuickBar';
 import RouteResultBar from './components/RouteResultBar';
 import IncidentReporter from './components/IncidentReporter';
@@ -65,6 +67,8 @@ export default function App() {
   const [routes, setRoutes] = useState([]);
   const [sponsoredLocations, setSponsoredLocations] = useState([]);
   const [selectedRoute, setSelectedRoute] = useState(null);
+  const [loadingRouteId, setLoadingRouteId] = useState(null);
+  const [focusedStop, setFocusedStop] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // ---- Navigation state ----
@@ -105,6 +109,11 @@ export default function App() {
   const [showCaptureConfig, setShowCaptureConfig] = useState(false);
 
   const { isPremium, isAuthenticated, isAdmin, canNavigate, incrementUsage, remainingFreeSearches } = useAuth();
+  const toast = useToast();
+  const hasNavBottomBar = Boolean(
+    navigationResult || previewOrigin || previewDestination || originFromMap || destFromMap
+  );
+  const fabBottom = hasNavBottomBar ? 204 : selectedRoute ? 148 : 28;
 
   /**
    * Full state reset on logout.
@@ -115,6 +124,8 @@ export default function App() {
     if (!isAuthenticated) {
       setNavigationResult(null);
       setSelectedRoute(null);
+      setLoadingRouteId(null);
+      setFocusedStop(null);
       setSelectedOptionIdx(0);
       setIsNavigating(false);
       setGpsTrack([]);
@@ -184,6 +195,19 @@ export default function App() {
   }, []);
 
   /**
+   * Continuous GPS tracking during active Live Navigation (unless capture is active).
+   */
+  useEffect(() => {
+    if (!liveNavOption || isCapturing) return;
+    const watchId = startTracking(
+      (pos) => setUserPosition(pos),
+      (err) => console.warn('LiveNav GPS:', err.message),
+      { maxAccuracy: 50, minInterval: 2000 }
+    );
+    return () => stopTracking(watchId);
+  }, [liveNavOption, isCapturing]);
+
+  /**
    * Load sponsored locations (only for free users).
    */
   useEffect(() => {
@@ -242,11 +266,11 @@ export default function App() {
       setMenuOpen(false);
     } catch (err) {
       console.error('Error en navegación:', err);
-      alert('Error al buscar rutas. Intenta de nuevo.');
+      toast.error('Error al buscar rutas. Intenta de nuevo.');
     } finally {
       setIsNavigating(false);
     }
-  }, [canNavigate, incrementUsage]);
+  }, [canNavigate, incrementUsage, toast]);
 
   /**
    * Select a route option idx — updates the map display.
@@ -299,15 +323,62 @@ export default function App() {
     }
   }, [pinMode]);
 
-  /**
-   * Select a route from the list (preview only that route on map).
-   */
-  const handleRouteSelect = useCallback((route) => {
-    // Clear navigation when viewing individual routes
-    setNavigationResult(null);
-    setSelectedRoute(prev => prev?._id === route._id ? null : route);
-    setMenuOpen(false);
+  const routeSelectReqRef = useRef(0);
+
+  const handleClearSelectedRoute = useCallback(() => {
+    routeSelectReqRef.current += 1;
+    setLoadingRouteId(null);
+    setSelectedRoute(null);
+    setFocusedStop(null);
   }, []);
+
+  /**
+   * Select a route from the list (lazy-loads full geometry & stops if omitted).
+   */
+  const handleRouteSelect = useCallback(async (route) => {
+    setNavigationResult(null);
+    setFocusedStop(null);
+    if (!route) {
+      handleClearSelectedRoute();
+      return;
+    }
+
+    if (selectedRoute?._id === route._id && loadingRouteId !== route._id) {
+      handleClearSelectedRoute();
+      return;
+    }
+
+    if (route.ida?.trazado?.coordinates?.length >= 2) {
+      routeSelectReqRef.current += 1;
+      setLoadingRouteId(null);
+      setSelectedRoute(route);
+      if (!isDesktop) setMenuOpen(false);
+      return;
+    }
+
+    // Show summary card immediately while full geometry & stops load
+    const reqId = ++routeSelectReqRef.current;
+    setLoadingRouteId(route._id);
+    setSelectedRoute(route);
+    if (!isDesktop) setMenuOpen(false);
+
+    try {
+      const res = await routesAPI.getById(route._id);
+      if (routeSelectReqRef.current !== reqId || !res?.data) return;
+      const fullRoute = res.data;
+      setSelectedRoute(fullRoute);
+      setRoutes(prev => prev.map(r => (r._id === fullRoute._id ? fullRoute : r)));
+    } catch (err) {
+      if (routeSelectReqRef.current === reqId) {
+        console.error('Error cargando geometría de ruta:', err);
+        toast.error('No se pudo cargar el trazado completo de la ruta');
+      }
+    } finally {
+      if (routeSelectReqRef.current === reqId) {
+        setLoadingRouteId(null);
+      }
+    }
+  }, [selectedRoute, loadingRouteId, isDesktop, toast, handleClearSelectedRoute]);
 
   const handleToggleLayer = useCallback((layer) => {
     setLayerVisibility(prev => ({ ...prev, [layer]: !prev[layer] }));
@@ -331,7 +402,9 @@ export default function App() {
       handleCaptureToggle(false);
     } else {
       if (!isAuthenticated) {
-        alert('Debes iniciar sesión para capturar rutas');
+        toast.warning('Inicia sesión para capturar rutas GPS');
+        setLoginReason(null);
+        setShowLogin(true);
         return;
       }
       setShowCaptureConfig(true);
@@ -370,18 +443,21 @@ export default function App() {
         menuOpen={menuOpen}
         onShowLegal={setShowLegal}
         onAdminClick={isAdmin ? goToAdmin : undefined}
+        routeCount={routes.length}
       />
 
       <div className="flex-1 flex relative" style={{ marginTop: 56 }}>
         <Sidebar
           routes={routes}
           isOpen={menuOpen}
-          onRouteSelect={(route) => {
-            handleRouteSelect(route);
-            // Auto-close sidebar on mobile after selecting a route
+          onRouteSelect={handleRouteSelect}
+          selectedRoute={selectedRoute}
+          loadingRouteId={loadingRouteId}
+          onClearSelectedRoute={handleClearSelectedRoute}
+          onFocusStop={(stop) => {
+            setFocusedStop({ ...stop, _t: Date.now() });
             if (!isDesktop) setMenuOpen(false);
           }}
-          selectedRoute={selectedRoute}
           onToggleLayer={handleToggleLayer}
           layerVisibility={layerVisibility}
           onStartCapture={handleStartCapture}
@@ -416,7 +492,7 @@ export default function App() {
           />
         )}
 
-        <main className="flex-1 relative" style={{ marginLeft: menuOpen && isDesktop ? '20rem' : 0, transition: 'margin-left 0.3s ease-out' }}>
+        <main className="flex-1 relative" style={{ marginLeft: menuOpen && isDesktop ? '22.5rem' : 0, transition: 'margin-left 0.3s ease-out' }}>
           {loading ? (
             <div className="w-full h-full flex items-center justify-center">
               <div className="text-center animate-fade-in">
@@ -441,6 +517,10 @@ export default function App() {
             <MapComponent
               navigationResult={navigationResult}
               selectedRoute={selectedRoute}
+              loadingRouteId={loadingRouteId}
+              focusedStop={focusedStop}
+              onClearSelectedRoute={handleClearSelectedRoute}
+              onOpenSidebarRoutes={() => setMenuOpen(true)}
               selectedOptionIdx={selectedOptionIdx}
               sponsoredLocations={sponsoredLocations}
               gpsTrack={gpsTrack}
@@ -489,7 +569,7 @@ export default function App() {
         />
       )}
 
-      <CookieConsent onShowPrivacy={() => setShowLegal('privacy')} />
+      <StorageNotice onShowPrivacy={() => setShowLegal('privacy')} />
 
       {/* Floating bottom bar for map-picked points (mobile-friendly) */}
       <MapQuickBar
@@ -529,8 +609,10 @@ export default function App() {
       {/* Incident Reporter (floating button + modal) — hidden during live nav */}
       {!liveNavOption && (
         <IncidentReporter
+          routes={routes}
           userPosition={userPosition}
           onReportCreated={loadActiveReports}
+          bottomOffset={fabBottom}
         />
       )}
 
@@ -549,8 +631,8 @@ export default function App() {
         onClick={() => setShowCommunity(true)}
         style={{
           position: 'fixed',
-          bottom: 80,
-          right: 74,
+          bottom: fabBottom + 60,
+          right: 16,
           zIndex: 1100,
           width: 50,
           height: 50,
@@ -562,14 +644,13 @@ export default function App() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: 20,
-          transition: 'transform 0.2s',
+          transition: 'bottom 0.3s ease, transform 0.2s',
         }}
         onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
         onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
         title="Comunidad Quilla"
       >
-        🏆
+        <Trophy size={20} color="#fff" />
       </button>
       )}
 

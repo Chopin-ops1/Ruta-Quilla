@@ -1,546 +1,237 @@
 /**
  * ============================================
- * RutaQuilla - MapComponent (Motor de Mapa v3)
+ * RutaQuilla - MapComponent v4 (MapLibre GL JS + OpenFreeMap)
  * ============================================
  *
- * Mejoras v3:
- * - Mapa con labels de calles siempre visibles (stack de capas)
- * - Navegación sin paradas fijas: proyección geométrica
- * - Diferenciación visual ida vs vuelta en rutas
- * - Capa de POIs reales de Barranquilla (OpenStreetMap)
- *
- * Capas de navegación:
- * - Walking: línea azul punteada (OSRM foot)
- * - Bus: línea sólida del color de la ruta (segmento extraído del LineString)
- * - Marcadores: origen (verde), destino (rojo), subir/bajar (dinámicos)
+ * Motor de mapa vectorial WebGL 60fps:
+ * - Tiles vectoriales OpenFreeMap (100% gratis, sin API key)
+ * - Modo oscuro (fiord) y claro (liberty) nativos
+ * - Edificios 3D / inclinación interactiva
+ * - Capas WebGL para rutas con flechas direccionales SDF
+ * - POIs y nombres de calles nativos en WebGL (sin Overpass spam)
+ * - Marcadores DOM seguros (escapados contra XSS)
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import * as maplibregl from 'maplibre-gl';
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import {
-  MapContainer, TileLayer, Polyline, Marker, Popup,
-  Circle, CircleMarker, useMap, useMapEvents, Pane
-} from 'react-leaflet';
-import L from 'leaflet';
+  Crosshair,
+  MapPin,
+  Plus,
+  Minus,
+  Compass,
+  Layers,
+  BusFront,
+  Utensils,
+  ShoppingBag,
+  HeartPulse,
+  GraduationCap,
+  Trees,
+  Landmark,
+  Banknote,
+  BedDouble,
+  X,
+  Loader2,
+  PanelLeftOpen,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { CURATED_MAP_POIS } from '../data/barranquillaPlaces';
+import {
+  POI_CATEGORIES,
+  POI_CHIP_ORDER,
+  POI_LAYER_IDS,
+  NATIVE_STYLE_POI_LAYERS,
+  buildPoiLayers,
+  buildCuratedPoisGeoJSON,
+  createPoiIconImages,
+  getPoiCategory,
+  getCategoryMeta,
+} from '../map/poiLayers';
 import { getWalkingRoute, getMultiStopRoute } from '../services/routingService';
-import POILayer from './POILayer';
+import { escapeHtml, safeColor } from '../utils/sanitize';
 
-const BARRANQUILLA_CENTER = [10.9685, -74.7813];
-const DEFAULT_ZOOM = 13;
+maplibregl.setWorkerUrl(maplibreWorkerUrl);
 
-// ---- Icon factories ----
+const BARRANQUILLA_CENTER = [-74.7813, 10.9685]; // [lng, lat]
+const DEFAULT_ZOOM = 12.8;
 
-function createOriginIcon() {
-  return L.divIcon({
-    className: '',
-    html: `<div style="
-      position: relative;
-      animation: marker-drop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    ">
-      <div style="
-        position: absolute; top: -10px; left: -10px;
-        width: 40px; height: 40px;
-        border: 2px solid rgba(16, 185, 129, 0.4);
-        border-radius: 50%;
-        animation: origin-pulse-1 2s ease-out infinite;
-      "></div>
-      <div style="
-        position: absolute; top: -10px; left: -10px;
-        width: 40px; height: 40px;
-        border: 1.5px solid rgba(16, 185, 129, 0.25);
-        border-radius: 50%;
-        animation: origin-pulse-2 2s ease-out 0.8s infinite;
-      "></div>
-      <div style="
-        width: 20px; height: 20px;
-        background: radial-gradient(circle at 35% 35%, #34D399, #10B981, #059669);
-        border: 3px solid white;
-        border-radius: 50%;
-        box-shadow: 0 0 16px rgba(16, 185, 129, 0.6), 0 2px 8px rgba(0,0,0,0.3);
-      "></div>
-      <div style="
-        position: absolute; top: 26px; left: 50%;
-        transform: translateX(-50%);
-        white-space: nowrap;
-        font-family: Inter, sans-serif;
-        font-size: 10px; font-weight: 700;
-        color: #10B981;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-        letter-spacing: 0.03em;
-      ">ORIGEN</div>
-    </div>`,
-    iconSize: [40, 50],
-    iconAnchor: [20, 20],
-    popupAnchor: [0, -20],
-  });
+const ICON_COMPONENTS = {
+  BusFront,
+  Utensils,
+  ShoppingBag,
+  HeartPulse,
+  GraduationCap,
+  Trees,
+  Landmark,
+  Banknote,
+  BedDouble,
+  MapPin,
+  Layers,
+};
+
+const POI_ICON_SVGS = Object.fromEntries(
+  Object.entries(POI_CATEGORIES).map(([id, meta]) => {
+    const Comp = ICON_COMPONENTS[meta.icon] || MapPin;
+    return [id, renderToStaticMarkup(createElement(Comp, { size: 24, color: '#FFFFFF', strokeWidth: 2.25 }))];
+  })
+);
+
+const CURATED_POIS_GEOJSON = buildCuratedPoisGeoJSON(CURATED_MAP_POIS);
+
+const STYLE_DARK = 'https://tiles.openfreemap.org/styles/fiord';
+const STYLE_LIGHT = 'https://tiles.openfreemap.org/styles/liberty';
+
+function emptyFC() {
+  return { type: 'FeatureCollection', features: [] };
 }
 
-function createDestinationIcon() {
-  return L.divIcon({
-    className: '',
-    html: `<div style="
-      position: relative;
-      animation: marker-drop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s forwards;
-      opacity: 0;
-    ">
-      <div style="
-        position: absolute; top: -6px; left: -6px;
-        width: 40px; height: 40px;
-        border-radius: 8px;
-        background: rgba(239, 68, 68, 0.15);
-        animation: dest-glow 2s ease-in-out infinite;
-        transform: rotate(45deg);
-      "></div>
-      <div style="
-        width: 28px; height: 28px;
-        background: linear-gradient(135deg, #F87171, #EF4444, #DC2626);
-        border: 3px solid white;
-        border-radius: 6px;
-        box-shadow: 0 0 16px rgba(239, 68, 68, 0.6), 0 2px 8px rgba(0,0,0,0.3);
-        display: flex; align-items: center; justify-content: center;
-        transform: rotate(45deg);
-      ">
-        <div style=\"width: 8px; height: 8px; background: white; border-radius: 50%; transform: rotate(-45deg);\"></div>
-      </div>
-      <div style="
-        position: absolute; top: 34px; left: 50%;
-        transform: translateX(-50%);
-        white-space: nowrap;
-        font-family: Inter, sans-serif;
-        font-size: 10px; font-weight: 700;
-        color: #EF4444;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-        letter-spacing: 0.03em;
-      ">DESTINO</div>
-    </div>`,
-    iconSize: [40, 56],
-    iconAnchor: [20, 20],
-    popupAnchor: [0, -20],
-  });
-}
-
-function createBoardAlightIcon(color, label) {
-  return L.divIcon({
-    className: '',
-    html: `<div style="
-      background: ${color};
-      color: #fff;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 12px;
-      border: 2px solid white;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
-      white-space: nowrap;
-      font-family: Inter, sans-serif;
-    ">${label}</div>`,
-    iconSize: [60, 24],
-    iconAnchor: [30, 12],
-    popupAnchor: [0, -14],
-  });
-}
-
-function createUserIcon() {
-  return L.divIcon({
-    className: '',
-    html: `<div style="position: relative;">
-      <div style="
-        position: absolute; top: -6px; left: -6px;
-        width: 28px; height: 28px;
-        border: 2px solid rgba(59, 130, 246, 0.3);
-        border-radius: 50%;
-        animation: origin-pulse-1 2.5s ease-out infinite;
-      "></div>
-      <div style="
-        position: absolute; top: -6px; left: -6px;
-        width: 28px; height: 28px;
-        border: 1.5px solid rgba(59, 130, 246, 0.2);
-        border-radius: 50%;
-        animation: origin-pulse-2 2.5s ease-out 1s infinite;
-      "></div>
-      <div style="
-        width: 16px; height: 16px;
-        background: radial-gradient(circle at 35% 35%, #60A5FA, #3B82F6, #2563EB);
-        border: 3px solid white;
-        border-radius: 50%;
-        box-shadow: 0 0 12px rgba(59, 130, 246, 0.6), 0 2px 6px rgba(0,0,0,0.3);
-        animation: gps-breathe 3s ease-in-out infinite;
-      "></div>
-      <div style="
-        position: absolute; top: 22px; left: 50%;
-        transform: translateX(-50%);
-        white-space: nowrap;
-        font-family: Inter, sans-serif;
-        font-size: 9px; font-weight: 700;
-        color: #60A5FA;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-      ">TÚ</div>
-    </div>`,
-    iconSize: [28, 36],
-    iconAnchor: [14, 14],
-  });
-}
-
-function createSponsorIcon(color = '#F59E0B') {
-  return L.divIcon({
-    className: '',
-    html: `<div class="sponsor-marker" style="border-color: ${color};">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5">
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-      </svg>
-    </div>`,
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
-    popupAnchor: [0, -24],
-  });
+function lineFC(coordsList, props = {}) {
+  const valid = (coordsList || []).filter((c) => Array.isArray(c) && c.length >= 2);
+  if (valid.length === 0) return emptyFC();
+  return {
+    type: 'FeatureCollection',
+    features: valid.map((coords) => ({
+      type: 'Feature',
+      properties: props,
+      geometry: { type: 'LineString', coordinates: coords },
+    })),
+  };
 }
 
 /**
- * Sub-component: handles map interaction.
- * - In pinMode: single click sets the pin directly.
- * - Desktop (no pinMode): RIGHT-CLICK shows context popup.
- * - Mobile (no pinMode): LONG-PRESS (500ms hold) shows context popup.
- * This prevents accidental popups from simple taps/clicks.
+ * Generates a 48-point geodesic circle GeoJSON polygon for GPS accuracy display.
  */
-function MapClickHandler({ pinMode, onMapClick, onSetOrigin, onSetDestination }) {
-  const map = useMap();
-  const longPressTimerRef = useRef(null);
-  const longPressPointRef = useRef(null);
-  const rippleRef = useRef(null);
+function createCircleGeoJSON(lng, lat, radiusMeters = 30, steps = 48) {
+  if (!Number.isFinite(lng) || !Number.isFinite(lat)) return emptyFC();
+  const safeRadius = Math.max(5, Math.min(Number(radiusMeters) || 30, 2000));
+  const coords = [];
+  const earthRadius = 6371000;
+  const latRad = (lat * Math.PI) / 180;
+  const lngRad = (lng * Math.PI) / 180;
+  const d = safeRadius / earthRadius;
 
-  // Clean up ripple element
-  const removeRipple = useCallback(() => {
-    if (rippleRef.current) {
-      try { map.getContainer().removeChild(rippleRef.current); } catch (_) {}
-      rippleRef.current = null;
-    }
-  }, [map]);
-
-  // Show the context popup at a location
-  const showContextPopup = useCallback((latlng) => {
-    const popup = L.popup({
-      className: 'context-popup',
-      closeButton: false,
-      minWidth: 180,
-      maxWidth: 220,
-      offset: [0, -5],
-    })
-      .setLatLng(latlng)
-      .setContent(`
-        <button class="ctx-btn" id="ctx-origin">
-          <span class="ctx-btn-icon">📍</span>
-          Origen desde aquí
-        </button>
-        <button class="ctx-btn" id="ctx-dest">
-          <span class="ctx-btn-icon">🏁</span>
-          Destino aquí
-        </button>
-      `)
-      .openOn(map);
-
-    setTimeout(() => {
-      document.getElementById('ctx-origin')?.addEventListener('click', () => {
-        onSetOrigin?.({ lat: latlng.lat, lng: latlng.lng });
-        map.closePopup(popup);
-      });
-      document.getElementById('ctx-dest')?.addEventListener('click', () => {
-        onSetDestination?.({ lat: latlng.lat, lng: latlng.lng });
-        map.closePopup(popup);
-      });
-    }, 50);
-  }, [map, onSetOrigin, onSetDestination]);
-
-  // Create a visual ripple indicator during long-press
-  const showRipple = useCallback((containerPoint) => {
-    removeRipple();
-    const el = document.createElement('div');
-    el.style.cssText = `
-      position: absolute; z-index: 9999;
-      width: 50px; height: 50px;
-      left: ${containerPoint.x - 25}px; top: ${containerPoint.y - 25}px;
-      border-radius: 50%;
-      border: 2px solid rgba(245,158,11,0.6);
-      background: rgba(245,158,11,0.1);
-      animation: origin-pulse-1 0.6s ease-out forwards;
-      pointer-events: none;
-    `;
-    map.getContainer().appendChild(el);
-    rippleRef.current = el;
-  }, [map, removeRipple]);
-
-  useEffect(() => {
-    const container = map.getContainer();
-
-    // ---- Right-click (desktop) ----
-    const onContextMenu = (e) => {
-      if (pinMode) return;
-      e.preventDefault();
-      const latlng = map.containerPointToLatLng(L.point(e.offsetX, e.offsetY));
-      showContextPopup(latlng);
-    };
-
-    // ---- Long-press (mobile) ----
-    const onTouchStart = (e) => {
-      if (pinMode) return;
-      if (e.touches.length !== 1) return;
-      const touch = e.touches[0];
-      const rect = container.getBoundingClientRect();
-      const point = { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
-      longPressPointRef.current = point;
-
-      longPressTimerRef.current = setTimeout(() => {
-        // Vibrate if available (mobile feedback)
-        if (navigator.vibrate) navigator.vibrate(30);
-        showRipple(L.point(point.x, point.y));
-        const latlng = map.containerPointToLatLng(L.point(point.x, point.y));
-        showContextPopup(latlng);
-        longPressTimerRef.current = null;
-      }, 500);
-    };
-
-    const onTouchMove = () => {
-      // Cancel long-press if finger moves
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-        longPressTimerRef.current = null;
-      }
-      removeRipple();
-    };
-
-    const onTouchEnd = () => {
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-        longPressTimerRef.current = null;
-      }
-      setTimeout(removeRipple, 600);
-    };
-
-    container.addEventListener('contextmenu', onContextMenu);
-    container.addEventListener('touchstart', onTouchStart, { passive: true });
-    container.addEventListener('touchmove', onTouchMove, { passive: true });
-    container.addEventListener('touchend', onTouchEnd);
-
-    return () => {
-      container.removeEventListener('contextmenu', onContextMenu);
-      container.removeEventListener('touchstart', onTouchStart);
-      container.removeEventListener('touchmove', onTouchMove);
-      container.removeEventListener('touchend', onTouchEnd);
-      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-      removeRipple();
-    };
-  }, [map, pinMode, showContextPopup, showRipple, removeRipple]);
-
-  // Pin mode: simple click sets position
-  useMapEvents({
-    click(e) {
-      if (pinMode) {
-        onMapClick?.({ lat: e.latlng.lat, lng: e.latlng.lng });
-      }
-      // No popup on normal click — only long-press or right-click
-    },
-  });
-  return null;
-}
-
-/**
- * Sub-component: creates a custom Leaflet pane for labels layer.
- */
-function LabelsPane() {
-  const map = useMap();
-
-  useEffect(() => {
-    if (!map.getPane('labels')) {
-      const pane = map.createPane('labels');
-      pane.style.zIndex = 650;
-      pane.style.pointerEvents = 'none';
-    }
-  }, [map]);
-
-  return null;
-}
-
-/**
- * Sub-component: fits map bounds when navigation result changes.
- */
-function MapPositioner({ navigationResult, selectedRoute, walkToBoard, walkFromAlight, busSegment }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (navigationResult?.origin && navigationResult?.destination) {
-      const points = [
-        [navigationResult.origin.lat, navigationResult.origin.lng],
-        [navigationResult.destination.lat, navigationResult.destination.lng],
-      ];
-      if (walkToBoard?.length) points.push(...walkToBoard);
-      if (walkFromAlight?.length) points.push(...walkFromAlight);
-      if (busSegment?.length) points.push(...busSegment.map(c => [c[1], c[0]]));
-
-      const bounds = L.latLngBounds(points);
-      map.fitBounds(bounds, { padding: [80, 80], maxZoom: 16 });
-    } else if (selectedRoute?.ida?.trazado?.coordinates) {
-      const coords = selectedRoute.ida.trazado.coordinates;
-      const latLngs = coords.map(c => [c[1], c[0]]);
-      // Also include vuelta coordinates if available
-      if (selectedRoute.regreso?.trazado?.coordinates) {
-        const vCoords = selectedRoute.regreso.trazado.coordinates;
-        latLngs.push(...vCoords.map(c => [c[1], c[0]]));
-      }
-      const bounds = L.latLngBounds(latLngs);
-      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 15 });
-    }
-  }, [navigationResult, selectedRoute, walkToBoard, walkFromAlight, busSegment, map]);
-
-  return null;
-}
-
-/**
- * Sub-component: flies the map to the user's GPS position on first detection.
- * Only triggers once so the user can freely pan afterward.
- */
-function FlyToUser({ userPosition }) {
-  const map = useMap();
-  const hasFlewRef = useRef(false);
-
-  useEffect(() => {
-    if (userPosition && !hasFlewRef.current) {
-      hasFlewRef.current = true;
-      map.flyTo(
-        [userPosition.lat, userPosition.lng],
-        15, // zoom level — close enough to see streets
-        { duration: 1.5, easeLinearity: 0.25 }
+  for (let i = 0; i <= steps; i++) {
+    const brng = (2 * Math.PI * i) / steps;
+    const pLat = Math.asin(
+      Math.sin(latRad) * Math.cos(d) + Math.cos(latRad) * Math.sin(d) * Math.cos(brng)
+    );
+    const pLng =
+      lngRad +
+      Math.atan2(
+        Math.sin(brng) * Math.sin(d) * Math.cos(latRad),
+        Math.cos(d) - Math.sin(latRad) * Math.sin(pLat)
       );
-    }
-  }, [userPosition, map]);
+    coords.push([(pLng * 180) / Math.PI, (pLat * 180) / Math.PI]);
+  }
 
-  return null;
+  return {
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        properties: {},
+        geometry: { type: 'Polygon', coordinates: [coords] },
+      },
+    ],
+  };
 }
 
 /**
- * Sub-component: flies the map to preview origin/destination as they're set.
- * If both are set, fits bounds to show both points.
+ * Generates a crisp white SDF chevron arrow pointing right (+X) for line directionality.
  */
-function FlyToPreview({ previewOrigin, previewDestination }) {
-  const map = useMap();
-  const lastOriginRef = useRef(null);
-  const lastDestRef = useRef(null);
-
-  useEffect(() => {
-    const originChanged = previewOrigin && (
-      !lastOriginRef.current ||
-      lastOriginRef.current.lat !== previewOrigin.lat ||
-      lastOriginRef.current.lng !== previewOrigin.lng
-    );
-    const destChanged = previewDestination && (
-      !lastDestRef.current ||
-      lastDestRef.current.lat !== previewDestination.lat ||
-      lastDestRef.current.lng !== previewDestination.lng
-    );
-
-    if (originChanged) lastOriginRef.current = previewOrigin;
-    if (destChanged) lastDestRef.current = previewDestination;
-
-    if (previewOrigin && previewDestination && (originChanged || destChanged)) {
-      // Both set — fit bounds to show both
-      const bounds = L.latLngBounds([
-        [previewOrigin.lat, previewOrigin.lng],
-        [previewDestination.lat, previewDestination.lng],
-      ]);
-      map.flyToBounds(bounds, { padding: [80, 80], maxZoom: 15, duration: 1 });
-    } else if (originChanged && previewOrigin) {
-      map.flyTo([previewOrigin.lat, previewOrigin.lng], Math.max(map.getZoom(), 15), { duration: 1 });
-    } else if (destChanged && previewDestination) {
-      map.flyTo([previewDestination.lat, previewDestination.lng], Math.max(map.getZoom(), 15), { duration: 1 });
-    }
-  }, [previewOrigin, previewDestination, map]);
-
-  return null;
+function createArrowImageData() {
+  const size = 24;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, size, size);
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 3.2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(8, 5);
+  ctx.lineTo(17, 12);
+  ctx.lineTo(8, 19);
+  ctx.stroke();
+  return ctx.getImageData(0, 0, size, size);
 }
 
-import 'leaflet-polylinedecorator';
+// ---- Safe DOM Marker Factories ----
 
-/**
- * Sub-component: Draws a Polyline with directional arrows
- */
-function DecoratedPolyline({ positions, color, opacity, children }) {
-  const map = useMap();
-  const polylineRef = useRef(null);
-  const decoratorRef = useRef(null);
-
-  // Guard: color must be a valid string, opacity must be a number
-  const safeColor = (typeof color === 'string' && color.length > 0) ? color : '#06B6D4';
-  const safeOpacity = (typeof opacity === 'number' && !isNaN(opacity)) ? opacity : 0.85;
-
-  useEffect(() => {
-    if (!polylineRef.current || !positions || positions.length < 2) return;
-
-    // Clean up previous decorator
-    if (decoratorRef.current) {
-      try { map.removeLayer(decoratorRef.current); } catch (_) {}
-      decoratorRef.current = null;
-    }
-
-    try {
-      decoratorRef.current = L.polylineDecorator(polylineRef.current, {
-        patterns: [
-          {
-            offset: '25px',
-            repeat: '200px',
-            symbol: L.Symbol.arrowHead({
-              pixelSize: 14,
-              headAngle: 55,
-              polygon: false,
-              pathOptions: {
-                stroke: true,
-                weight: 2.5,
-                color: safeColor,
-                opacity: safeOpacity,
-                fillOpacity: 0,
-              },
-            }),
-          },
-        ],
-      }).addTo(map);
-    } catch (err) {
-      console.warn('[DecoratedPolyline] Failed to create decorator:', err.message);
-    }
-
-    return () => {
-      if (decoratorRef.current) {
-        try { map.removeLayer(decoratorRef.current); } catch (_) {}
-        decoratorRef.current = null;
-      }
-    };
-  }, [map, positions, safeColor, safeOpacity]);
-
-  return (
-    <Polyline
-      ref={polylineRef}
-      positions={positions}
-      pathOptions={{ color: safeColor, weight: 4, opacity: safeOpacity, lineCap: 'round', lineJoin: 'round' }}
-    >
-      {children}
-    </Polyline>
-  );
+function createOriginElement() {
+  const el = document.createElement('div');
+  el.innerHTML = `<div style="position:relative;animation:marker-drop 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;">
+    <div style="position:absolute;top:-10px;left:-10px;width:40px;height:40px;border:2px solid rgba(16,185,129,0.4);border-radius:50%;animation:origin-pulse-1 2s ease-out infinite;"></div>
+    <div style="position:absolute;top:-10px;left:-10px;width:40px;height:40px;border:1.5px solid rgba(16,185,129,0.25);border-radius:50%;animation:origin-pulse-2 2s ease-out 0.8s infinite;"></div>
+    <div style="width:20px;height:20px;background:radial-gradient(circle at 35% 35%,#34D399,#10B981,#059669);border:3px solid white;border-radius:50%;box-shadow:0 0 16px rgba(16,185,129,0.6),0 2px 8px rgba(0,0,0,0.3);"></div>
+    <div style="position:absolute;top:24px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:Inter,sans-serif;font-size:10px;font-weight:700;color:#10B981;text-shadow:0 1px 3px rgba(0,0,0,0.8);letter-spacing:0.03em;">ORIGEN</div>
+  </div>`;
+  return el;
 }
 
-function ThemeSync({ isDark }) {
-  const map = useMap();
-  useEffect(() => {
-    const container = map.getContainer();
-    if (!container) return;
-    if (isDark) {
-      container.classList.add('dark-map-tiles');
-    } else {
-      container.classList.remove('dark-map-tiles');
-    }
-  }, [isDark, map]);
-  return null;
+function createDestinationElement() {
+  const el = document.createElement('div');
+  el.innerHTML = `<div style="position:relative;animation:marker-drop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.1s forwards;opacity:0;">
+    <div style="position:absolute;top:-6px;left:-6px;width:36px;height:36px;border-radius:8px;background:rgba(239,68,68,0.15);animation:dest-glow 2s ease-in-out infinite;transform:rotate(45deg);"></div>
+    <div style="width:24px;height:24px;background:linear-gradient(135deg,#F87171,#EF4444,#DC2626);border:3px solid white;border-radius:6px;box-shadow:0 0 16px rgba(239,68,68,0.6),0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;transform:rotate(45deg);">
+      <div style="width:7px;height:7px;background:white;border-radius:50%;transform:rotate(-45deg);"></div>
+    </div>
+    <div style="position:absolute;top:30px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:Inter,sans-serif;font-size:10px;font-weight:700;color:#EF4444;text-shadow:0 1px 3px rgba(0,0,0,0.8);letter-spacing:0.03em;">DESTINO</div>
+  </div>`;
+  return el;
+}
+
+function createBoardAlightElement(color, label) {
+  const safeBg = safeColor(color, '#06B6D4');
+  const safeLabel = escapeHtml(label);
+  const el = document.createElement('div');
+  el.innerHTML = `<div style="background:${safeBg};color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:12px;border:2px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.4);white-space:nowrap;font-family:Inter,sans-serif;cursor:pointer;">${safeLabel}</div>`;
+  return el;
+}
+
+function createUserElement() {
+  const el = document.createElement('div');
+  el.innerHTML = `<div style="position:relative;">
+    <div style="position:absolute;top:-6px;left:-6px;width:28px;height:28px;border:2px solid rgba(59,130,246,0.3);border-radius:50%;animation:origin-pulse-1 2.5s ease-out infinite;"></div>
+    <div style="position:absolute;top:-6px;left:-6px;width:28px;height:28px;border:1.5px solid rgba(59,130,246,0.2);border-radius:50%;animation:origin-pulse-2 2.5s ease-out 1s infinite;"></div>
+    <div style="width:16px;height:16px;background:radial-gradient(circle at 35% 35%,#60A5FA,#3B82F6,#2563EB);border:3px solid white;border-radius:50%;box-shadow:0 0 12px rgba(59,130,246,0.6),0 2px 6px rgba(0,0,0,0.3);animation:gps-breathe 3s ease-in-out infinite;"></div>
+    <div style="position:absolute;top:22px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:Inter,sans-serif;font-size:9px;font-weight:700;color:#60A5FA;text-shadow:0 1px 3px rgba(0,0,0,0.8);">TÚ</div>
+  </div>`;
+  return el;
+}
+
+function createSponsorElement(color = '#F59E0B') {
+  const safeAccent = safeColor(color, '#F59E0B');
+  const el = document.createElement('div');
+  el.innerHTML = `<div class="sponsor-marker" style="border-color:${safeAccent};cursor:pointer;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${safeAccent}" stroke-width="2.5">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </svg>
+  </div>`;
+  return el;
+}
+
+function createReportElement(report) {
+  const badgeColor = safeColor(report?.color, '#F59E0B');
+  const badgeEmoji = escapeHtml(report?.emoji || '⚠️');
+  const el = document.createElement('div');
+  el.innerHTML = `<div style="width:32px;height:32px;border-radius:50%;background:${badgeColor};border:2px solid rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 10px rgba(0,0,0,0.4);animation:pulse 2s ease-in-out infinite;cursor:pointer;">${badgeEmoji}</div>`;
+  return el;
 }
 
 export default function MapComponent({
   navigationResult,
   selectedRoute,
+  loadingRouteId = null,
+  focusedStop = null,
+  onClearSelectedRoute,
+  onOpenSidebarRoutes,
   selectedOptionIdx = 0,
   sponsoredLocations = [],
   gpsTrack = [],
@@ -550,27 +241,72 @@ export default function MapComponent({
   previewOrigin,
   previewDestination,
   onMapClick,
+  onSetOrigin,
+  onSetDestination,
   activeReports = [],
   onReportClick,
 }) {
   const { isPremium } = useAuth();
   const { isDark } = useTheme();
 
-  // Map tile URLs: OpenStreetMap oficial (100% gratis, sin API key, con todos los POIs y calles de Barranquilla)
-  const baseTileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  const containerRef = useRef(null);
+  const mapRef = useRef(null);
+  const currentStyleRef = useRef(isDark ? STYLE_DARK : STYLE_LIGHT);
+  const styleLoadedRef = useRef(false);
 
-  // Walking route geometries (fetched from OSRM)
+  const [is3D, setIs3D] = useState(false);
+  const [showPOIs, setShowPOIs] = useState(true);
+  const [poiCategory, setPoiCategory] = useState('all');
+  const [mapZoom, setMapZoom] = useState(DEFAULT_ZOOM);
+  const [mapBearing, setMapBearing] = useState(0);
+  const [routeDirectionFilter, setRouteDirectionFilter] = useState('all');
+
+  // Refs for fresh closures inside event handlers
+  const poiIconsRef = useRef({});
+  const poiIconsThemeRef = useRef(null);
+  const pinModeRef = useRef(pinMode);
+  const onMapClickRef = useRef(onMapClick);
+  const onSetOriginRef = useRef(onSetOrigin);
+  const onSetDestinationRef = useRef(onSetDestination);
+  const onReportClickRef = useRef(onReportClick);
+  const selectedRouteRef = useRef(selectedRoute);
+  const currentOptionRef = useRef(null);
+  const openPointCardPopupRef = useRef(null);
+
+  pinModeRef.current = pinMode;
+  onMapClickRef.current = onMapClick;
+  onSetOriginRef.current = onSetOrigin;
+  onSetDestinationRef.current = onSetDestination;
+  onReportClickRef.current = onReportClick;
+  selectedRouteRef.current = selectedRoute;
+
+  // Marker refs for cleanup
+  const navMarkersRef = useRef([]);
+  const reportMarkersRef = useRef([]);
+  const sponsorMarkersRef = useRef([]);
+  const userMarkerRef = useRef(null);
+  const contextPopupRef = useRef(null);
+  const infoPopupRef = useRef(null);
+
+  // One-time camera guards
+  const hasFlewToUserRef = useRef(false);
+  const lastPreviewOriginRef = useRef(null);
+  const lastPreviewDestRef = useRef(null);
+  const lastFittedRouteIdRef = useRef(null);
+
+  // Walking & bus segment states (stored as [lat, lng] from routingService, converted to [lng, lat] for GeoJSON)
   const [walkToBoard, setWalkToBoard] = useState([]);
   const [walkFromAlight, setWalkFromAlight] = useState([]);
+  const [smoothedBusSegment, setSmoothedBusSegment] = useState([]);
 
   const currentOption = navigationResult?.options?.[selectedOptionIdx];
+  currentOptionRef.current = currentOption;
 
-  // Stable key for the current navigation
   const navKey = currentOption
     ? `${navigationResult.origin.lat},${navigationResult.origin.lng}-${navigationResult.destination.lat},${navigationResult.destination.lng}-${selectedOptionIdx}`
     : null;
 
-  // Fetch OSRM walking routes when navigation result changes
+  // ---- Fetch OSRM walking paths for current navigation ----
   useEffect(() => {
     if (!navKey || !currentOption || !navigationResult) {
       setWalkToBoard([]);
@@ -579,31 +315,23 @@ export default function MapComponent({
     }
 
     let cancelled = false;
-
     async function fetchRoutes() {
       try {
         const opt = currentOption;
         const orig = navigationResult.origin;
         const dest = navigationResult.destination;
 
-        // Walking: origin → board point on the route
-        const walkIn = await getWalkingRoute(
-          orig.lat, orig.lng,
-          opt.boardPoint.coordinates[1], opt.boardPoint.coordinates[0]
-        );
-
-        // Walking: alight point → destination
-        const walkOut = await getWalkingRoute(
-          opt.alightPoint.coordinates[1], opt.alightPoint.coordinates[0],
-          dest.lat, dest.lng
-        );
+        const [walkIn, walkOut] = await Promise.all([
+          getWalkingRoute(orig.lat, orig.lng, opt.boardPoint.coordinates[1], opt.boardPoint.coordinates[0]),
+          getWalkingRoute(opt.alightPoint.coordinates[1], opt.alightPoint.coordinates[0], dest.lat, dest.lng),
+        ]);
 
         if (!cancelled) {
-          setWalkToBoard(walkIn.coordinates);
-          setWalkFromAlight(walkOut.coordinates);
+          setWalkToBoard(walkIn.coordinates || []);
+          setWalkFromAlight(walkOut.coordinates || []);
         }
       } catch (err) {
-        console.error('❌ OSRM fetch error:', err);
+        console.error('❌ OSRM walk fetch error:', err);
       }
     }
 
@@ -611,24 +339,16 @@ export default function MapComponent({
     return () => { cancelled = true; };
   }, [navKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Map-matching for bus segment to snap to roads instead of cutting corners
-  const [smoothedBusSegment, setSmoothedBusSegment] = useState([]);
-  
+  // ---- Map-match sparse bus segment ----
   useEffect(() => {
     if (!currentOption?.busSegment || currentOption.busSegment.length < 2) {
       setSmoothedBusSegment([]);
       return;
     }
-    
+
     let cancelled = false;
     async function matchBusRoute() {
-      // busSegment comes as [lng, lat], convert to [lat, lng] for routing service
-      const rawLatLng = currentOption.busSegment.map(c => [c[1], c[0]]);
-      
-      // If the segment has >= 20 points, the admin already hand-drew/snapped this route
-      // to follow actual streets. Re-routing through OSRM would REPLACE the admin's precise
-      // trace with OSRM's "shortest path" guess, which takes different streets.
-      // Only use OSRM for very sparse legacy routes with few waypoints.
+      const rawLatLng = currentOption.busSegment.map((c) => [c[1], c[0]]);
       if (rawLatLng.length < 20) {
         try {
           const matched = await getMultiStopRoute(rawLatLng);
@@ -636,442 +356,1508 @@ export default function MapComponent({
             setSmoothedBusSegment(matched.coordinates);
             return;
           }
-        } catch (err) {
-          console.warn('Map matching for bus segment failed, using raw coordinates');
+        } catch (_) {
+          // fallback to raw
         }
       }
-      
-      // Fallback: use raw
       if (!cancelled) setSmoothedBusSegment(rawLatLng);
     }
     matchBusRoute();
     return () => { cancelled = true; };
   }, [currentOption?.busSegment]);
 
-  // Selected route preview — show raw immediately, then upgrade to OSRM-smoothed
-  const [smoothedSelectedRouteIda, setSmoothedSelectedRouteIda] = useState([]);
-  const [smoothedSelectedRouteVuelta, setSmoothedSelectedRouteVuelta] = useState([]);
-
+  // ---- Reset direction filter & fit guard when selected route changes ----
   useEffect(() => {
-    if (navigationResult || !selectedRoute) {
-      setSmoothedSelectedRouteIda([]);
-      setSmoothedSelectedRouteVuelta([]);
+    setRouteDirectionFilter('all');
+    if (!selectedRoute?._id) {
+      lastFittedRouteIdRef.current = null;
+    }
+  }, [selectedRoute?._id]);
+
+  // ---- Compute latest GeoJSON data for WebGL layers ----
+  const layerDataRef = useRef({
+    accuracy: emptyFC(),
+    selectedVuelta: emptyFC(),
+    selectedIda: emptyFC(),
+    selectedStops: emptyFC(),
+    navWalk: emptyFC(),
+    navBus: emptyFC(),
+    navBus2: emptyFC(),
+    busColor: '#06B6D4',
+    bus2Color: '#8B5CF6',
+    gpsTrack: emptyFC(),
+    isCapturing: false,
+  });
+
+  const busSegmentLatLng = currentOption?.busSegment?.map((c) => [c[1], c[0]]) || [];
+  const activeDisplayBusLatLng = smoothedBusSegment.length > 1 ? smoothedBusSegment : busSegmentLatLng;
+
+  const accuracyGeoJSON = userPosition
+    ? createCircleGeoJSON(userPosition.lng, userPosition.lat, userPosition.accuracy || 30)
+    : emptyFC();
+
+  const rawSelectedIdaCoords =
+    !navigationResult && selectedRoute?.ida?.trazado?.coordinates?.length > 1
+      ? selectedRoute.ida.trazado.coordinates
+      : null;
+
+  const rawSelectedVueltaCoords =
+    !navigationResult && selectedRoute?.regreso?.trazado?.coordinates?.length > 1
+      ? selectedRoute.regreso.trazado.coordinates
+      : null;
+
+  const selectedVueltaGeoJSON =
+    rawSelectedVueltaCoords && routeDirectionFilter !== 'ida'
+      ? lineFC([rawSelectedVueltaCoords])
+      : emptyFC();
+
+  const selectedIdaGeoJSON =
+    rawSelectedIdaCoords && routeDirectionFilter !== 'regreso'
+      ? lineFC([rawSelectedIdaCoords])
+      : emptyFC();
+
+  const walkLines = [];
+  if (navigationResult && currentOption) {
+    if (walkToBoard.length > 1) walkLines.push(walkToBoard.map((c) => [c[1], c[0]]));
+    if (
+      currentOption.isTransfer &&
+      currentOption.transfer?.transferPoint?.length >= 2 &&
+      currentOption.transfer?.secondBoardPoint?.length >= 2
+    ) {
+      const p1 = currentOption.transfer.transferPoint;
+      const p2 = currentOption.transfer.secondBoardPoint;
+      if (p1[0] !== p2[0] || p1[1] !== p2[1]) {
+        walkLines.push([p1, p2]);
+      }
+    }
+    if (walkFromAlight.length > 1) walkLines.push(walkFromAlight.map((c) => [c[1], c[0]]));
+  }
+  const navWalkGeoJSON = lineFC(walkLines);
+
+  const navBusGeoJSON =
+    navigationResult && currentOption && activeDisplayBusLatLng.length > 1
+      ? lineFC([activeDisplayBusLatLng.map((c) => [c[1], c[0]])])
+      : emptyFC();
+
+  const navBus2GeoJSON =
+    navigationResult &&
+    currentOption?.isTransfer &&
+    currentOption?.transfer?.secondBusSegment?.length > 1
+      ? lineFC([currentOption.transfer.secondBusSegment])
+      : emptyFC();
+
+  const busColor = safeColor(currentOption?.route?.color, '#06B6D4');
+  const bus2Color = safeColor(currentOption?.transfer?.secondRoute?.color, '#8B5CF6');
+
+  const gpsTrackGeoJSON =
+    gpsTrack.length > 1 ? lineFC([gpsTrack.map((p) => [p.lng, p.lat])]) : emptyFC();
+
+  const selectedRouteStopsGeoJSON =
+    !navigationResult && selectedRoute?.paradas?.length > 0
+      ? {
+          type: 'FeatureCollection',
+          features: selectedRoute.paradas
+            .filter((p) => {
+              if (!Number.isFinite(p.lat) || !Number.isFinite(p.lng)) return false;
+              if (routeDirectionFilter === 'all') return true;
+              const dir = p.sentido === 'regreso' ? 'regreso' : 'ida';
+              return dir === routeDirectionFilter;
+            })
+            .map((p, idx) => ({
+              type: 'Feature',
+              properties: {
+                orden: p.orden || idx + 1,
+                sentido: p.sentido === 'regreso' ? 'regreso' : 'ida',
+                nombre: p.nombre || `Parada ${p.orden || idx + 1}`,
+                lat: p.lat,
+                lng: p.lng,
+              },
+              geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
+            })),
+        }
+      : emptyFC();
+
+  layerDataRef.current = {
+    accuracy: accuracyGeoJSON,
+    selectedVuelta: selectedVueltaGeoJSON,
+    selectedIda: selectedIdaGeoJSON,
+    selectedStops: selectedRouteStopsGeoJSON,
+    navWalk: navWalkGeoJSON,
+    navBus: navBusGeoJSON,
+    navBus2: navBus2GeoJSON,
+    busColor,
+    bus2Color,
+    gpsTrack: gpsTrackGeoJSON,
+    pois: CURATED_POIS_GEOJSON,
+    showPOIs,
+    poiCategory,
+    isDark,
+    isCapturing: Boolean(isCapturing),
+  };
+
+  /**
+   * Ensures all vector sources & layers exist on the active style and syncs their data.
+   * Uses styleLoadedRef instead of map.isStyleLoaded() so GeoJSON source updates
+   * never silently drop while vector tiles are streaming during fitBounds/pan.
+   */
+  const syncVectorLayers = useCallback((map) => {
+    if (!map || !styleLoadedRef.current || !map.getStyle()) return;
+    const d = layerDataRef.current;
+
+    if (!map.hasImage('route-arrow')) {
+      try {
+        map.addImage('route-arrow', createArrowImageData(), { sdf: true });
+      } catch (_) {}
+    }
+
+    // Register POI icon sprites for the current style when loaded
+    const loadedIcons = poiIconsRef.current || {};
+    for (const [id, imgData] of Object.entries(loadedIcons)) {
+      if (!map.hasImage(id)) {
+        try {
+          map.addImage(id, imgData, { pixelRatio: 2 });
+        } catch (_) {}
+      }
+    }
+
+    // Hide OpenFreeMap liberty's default POI layers so RutaQuilla owns POI density & theme parity
+    for (const nativeId of NATIVE_STYLE_POI_LAYERS) {
+      if (map.getLayer(nativeId)) {
+        map.setLayoutProperty(nativeId, 'visibility', 'none');
+      }
+    }
+
+    const upsertSource = (id, data) => {
+      const existing = map.getSource(id);
+      if (existing) {
+        existing.setData(data);
+      } else {
+        map.addSource(id, { type: 'geojson', data });
+      }
+    };
+
+    upsertSource('user-accuracy', d.accuracy);
+    upsertSource('pois', d.pois || emptyFC());
+    upsertSource('selected-route-vuelta', d.selectedVuelta);
+    upsertSource('selected-route-ida', d.selectedIda);
+    upsertSource('selected-route-stops', d.selectedStops || emptyFC());
+    upsertSource('nav-walk', d.navWalk);
+    upsertSource('nav-bus', d.navBus);
+    upsertSource('nav-bus-2', d.navBus2);
+    upsertSource('gps-track', d.gpsTrack);
+
+    // Accuracy circle
+    if (!map.getLayer('user-accuracy-fill')) {
+      map.addLayer({
+        id: 'user-accuracy-fill',
+        type: 'fill',
+        source: 'user-accuracy',
+        paint: { 'fill-color': '#3B82F6', 'fill-opacity': 0.1 },
+      });
+    }
+    if (!map.getLayer('user-accuracy-outline')) {
+      map.addLayer({
+        id: 'user-accuracy-outline',
+        type: 'line',
+        source: 'user-accuracy',
+        paint: { 'line-color': '#3B82F6', 'line-width': 1.2, 'line-opacity': 0.35 },
+      });
+    }
+
+    // Google Maps-style progressive POIs (OpenMapTiles vector bands + curated Barranquilla catalog)
+    if (Object.keys(loadedIcons).length > 0) {
+      const poiSpecs = buildPoiLayers({ isDark: d.isDark, activeCategory: d.poiCategory });
+      const beforeRouteLayer = map.getLayer('selected-route-vuelta-casing')
+        ? 'selected-route-vuelta-casing'
+        : undefined;
+
+      for (const spec of poiSpecs) {
+        if (!map.getSource(spec.source)) continue;
+        if (!map.getLayer(spec.id)) {
+          map.addLayer(spec, beforeRouteLayer);
+        } else {
+          map.setFilter(spec.id, spec.filter);
+          map.setPaintProperty(spec.id, 'text-color', spec.paint['text-color']);
+          map.setPaintProperty(spec.id, 'text-halo-color', spec.paint['text-halo-color']);
+        }
+        map.setLayoutProperty(spec.id, 'visibility', d.showPOIs ? 'visible' : 'none');
+      }
+    }
+
+    // Selected route: VUELTA (#EF4444)
+    if (!map.getLayer('selected-route-vuelta-casing')) {
+      map.addLayer({
+        id: 'selected-route-vuelta-casing',
+        type: 'line',
+        source: 'selected-route-vuelta',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': 'rgba(15,23,42,0.45)', 'line-width': 7.5 },
+      });
+    }
+    if (!map.getLayer('selected-route-vuelta-line')) {
+      map.addLayer({
+        id: 'selected-route-vuelta-line',
+        type: 'line',
+        source: 'selected-route-vuelta',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#EF4444', 'line-width': 4.5, 'line-opacity': 0.88 },
+      });
+    }
+    if (!map.getLayer('selected-route-vuelta-arrows')) {
+      map.addLayer({
+        id: 'selected-route-vuelta-arrows',
+        type: 'symbol',
+        source: 'selected-route-vuelta',
+        layout: {
+          'symbol-placement': 'line',
+          'symbol-spacing': 95,
+          'icon-image': 'route-arrow',
+          'icon-size': 0.72,
+          'icon-allow-overlap': true,
+          'icon-ignore-placement': true,
+        },
+        paint: { 'icon-color': '#FFFFFF', 'icon-opacity': 0.9 },
+      });
+    }
+
+    // Selected route: IDA (#10B981)
+    if (!map.getLayer('selected-route-ida-casing')) {
+      map.addLayer({
+        id: 'selected-route-ida-casing',
+        type: 'line',
+        source: 'selected-route-ida',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': 'rgba(15,23,42,0.45)', 'line-width': 8 },
+      });
+    }
+    if (!map.getLayer('selected-route-ida-line')) {
+      map.addLayer({
+        id: 'selected-route-ida-line',
+        type: 'line',
+        source: 'selected-route-ida',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#10B981', 'line-width': 5, 'line-opacity': 0.92 },
+      });
+    }
+    if (!map.getLayer('selected-route-ida-arrows')) {
+      map.addLayer({
+        id: 'selected-route-ida-arrows',
+        type: 'symbol',
+        source: 'selected-route-ida',
+        layout: {
+          'symbol-placement': 'line',
+          'symbol-spacing': 95,
+          'icon-image': 'route-arrow',
+          'icon-size': 0.72,
+          'icon-allow-overlap': true,
+          'icon-ignore-placement': true,
+        },
+        paint: { 'icon-color': '#FFFFFF', 'icon-opacity': 0.92 },
+      });
+    }
+
+    // Selected route named stops (Transmetro / SIBUS transfer stops)
+    const stopStrokeColor = d.isDark ? '#0B1120' : '#FFFFFF';
+    if (!map.getLayer('selected-route-stops-layer')) {
+      map.addLayer({
+        id: 'selected-route-stops-layer',
+        type: 'circle',
+        source: 'selected-route-stops',
+        paint: {
+          'circle-color': ['match', ['get', 'sentido'], 'regreso', '#EF4444', '#10B981'],
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 4.5, 15, 7],
+          'circle-stroke-width': 2,
+          'circle-stroke-color': stopStrokeColor,
+          'circle-opacity': 0.95,
+        },
+      });
+    } else {
+      map.setPaintProperty('selected-route-stops-layer', 'circle-stroke-color', stopStrokeColor);
+    }
+
+    // Navigation walking paths
+    if (!map.getLayer('nav-walk-line')) {
+      map.addLayer({
+        id: 'nav-walk-line',
+        type: 'line',
+        source: 'nav-walk',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: {
+          'line-color': '#60A5FA',
+          'line-width': 4,
+          'line-opacity': 0.95,
+          'line-dasharray': [1.4, 1.8],
+        },
+      });
+    }
+
+    // Navigation bus path (glow + core + directional arrows)
+    if (!map.getLayer('nav-bus-glow')) {
+      map.addLayer({
+        id: 'nav-bus-glow',
+        type: 'line',
+        source: 'nav-bus',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': d.busColor, 'line-width': 11, 'line-opacity': 0.25 },
+      });
+    } else {
+      map.setPaintProperty('nav-bus-glow', 'line-color', d.busColor);
+    }
+
+    if (!map.getLayer('nav-bus-line')) {
+      map.addLayer({
+        id: 'nav-bus-line',
+        type: 'line',
+        source: 'nav-bus',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': d.busColor, 'line-width': 5.5, 'line-opacity': 0.95 },
+      });
+    } else {
+      map.setPaintProperty('nav-bus-line', 'line-color', d.busColor);
+    }
+
+    if (!map.getLayer('nav-bus-arrows')) {
+      map.addLayer({
+        id: 'nav-bus-arrows',
+        type: 'symbol',
+        source: 'nav-bus',
+        layout: {
+          'symbol-placement': 'line',
+          'symbol-spacing': 90,
+          'icon-image': 'route-arrow',
+          'icon-size': 0.72,
+          'icon-allow-overlap': true,
+          'icon-ignore-placement': true,
+        },
+        paint: { 'icon-color': '#FFFFFF', 'icon-opacity': 0.92 },
+      });
+    }
+
+    // Navigation second bus path (1-transfer leg 2)
+    if (!map.getLayer('nav-bus-2-glow')) {
+      map.addLayer({
+        id: 'nav-bus-2-glow',
+        type: 'line',
+        source: 'nav-bus-2',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': d.bus2Color, 'line-width': 11, 'line-opacity': 0.25 },
+      });
+    } else {
+      map.setPaintProperty('nav-bus-2-glow', 'line-color', d.bus2Color);
+    }
+
+    if (!map.getLayer('nav-bus-2-line')) {
+      map.addLayer({
+        id: 'nav-bus-2-line',
+        type: 'line',
+        source: 'nav-bus-2',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': d.bus2Color, 'line-width': 5.5, 'line-opacity': 0.95 },
+      });
+    } else {
+      map.setPaintProperty('nav-bus-2-line', 'line-color', d.bus2Color);
+    }
+
+    if (!map.getLayer('nav-bus-2-arrows')) {
+      map.addLayer({
+        id: 'nav-bus-2-arrows',
+        type: 'symbol',
+        source: 'nav-bus-2',
+        layout: {
+          'symbol-placement': 'line',
+          'symbol-spacing': 90,
+          'icon-image': 'route-arrow',
+          'icon-size': 0.72,
+          'icon-allow-overlap': true,
+          'icon-ignore-placement': true,
+        },
+        paint: { 'icon-color': '#FFFFFF', 'icon-opacity': 0.92 },
+      });
+    }
+
+    // GPS tracking path
+    if (!map.getLayer('gps-track-line')) {
+      map.addLayer({
+        id: 'gps-track-line',
+        type: 'line',
+        source: 'gps-track',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: {
+          'line-color': '#EF4444',
+          'line-width': 4,
+          'line-opacity': 0.9,
+          ...(d.isCapturing ? { 'line-dasharray': [1.2, 1.8] } : {}),
+        },
+      });
+    } else {
+      map.setPaintProperty('gps-track-line', 'line-dasharray', d.isCapturing ? [1.2, 1.8] : undefined);
+    }
+  }, []);
+
+  // ---- Helper: context menu popup (right-click & mobile long-press) ----
+  const showContextPopup = useCallback((map, lngLat) => {
+    if (contextPopupRef.current) {
+      contextPopupRef.current.remove();
+      contextPopupRef.current = null;
+    }
+
+    const wrapper = document.createElement('div');
+    const originBtn = document.createElement('button');
+    originBtn.className = 'ctx-btn';
+    originBtn.type = 'button';
+    originBtn.innerHTML = '<span class="ctx-btn-icon">📍</span><span>Origen desde aquí</span>';
+
+    const destBtn = document.createElement('button');
+    destBtn.className = 'ctx-btn';
+    destBtn.type = 'button';
+    destBtn.innerHTML = '<span class="ctx-btn-icon">🏁</span><span>Destino aquí</span>';
+
+    wrapper.appendChild(originBtn);
+    wrapper.appendChild(destBtn);
+
+    const popup = new maplibregl.Popup({
+      className: 'context-popup',
+      closeButton: false,
+      offset: 8,
+      maxWidth: '220px',
+    })
+      .setLngLat(lngLat)
+      .setDOMContent(wrapper)
+      .addTo(map);
+
+    originBtn.addEventListener('click', () => {
+      onSetOriginRef.current?.({ lat: lngLat.lat, lng: lngLat.lng });
+      popup.remove();
+    });
+    destBtn.addEventListener('click', () => {
+      onSetDestinationRef.current?.({ lat: lngLat.lat, lng: lngLat.lng });
+      popup.remove();
+    });
+
+    contextPopupRef.current = popup;
+  }, []);
+
+  // ---- Initialize MapLibre GL map once ----
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const initialStyle = isDark ? STYLE_DARK : STYLE_LIGHT;
+    currentStyleRef.current = initialStyle;
+    styleLoadedRef.current = false;
+
+    const map = new maplibregl.Map({
+      container: containerRef.current,
+      style: initialStyle,
+      center: BARRANQUILLA_CENTER,
+      zoom: DEFAULT_ZOOM,
+      pitch: 0,
+      maxPitch: 60,
+      attributionControl: true,
+    });
+
+    map.on('style.load', () => {
+      styleLoadedRef.current = true;
+      syncVectorLayers(map);
+    });
+
+    map.on('zoomend', () => setMapZoom(map.getZoom()));
+    map.on('rotate', () => setMapBearing(map.getBearing()));
+
+    // Left click for pinMode
+    map.on('click', (e) => {
+      if (pinModeRef.current) {
+        onMapClickRef.current?.({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+      }
+    });
+
+    // Desktop right-click context popup
+    map.on('contextmenu', (e) => {
+      if (pinModeRef.current) return;
+      e.preventDefault();
+      showContextPopup(map, e.lngLat);
+    });
+
+    // Click popups on route polylines
+    const showLinePopup = (lngLat, html) => {
+      if (infoPopupRef.current) infoPopupRef.current.remove();
+      infoPopupRef.current = new maplibregl.Popup({ maxWidth: '260px' })
+        .setLngLat(lngLat)
+        .setHTML(html)
+        .addTo(map);
+    };
+
+    map.on('click', 'nav-bus-line', (e) => {
+      const opt = currentOptionRef.current;
+      if (!opt || pinModeRef.current) return;
+      const color = safeColor(opt.route?.color, '#06B6D4');
+      const name = escapeHtml(opt.route?.name || opt.route?.nombre || 'Ruta');
+      const company = escapeHtml(opt.route?.company || opt.route?.operador || '');
+      const dir = opt.direction === 'ida' ? 'Ida' : 'Vuelta';
+      const fare = escapeHtml((opt.route?.fare || 3700).toLocaleString());
+      showLinePopup(
+        e.lngLat,
+        `<div style="min-width:180px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <div style="width:12px;height:12px;border-radius:50%;background:${color}"></div>
+            <strong style="font-size:14px">${name}</strong>
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:1.6">
+            <div>🚌 ${company}</div>
+            <div>📍 Dirección: ${dir}</div>
+            <div>💰 $${fare} COP</div>
+          </div>
+        </div>`
+      );
+    });
+
+    const handleSelectedLineClick = (dirLabel, badgeColor) => (e) => {
+      const r = selectedRouteRef.current;
+      if (!r || pinModeRef.current) return;
+      const name = escapeHtml(r.nombre || 'Ruta');
+      const op = escapeHtml(r.operador || '');
+      const code = r.codigo ? `<div>🔢 Código: ${escapeHtml(r.codigo)}</div>` : '';
+      const locLine = dirLabel === 'IDA'
+        ? (r.origen ? `<div>📍 Origen: ${escapeHtml(r.origen)}</div>` : '')
+        : (r.destino ? `<div>📍 Destino: ${escapeHtml(r.destino)}</div>` : '');
+      const fare = escapeHtml((r.fare || 3700).toLocaleString());
+      showLinePopup(
+        e.lngLat,
+        `<div style="min-width:200px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="width:12px;height:12px;border-radius:50%;background:${badgeColor}"></div>
+            <strong style="font-size:14px">${name}</strong>
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:1.6">
+            <div>🚌 ${op} — <span style="color:${badgeColor};font-weight:600">${dirLabel}</span></div>
+            ${code}
+            ${locLine}
+            <div>💰 $${fare} COP</div>
+          </div>
+        </div>`
+      );
+    };
+
+    map.on('click', 'nav-bus-2-line', (e) => {
+      const opt = currentOptionRef.current;
+      const sr = opt?.transfer?.secondRoute;
+      if (!sr || pinModeRef.current) return;
+      const color = safeColor(sr.color, '#8B5CF6');
+      const name = escapeHtml(sr.name || 'Ruta 2');
+      const company = escapeHtml(sr.company || '');
+      const dir = opt.transfer.secondDirection === 'ida' ? 'Ida' : 'Vuelta';
+      const fare = escapeHtml((sr.fare || 3700).toLocaleString());
+      showLinePopup(
+        e.lngLat,
+        `<div style="min-width:180px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <div style="width:12px;height:12px;border-radius:50%;background:${color}"></div>
+            <strong style="font-size:14px">${name}</strong>
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:1.6">
+            <div>🚌 ${company} (Transbordo)</div>
+            <div>📍 Dirección: ${dir}</div>
+            <div>💰 $${fare} COP</div>
+          </div>
+        </div>`
+      );
+    });
+
+    map.on('click', 'selected-route-ida-line', handleSelectedLineClick('IDA', '#10B981'));
+    map.on('click', 'selected-route-vuelta-line', handleSelectedLineClick('VUELTA', '#EF4444'));
+
+    const openPointCardPopup = ({ lng, lat, badgeText, badgeColor, titleText, subtitleText, metaText }) => {
+      const root = document.createElement('div');
+      root.className = 'poi-card';
+
+      const badge = document.createElement('div');
+      badge.className = 'poi-card-badge';
+      badge.style.setProperty('--poi-color', badgeColor);
+      const dot = document.createElement('span');
+      dot.className = 'poi-card-dot';
+      dot.style.background = badgeColor;
+      badge.appendChild(dot);
+      badge.appendChild(document.createTextNode(badgeText));
+      root.appendChild(badge);
+
+      const title = document.createElement('div');
+      title.className = 'poi-card-title';
+      title.textContent = titleText;
+      root.appendChild(title);
+
+      if (subtitleText) {
+        const sub = document.createElement('div');
+        sub.className = 'poi-card-sub';
+        sub.textContent = subtitleText;
+        root.appendChild(sub);
+      }
+
+      if (metaText) {
+        const metaLine = document.createElement('div');
+        metaLine.className = 'poi-card-meta';
+        metaLine.textContent = metaText;
+        root.appendChild(metaLine);
+      }
+
+      const actions = document.createElement('div');
+      actions.className = 'poi-card-actions';
+
+      const originBtn = document.createElement('button');
+      originBtn.type = 'button';
+      originBtn.className = 'poi-btn-origin';
+      originBtn.textContent = 'Salir desde aquí';
+
+      const destBtn = document.createElement('button');
+      destBtn.type = 'button';
+      destBtn.className = 'poi-btn-dest';
+      destBtn.textContent = 'Ir aquí';
+
+      actions.appendChild(originBtn);
+      actions.appendChild(destBtn);
+      root.appendChild(actions);
+
+      if (infoPopupRef.current) infoPopupRef.current.remove();
+      const popup = new maplibregl.Popup({ maxWidth: '270px', offset: 12 })
+        .setLngLat([lng, lat])
+        .setDOMContent(root)
+        .addTo(map);
+      infoPopupRef.current = popup;
+
+      originBtn.addEventListener('click', () => {
+        onSetOriginRef.current?.({ lat, lng, name: titleText });
+        popup.remove();
+      });
+      destBtn.addEventListener('click', () => {
+        onSetDestinationRef.current?.({ lat, lng, name: titleText });
+        popup.remove();
+      });
+    };
+
+    openPointCardPopupRef.current = openPointCardPopup;
+
+    map.on('click', 'selected-route-stops-layer', (e) => {
+      if (pinModeRef.current || e.originalEvent?._poiHandled) return;
+      const feat = e.features?.[0];
+      if (!feat) return;
+      if (e.originalEvent) e.originalEvent._poiHandled = true;
+      const props = feat.properties || {};
+      const coords = feat.geometry?.coordinates || [e.lngLat.lng, e.lngLat.lat];
+      const lng = Number(props.lng ?? coords[0]);
+      const lat = Number(props.lat ?? coords[1]);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      const isRegreso = props.sentido === 'regreso';
+      const routeName = selectedRouteRef.current?.nombre || 'Ruta';
+      openPointCardPopup({
+        lng,
+        lat,
+        badgeText: `Parada #${props.orden || '?'} · ${isRegreso ? 'Regreso' : 'Ida'}`,
+        badgeColor: isRegreso ? '#EF4444' : '#10B981',
+        titleText: props.nombre || 'Paradero',
+        subtitleText: routeName,
+        metaText: selectedRouteRef.current?.operador || 'RutaQuilla',
+      });
+    });
+
+    const handlePoiClick = (e) => {
+      if (pinModeRef.current || e.originalEvent?._poiHandled) return;
+      const feat = e.features?.[0];
+      if (!feat) return;
+      if (e.originalEvent) e.originalEvent._poiHandled = true;
+
+      const props = feat.properties || {};
+      const coords =
+        feat.geometry?.type === 'Point' && Array.isArray(feat.geometry.coordinates)
+          ? feat.geometry.coordinates
+          : [e.lngLat.lng, e.lngLat.lat];
+      const lng = Number(coords[0]);
+      const lat = Number(coords[1]);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+      const categoryId = props.category || getPoiCategory(props.class, props.subclass);
+      const meta = getCategoryMeta(categoryId);
+      const isCurated = props.source === 'RutaQuilla';
+      const osmDetail = String(props.subclass || props.class || '')
+        .replace(/_/g, ' ')
+        .trim();
+
+      openPointCardPopup({
+        lng,
+        lat,
+        badgeText: meta.label,
+        badgeColor: meta.color,
+        titleText: props.name || 'Punto de interés',
+        subtitleText: props.subtitle || osmDetail,
+        metaText: isCurated ? 'RutaQuilla · Barranquilla' : 'OpenStreetMap · Actualización semanal',
+      });
+    };
+
+    POI_LAYER_IDS.forEach((layerId) => {
+      map.on('click', layerId, handlePoiClick);
+    });
+
+    ['nav-bus-line', 'nav-bus-2-line', 'selected-route-ida-line', 'selected-route-vuelta-line', 'selected-route-stops-layer', ...POI_LAYER_IDS].forEach((layerId) => {
+      map.on('mouseenter', layerId, () => {
+        if (!pinModeRef.current) map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', layerId, () => {
+        map.getCanvas().style.cursor = pinModeRef.current ? 'crosshair' : '';
+      });
+    });
+
+    // Mobile long-press context menu
+    const container = map.getContainer();
+    let longPressTimer = null;
+    let startTouch = null;
+    let rippleEl = null;
+
+    const clearRipple = () => {
+      if (rippleEl && rippleEl.parentNode) {
+        rippleEl.parentNode.removeChild(rippleEl);
+      }
+      rippleEl = null;
+    };
+
+    const onTouchStart = (e) => {
+      if (pinModeRef.current || e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      const rect = container.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      startTouch = { x, y };
+
+      longPressTimer = setTimeout(() => {
+        if (navigator.vibrate) navigator.vibrate(30);
+        clearRipple();
+        rippleEl = document.createElement('div');
+        rippleEl.style.cssText = `position:absolute;z-index:9999;width:50px;height:50px;left:${x - 25}px;top:${y - 25}px;border-radius:50%;border:2px solid rgba(245,158,11,0.6);background:rgba(245,158,11,0.1);animation:origin-pulse-1 0.6s ease-out forwards;pointer-events:none;`;
+        container.appendChild(rippleEl);
+
+        const lngLat = map.unproject([x, y]);
+        showContextPopup(map, lngLat);
+        longPressTimer = null;
+      }, 500);
+    };
+
+    const onTouchMove = (e) => {
+      if (!longPressTimer || !startTouch || e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      const rect = container.getBoundingClientRect();
+      const dx = touch.clientX - rect.left - startTouch.x;
+      const dy = touch.clientY - rect.top - startTouch.y;
+      if (Math.hypot(dx, dy) > 8) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+        clearRipple();
+      }
+    };
+
+    const onTouchEnd = () => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+      setTimeout(clearRipple, 600);
+    };
+
+    container.addEventListener('touchstart', onTouchStart, { passive: true });
+    container.addEventListener('touchmove', onTouchMove, { passive: true });
+    container.addEventListener('touchend', onTouchEnd);
+    container.addEventListener('touchcancel', onTouchEnd);
+
+    // Keep WebGL canvas sized cleanly when sidebar opens/closes
+    const resizeObserver = new ResizeObserver(() => {
+      map.resize();
+    });
+    resizeObserver.observe(container);
+
+    mapRef.current = map;
+
+    return () => {
+      openPointCardPopupRef.current = null;
+      resizeObserver.disconnect();
+      container.removeEventListener('touchstart', onTouchStart);
+      container.removeEventListener('touchmove', onTouchMove);
+      container.removeEventListener('touchend', onTouchEnd);
+      container.removeEventListener('touchcancel', onTouchEnd);
+      if (longPressTimer) clearTimeout(longPressTimer);
+      clearRipple();
+      navMarkersRef.current.forEach((m) => m.remove());
+      reportMarkersRef.current.forEach((m) => m.remove());
+      sponsorMarkersRef.current.forEach((m) => m.remove());
+      if (userMarkerRef.current) userMarkerRef.current.remove();
+      if (contextPopupRef.current) contextPopupRef.current.remove();
+      if (infoPopupRef.current) infoPopupRef.current.remove();
+      map.remove();
+      mapRef.current = null;
+    };
+  }, [syncVectorLayers, showContextPopup]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ---- Generate category icon sprites whenever theme changes ----
+  useEffect(() => {
+    let cancelled = false;
+    if (poiIconsThemeRef.current === isDark && Object.keys(poiIconsRef.current).length > 0) {
+      return;
+    }
+    createPoiIconImages(POI_ICON_SVGS, isDark).then((images) => {
+      if (cancelled || !images) return;
+      poiIconsRef.current = images;
+      poiIconsThemeRef.current = isDark;
+      const map = mapRef.current;
+      if (map && styleLoadedRef.current) {
+        for (const [id, imgData] of Object.entries(images)) {
+          try {
+            if (map.hasImage(id)) map.removeImage(id);
+            map.addImage(id, imgData, { pixelRatio: 2 });
+          } catch (_) {}
+        }
+        syncVectorLayers(map);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isDark, syncVectorLayers]);
+
+  // ---- Update cursor when pinMode toggles ----
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.getCanvas().style.cursor = pinMode ? 'crosshair' : '';
+  }, [pinMode]);
+
+  // ---- Switch native vector theme instantaneously ----
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const nextStyle = isDark ? STYLE_DARK : STYLE_LIGHT;
+    if (currentStyleRef.current !== nextStyle) {
+      currentStyleRef.current = nextStyle;
+      styleLoadedRef.current = false;
+      map.setStyle(nextStyle);
+    }
+  }, [isDark]);
+
+  // ---- Sync WebGL vector sources & paint whenever route/nav/GPS data changes ----
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !styleLoadedRef.current) return;
+    syncVectorLayers(map);
+  }, [
+    syncVectorLayers,
+    userPosition,
+    navigationResult,
+    selectedRoute,
+    routeDirectionFilter,
+    selectedOptionIdx,
+    walkToBoard,
+    walkFromAlight,
+    smoothedBusSegment,
+    gpsTrack,
+    isCapturing,
+    isDark,
+    showPOIs,
+    poiCategory,
+  ]);
+
+  // ---- Close stale line/stop popups when switching selected route ----
+  useEffect(() => {
+    if (infoPopupRef.current) {
+      infoPopupRef.current.remove();
+      infoPopupRef.current = null;
+    }
+  }, [selectedRoute?._id]);
+
+  // ---- Sync Navigation, Preview & Selected-Route Markers ----
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    navMarkersRef.current.forEach((m) => m.remove());
+    navMarkersRef.current = [];
+
+    const addMarker = (lngLat, el, popupHtml = null) => {
+      const marker = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(lngLat);
+      if (popupHtml) {
+        marker.setPopup(new maplibregl.Popup({ offset: 18 }).setHTML(popupHtml));
+      }
+      marker.addTo(map);
+      navMarkersRef.current.push(marker);
+    };
+
+    if (!navigationResult) {
+      if (previewOrigin) {
+        addMarker(
+          [previewOrigin.lng, previewOrigin.lat],
+          createOriginElement(),
+          '<strong>📍 Origen seleccionado</strong>'
+        );
+      }
+      if (previewDestination) {
+        addMarker(
+          [previewDestination.lng, previewDestination.lat],
+          createDestinationElement(),
+          '<strong>🏁 Destino seleccionado</strong>'
+        );
+      }
+      if (selectedRoute) {
+        const idaCoords = selectedRoute.ida?.trazado?.coordinates;
+        const regCoords = selectedRoute.regreso?.trazado?.coordinates;
+        const hasReg = Array.isArray(regCoords) && regCoords.length > 1;
+        const title = escapeHtml(selectedRoute.nombre || selectedRoute.codigo || 'Ruta');
+
+        if (routeDirectionFilter !== 'regreso' && Array.isArray(idaCoords) && idaCoords.length > 1) {
+          addMarker(
+            idaCoords[0],
+            createBoardAlightElement('#10B981', '🚏 Inicio'),
+            `<div><strong>${title}</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:3px">Inicio recorrido (Ida)${selectedRoute.origen ? ` · ${escapeHtml(selectedRoute.origen)}` : ''}</div></div>`
+          );
+          addMarker(
+            idaCoords[idaCoords.length - 1],
+            createBoardAlightElement(hasReg ? '#F59E0B' : '#EF4444', hasReg ? '🔄 Retorno' : '🏁 Fin'),
+            `<div><strong>${title}</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:3px">${hasReg ? 'Punto de retorno a regreso' : 'Destino final (recorrido lineal)'}${selectedRoute.destino ? ` · ${escapeHtml(selectedRoute.destino)}` : ''}</div></div>`
+          );
+        } else if (routeDirectionFilter === 'regreso' && hasReg) {
+          addMarker(
+            regCoords[0],
+            createBoardAlightElement('#EF4444', '🔄 Inicio regreso'),
+            `<div><strong>${title}</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:3px">Inicio sentido regreso</div></div>`
+          );
+          addMarker(
+            regCoords[regCoords.length - 1],
+            createBoardAlightElement('#10B981', '🏁 Fin regreso'),
+            `<div><strong>${title}</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:3px">Cierre de recorrido</div></div>`
+          );
+        }
+      }
+    } else if (currentOption) {
+      const rColor = safeColor(currentOption.route?.color, '#06B6D4');
+      const rName = escapeHtml(currentOption.route?.name || currentOption.route?.nombre || 'Ruta');
+      const dirText = currentOption.direction === 'ida' ? 'Ida' : 'Vuelta';
+      const alightText =
+        currentOption.alightPoint.walkDistance < 50
+          ? 'Estás frente a tu destino'
+          : `Camina ${escapeHtml(currentOption.alightPoint.walkDistance)}m al destino`;
+
+      addMarker(
+        [navigationResult.origin.lng, navigationResult.origin.lat],
+        createOriginElement(),
+        '<strong>📍 Tu origen</strong>'
+      );
+      addMarker(
+        [navigationResult.destination.lng, navigationResult.destination.lat],
+        createDestinationElement(),
+        '<strong>🏁 Tu destino</strong>'
+      );
+      addMarker(
+        currentOption.boardPoint.coordinates,
+        createBoardAlightElement(rColor, '🚌 Sube aquí'),
+        `<div><strong>🚌 Toma el bus aquí</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:4px">${rName} (${dirText})</div></div>`
+      );
+      if (currentOption.isTransfer && currentOption.transfer?.transferPoint?.length >= 2) {
+        const srName = escapeHtml(currentOption.transfer.secondRoute?.name || 'Siguiente bus');
+        const trWalk = escapeHtml(currentOption.transfer.walkDistance ?? 0);
+        addMarker(
+          currentOption.transfer.transferPoint,
+          createBoardAlightElement('#8B5CF6', '🔄 Transbordo'),
+          `<div><strong>🔄 Cambia a ${srName}</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:4px">Camina ${trWalk}m al siguiente tramo</div></div>`
+        );
+      }
+      addMarker(
+        currentOption.alightPoint.coordinates,
+        createBoardAlightElement('#EF4444', '🛑 Baja aquí'),
+        `<div><strong>🛑 Bájate aquí</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:4px">${alightText}</div></div>`
+      );
+    }
+  }, [navigationResult, currentOption, previewOrigin, previewDestination, selectedRoute, routeDirectionFilter]);
+
+  // ---- Sync Incident Report Markers ----
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    reportMarkersRef.current.forEach((m) => m.remove());
+    reportMarkersRef.current = [];
+
+    for (const report of activeReports) {
+      const coord = report?.location?.coordinates;
+      if (!coord || coord.length < 2) continue;
+      const el = createReportElement(report);
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        onReportClickRef.current?.(report);
+      });
+      const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+        .setLngLat([coord[0], coord[1]])
+        .addTo(map);
+      reportMarkersRef.current.push(marker);
+    }
+  }, [activeReports]);
+
+  // ---- Sync Sponsored Markers ----
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    sponsorMarkersRef.current.forEach((m) => m.remove());
+    sponsorMarkersRef.current = [];
+
+    if (isPremium) return;
+
+    for (const sponsor of sponsoredLocations) {
+      if (!sponsor?.coordinates || sponsor.coordinates.length < 2) continue;
+      const sColor = safeColor(sponsor.color, '#F59E0B');
+      const sPromo = escapeHtml(sponsor.promo || '');
+      const sName = escapeHtml(sponsor.name || '');
+      const sDesc = escapeHtml(sponsor.description || '');
+
+      const el = createSponsorElement(sColor);
+      const popup = new maplibregl.Popup({ offset: 22, maxWidth: '240px' }).setHTML(
+        `<div style="min-width:190px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+            <span style="background:${sColor};color:#000;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700">${sPromo}</span>
+            <span style="font-size:10px;color:var(--text-muted)">PATROCINADO</span>
+          </div>
+          <strong style="font-size:14px">${sName}</strong>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:4px">${sDesc}</div>
+        </div>`
+      );
+      const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+        .setLngLat([sponsor.coordinates[0], sponsor.coordinates[1]])
+        .setPopup(popup)
+        .addTo(map);
+      sponsorMarkersRef.current.push(marker);
+    }
+  }, [isPremium, sponsoredLocations]);
+
+  // ---- Sync User GPS Marker ----
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (!userPosition) {
+      if (userMarkerRef.current) {
+        userMarkerRef.current.remove();
+        userMarkerRef.current = null;
+      }
       return;
     }
 
-    // ---- Show raw coordinates IMMEDIATELY so user sees lines right away ----
-    const rawIda = selectedRoute.ida?.trazado?.coordinates?.map(c => [c[1], c[0]]) || [];
-    const rawVuelta = selectedRoute.regreso?.trazado?.coordinates?.map(c => [c[1], c[0]]) || [];
-    setSmoothedSelectedRouteIda(rawIda);
-    setSmoothedSelectedRouteVuelta(rawVuelta);
+    const acc = escapeHtml(userPosition.accuracy ? userPosition.accuracy.toFixed(0) : '30');
+    const popupHtml = `<div><strong>Tu posición</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:4px">Precisión: ±${acc}m</div></div>`;
 
-    // ---- Then async upgrade to OSRM-snapped roads ----
-    // Only if the route has very few sparse waypoints (legacy routes).
-    // If the admin already hand-drew/snapped the route with dense coordinates,
-    // OSRM would overwrite that precise trace with its own "shortest path".
-    let cancelled = false;
-    async function matchSelectedRoute() {
-      try {
-        let idaFinished = rawIda;
-        if (rawIda.length >= 2 && rawIda.length < 20) {
-          const matched = await getMultiStopRoute(rawIda);
-          if (matched.coordinates?.length > 1) idaFinished = matched.coordinates;
-        }
-
-        let vueltaFinished = rawVuelta;
-        if (rawVuelta.length >= 2 && rawVuelta.length < 20) {
-          const matched = await getMultiStopRoute(rawVuelta);
-          if (matched.coordinates?.length > 1) vueltaFinished = matched.coordinates;
-        }
-
-        if (!cancelled) {
-          setSmoothedSelectedRouteIda(idaFinished);
-          setSmoothedSelectedRouteVuelta(vueltaFinished);
-        }
-      } catch (err) {
-        console.warn('OSRM route matching failed, keeping raw', err.message);
-      }
+    if (!userMarkerRef.current) {
+      const marker = new maplibregl.Marker({ element: createUserElement(), anchor: 'center' })
+        .setLngLat([userPosition.lng, userPosition.lat])
+        .setPopup(new maplibregl.Popup({ offset: 14 }).setHTML(popupHtml))
+        .addTo(map);
+      userMarkerRef.current = marker;
+    } else {
+      userMarkerRef.current.setLngLat([userPosition.lng, userPosition.lat]);
+      const p = userMarkerRef.current.getPopup();
+      if (p) p.setHTML(popupHtml);
     }
-    matchSelectedRoute();
-    return () => { cancelled = true; };
-  }, [selectedRoute, navigationResult]);
 
-  // Nav option bus segment: show raw immediately, upgrade async
-  const busSegmentLatLng = currentOption?.busSegment?.map(c => [c[1], c[0]]) || [];
-  const activeDisplayBusSegment = smoothedBusSegment.length > 1 ? smoothedBusSegment : busSegmentLatLng;
+    if (!hasFlewToUserRef.current) {
+      hasFlewToUserRef.current = true;
+      map.flyTo({
+        center: [userPosition.lng, userPosition.lat],
+        zoom: 15,
+        duration: 1400,
+      });
+    }
+  }, [userPosition]);
+
+  // ---- Camera Fit: Preview Origin / Destination ----
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || navigationResult) return;
+
+    const originChanged =
+      previewOrigin &&
+      (!lastPreviewOriginRef.current ||
+        lastPreviewOriginRef.current.lat !== previewOrigin.lat ||
+        lastPreviewOriginRef.current.lng !== previewOrigin.lng);
+    const destChanged =
+      previewDestination &&
+      (!lastPreviewDestRef.current ||
+        lastPreviewDestRef.current.lat !== previewDestination.lat ||
+        lastPreviewDestRef.current.lng !== previewDestination.lng);
+
+    if (originChanged) lastPreviewOriginRef.current = previewOrigin;
+    if (destChanged) lastPreviewDestRef.current = previewDestination;
+
+    if (previewOrigin && previewDestination && (originChanged || destChanged)) {
+      const bounds = new maplibregl.LngLatBounds(
+        [previewOrigin.lng, previewOrigin.lat],
+        [previewOrigin.lng, previewOrigin.lat]
+      );
+      bounds.extend([previewDestination.lng, previewDestination.lat]);
+      map.fitBounds(bounds, {
+        padding: { top: 80, bottom: 160, left: 60, right: 60 },
+        maxZoom: 15.5,
+        duration: 900,
+      });
+    } else if (originChanged && previewOrigin) {
+      map.flyTo({
+        center: [previewOrigin.lng, previewOrigin.lat],
+        zoom: Math.max(map.getZoom(), 15),
+        duration: 900,
+      });
+    } else if (destChanged && previewDestination) {
+      map.flyTo({
+        center: [previewDestination.lng, previewDestination.lat],
+        zoom: Math.max(map.getZoom(), 15),
+        duration: 900,
+      });
+    }
+  }, [previewOrigin, previewDestination, navigationResult]);
+
+  // ---- Camera Fit: Navigation Result ----
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !navigationResult?.origin || !navigationResult?.destination) return;
+
+    const bounds = new maplibregl.LngLatBounds(
+      [navigationResult.origin.lng, navigationResult.origin.lat],
+      [navigationResult.origin.lng, navigationResult.origin.lat]
+    );
+    bounds.extend([navigationResult.destination.lng, navigationResult.destination.lat]);
+    walkToBoard.forEach((c) => bounds.extend([c[1], c[0]]));
+    walkFromAlight.forEach((c) => bounds.extend([c[1], c[0]]));
+    (currentOption?.busSegment || []).forEach((c) => bounds.extend([c[0], c[1]]));
+    (currentOption?.transfer?.secondBusSegment || []).forEach((c) => bounds.extend([c[0], c[1]]));
+
+    map.fitBounds(bounds, {
+      padding: { top: 80, bottom: 200, left: 60, right: 60 },
+      maxZoom: 16,
+      duration: 900,
+    });
+  }, [navigationResult, currentOption, walkToBoard, walkFromAlight]);
+
+  // ---- Camera Fit: Selected Route (once per route when geometry arrives) ----
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || navigationResult || !selectedRoute?._id) return;
+
+    const idaCoords = selectedRoute.ida?.trazado?.coordinates;
+    if (!Array.isArray(idaCoords) || idaCoords.length < 2) return;
+    if (lastFittedRouteIdRef.current === selectedRoute._id) return;
+    lastFittedRouteIdRef.current = selectedRoute._id;
+
+    const bounds = new maplibregl.LngLatBounds(idaCoords[0], idaCoords[0]);
+    idaCoords.forEach((c) => bounds.extend(c));
+    (selectedRoute.regreso?.trazado?.coordinates || []).forEach((c) => bounds.extend(c));
+
+    map.fitBounds(bounds, {
+      padding: { top: 76, bottom: 118, left: 56, right: 68 },
+      maxZoom: 15,
+      duration: 850,
+    });
+  }, [navigationResult, selectedRoute]);
+
+  // ---- Focus specific stop clicked from Sidebar ----
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !focusedStop || !Number.isFinite(focusedStop.lat) || !Number.isFinite(focusedStop.lng)) return;
+
+    map.flyTo({
+      center: [focusedStop.lng, focusedStop.lat],
+      zoom: Math.max(map.getZoom(), 15.8),
+      duration: 750,
+    });
+
+    const isRegreso = focusedStop.sentido === 'regreso';
+    openPointCardPopupRef.current?.({
+      lng: focusedStop.lng,
+      lat: focusedStop.lat,
+      badgeText: `Parada #${focusedStop.orden || '?'} · ${isRegreso ? 'Regreso' : 'Ida'}`,
+      badgeColor: isRegreso ? '#EF4444' : '#10B981',
+      titleText: focusedStop.nombre || 'Paradero',
+      subtitleText: selectedRouteRef.current?.nombre || 'Ruta',
+      metaText: selectedRouteRef.current?.operador || 'RutaQuilla',
+    });
+  }, [focusedStop]);
+
+  // ---- Floating Map Controls ----
+  const handleZoomIn = () => {
+    mapRef.current?.zoomIn({ duration: 280 });
+  };
+
+  const handleZoomOut = () => {
+    mapRef.current?.zoomOut({ duration: 280 });
+  };
+
+  const handleResetNorth = () => {
+    const map = mapRef.current;
+    if (!map) return;
+    setIs3D(false);
+    map.easeTo({ bearing: 0, pitch: 0, duration: 450 });
+  };
+
+  const handleToggle3D = () => {
+    const map = mapRef.current;
+    if (!map) return;
+    const next3D = !is3D;
+    setIs3D(next3D);
+    map.easeTo({ pitch: next3D ? 48 : 0, duration: 500 });
+  };
+
+  const handleRecenterGPS = () => {
+    const map = mapRef.current;
+    if (!map || !userPosition) return;
+    map.flyTo({
+      center: [userPosition.lng, userPosition.lat],
+      zoom: 15.5,
+      duration: 900,
+    });
+  };
+
+  const handleSelectCategory = (catId) => {
+    setPoiCategory(catId);
+    const map = mapRef.current;
+    if (catId !== 'all' && map && map.getZoom() < 14) {
+      map.easeTo({ zoom: 14.5, duration: 550 });
+    }
+  };
 
   return (
-    <div className="w-full h-full" style={{ cursor: pinMode ? 'crosshair' : undefined }}>
-      <MapContainer
-        center={BARRANQUILLA_CENTER}
-        zoom={DEFAULT_ZOOM}
-        className={`w-full h-full ${isDark ? 'dark-map-tiles' : ''}`}
-        zoomControl={true}
-        attributionControl={true}
-      >
-        <ThemeSync isDark={isDark} />
-        {/* Base map: OpenStreetMap completo con todos los POIs y nombres de vías */}
-        <TileLayer
-          key="base-osm"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url={baseTileUrl}
-          maxZoom={19}
-        />
+    <div className="w-full h-full relative" style={{ cursor: pinMode ? 'crosshair' : undefined }}>
+      <div ref={containerRef} className="w-full h-full" />
 
-        {/* Labels pane on top of route overlays if needed */}
-        <LabelsPane />
-
-        <MapClickHandler pinMode={pinMode} onMapClick={onMapClick} />
-        <MapPositioner
-          navigationResult={navigationResult}
-          selectedRoute={!navigationResult ? selectedRoute : null}
-          walkToBoard={walkToBoard}
-          walkFromAlight={walkFromAlight}
-          busSegment={currentOption?.busSegment}
-        />
-        <FlyToUser userPosition={userPosition} />
-        <FlyToPreview previewOrigin={previewOrigin} previewDestination={previewDestination} />
-
-        {/* ======= PREVIEW MARKERS (before search, show where user set origin/dest) ======= */}
-        {!navigationResult && (
-          <>
-            {previewOrigin && (
-              <Marker
-                position={[previewOrigin.lat, previewOrigin.lng]}
-                icon={createOriginIcon()}
-              >
-                <Popup><strong>📍 Origen seleccionado</strong></Popup>
-              </Marker>
-            )}
-            {previewDestination && (
-              <Marker
-                position={[previewDestination.lat, previewDestination.lng]}
-                icon={createDestinationIcon()}
-              >
-                <Popup><strong>🏁 Destino seleccionado</strong></Popup>
-              </Marker>
-            )}
-          </>
-        )}
-
-        {/* ======= POI LAYER ======= */}
-        <POILayer />
-
-        {/* ======= NAVIGATION MODE ======= */}
-        {navigationResult && currentOption && (
-          <>
-            {/* Walking: origin → board point */}
-            {walkToBoard.length > 1 && (
-              <Polyline
-                positions={walkToBoard}
-                pathOptions={{
-                  color: '#60A5FA',
-                  weight: 4,
-                  opacity: 0.9,
-                  dashArray: '6, 10',
-                  lineCap: 'round',
-                }}
-              >
-                <Popup>
-                  <div>
-                    <strong>🚶 Caminar hasta la ruta</strong>
-                    <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>
-                      {currentOption.boardPoint.walkDistance}m (~{currentOption.boardPoint.walkMinutes} min)
-                    </div>
-                  </div>
-                </Popup>
-              </Polyline>
-            )}
-
-            {/* Bus segment (the exact path the bus follows) */}
-            {activeDisplayBusSegment.length > 1 && (
-              <Polyline
-                positions={activeDisplayBusSegment}
-                pathOptions={{
-                  color: currentOption.route.color,
-                  weight: 5,
-                  opacity: 0.9,
-                  lineCap: 'round',
-                  lineJoin: 'round',
-                  smoothFactor: 0.5,
-                }}
-              >
-                <Popup>
-                  <div style={{ minWidth: 180 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                      <div style={{
-                        width: 12, height: 12, borderRadius: '50%',
-                        background: currentOption.route.color,
-                      }} />
-                      <strong style={{ fontSize: 14 }}>{currentOption.route.name}</strong>
-                    </div>
-                    <div style={{ fontSize: 12, color: '#94A3B8', lineHeight: 1.6 }}>
-                      <div>🚌 {currentOption.route.company}</div>
-                      <div>📍 Dirección: {currentOption.direction === 'ida' ? 'Ida' : 'Vuelta'}</div>
-                      <div>💰 ${currentOption.route.fare?.toLocaleString()} COP</div>
-                    </div>
-                  </div>
-                </Popup>
-              </Polyline>
-            )}
-
-            {/* Walking: alight point → destination */}
-            {walkFromAlight.length > 1 && (
-              <Polyline
-                positions={walkFromAlight}
-                pathOptions={{
-                  color: '#60A5FA',
-                  weight: 4,
-                  opacity: 0.9,
-                  dashArray: '6, 10',
-                  lineCap: 'round',
-                }}
-              >
-                <Popup>
-                  <div>
-                    <strong>🚶 Caminar al destino</strong>
-                    <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>
-                      {currentOption.alightPoint.walkDistance < 50
-                        ? 'El bus pasa frente a tu destino 🎯'
-                        : `${currentOption.alightPoint.walkDistance}m (~${currentOption.alightPoint.walkMinutes} min)`
-                      }
-                    </div>
-                  </div>
-                </Popup>
-              </Polyline>
-            )}
-
-            {/* Origin marker (green) */}
-            <Marker
-              position={[navigationResult.origin.lat, navigationResult.origin.lng]}
-              icon={createOriginIcon()}
-            >
-              <Popup><strong>📍 Tu origen</strong></Popup>
-            </Marker>
-
-            {/* Destination marker (red) */}
-            <Marker
-              position={[navigationResult.destination.lat, navigationResult.destination.lng]}
-              icon={createDestinationIcon()}
-            >
-              <Popup><strong>🏁 Tu destino</strong></Popup>
-            </Marker>
-
-            {/* Board point marker (dynamic — "Sube aquí") */}
-            <Marker
-              position={[currentOption.boardPoint.coordinates[1], currentOption.boardPoint.coordinates[0]]}
-              icon={createBoardAlightIcon(currentOption.route.color, '🚌 Sube aquí')}
-            >
-              <Popup>
-                <div>
-                  <strong>🚌 Toma el bus aquí</strong>
-                  <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>
-                    {currentOption.route.name} ({currentOption.direction === 'ida' ? 'Ida' : 'Vuelta'})
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
-
-            {/* Alight point marker (dynamic — "Baja aquí") */}
-            <Marker
-              position={[currentOption.alightPoint.coordinates[1], currentOption.alightPoint.coordinates[0]]}
-              icon={createBoardAlightIcon('#EF4444', '🛑 Baja aquí')}
-            >
-              <Popup>
-                <div>
-                  <strong>🛑 Bájate aquí</strong>
-                  <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>
-                    {currentOption.alightPoint.walkDistance < 50
-                      ? 'Estás frente a tu destino'
-                      : `Camina ${currentOption.alightPoint.walkDistance}m al destino`
-                    }
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
-          </>
-        )}
-
-        {/* ======= SINGLE ROUTE PREVIEW (IDA + VUELTA) ======= */}
-        {!navigationResult && selectedRoute && (
-          <>
-            {/* IDA: Green #2ECC71 with arrows */}
-            {smoothedSelectedRouteIda.length > 1 && (
-              <DecoratedPolyline
-                positions={smoothedSelectedRouteIda}
-                color="#2ECC71"
-                opacity={0.8}
-              >
-                <Popup>
-                  <div style={{ minWidth: 200 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                      <div style={{
-                        width: 12, height: 12, borderRadius: '50%',
-                        background: "#2ECC71",
-                      }} />
-                      <strong style={{ fontSize: 14 }}>{selectedRoute.nombre}</strong>
-                    </div>
-                    <div style={{ fontSize: 12, color: '#94A3B8', lineHeight: 1.6 }}>
-                      <div>🚌 {selectedRoute.operador} — <span style={{ color: "#2ECC71", fontWeight: 600 }}>IDA</span></div>
-                      {selectedRoute.codigo && <div>🔢 Código: {selectedRoute.codigo}</div>}
-                      {selectedRoute.origen && <div>📍 Origen: {selectedRoute.origen}</div>}
-                      <div>💰 ${selectedRoute.fare?.toLocaleString() || '2,600'} COP</div>
-                    </div>
-                  </div>
-                </Popup>
-              </DecoratedPolyline>
-            )}
-
-            {/* VUELTA: Red #E74C3C with arrows */}
-            {smoothedSelectedRouteVuelta.length > 1 && (
-              <DecoratedPolyline
-                positions={smoothedSelectedRouteVuelta}
-                color="#E74C3C"
-                opacity={0.8}
-              >
-                <Popup>
-                  <div style={{ minWidth: 200 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                      <div style={{
-                        width: 12, height: 12, borderRadius: '50%',
-                        background: "#E74C3C",
-                      }} />
-                      <strong style={{ fontSize: 14 }}>{selectedRoute.nombre}</strong>
-                    </div>
-                    <div style={{ fontSize: 12, color: '#94A3B8', lineHeight: 1.6 }}>
-                      <div>🚌 {selectedRoute.operador} — <span style={{ color: "#E74C3C", fontWeight: 600 }}>VUELTA</span></div>
-                      {selectedRoute.destino && <div>📍 Destino: {selectedRoute.destino}</div>}
-                      <div>💰 ${selectedRoute.fare?.toLocaleString() || '2,600'} COP</div>
-                    </div>
-                  </div>
-                </Popup>
-              </DecoratedPolyline>
-            )}
-
-            {/* Route direction indicators: start and end markers */}
-            {selectedRoute.ida?.trazado?.coordinates?.length > 0 && (
-              <>
-                <Marker
-                  position={[
-                    selectedRoute.ida.trazado.coordinates[0][1],
-                    selectedRoute.ida.trazado.coordinates[0][0],
-                  ]}
-                  icon={createBoardAlightIcon(selectedRoute.color || '#06B6D4', '🏁 Nevada (Inicio)')}
-                />
-                <Marker
-                  position={[
-                    selectedRoute.ida.trazado.coordinates[selectedRoute.ida.trazado.coordinates.length - 1][1],
-                    selectedRoute.ida.trazado.coordinates[selectedRoute.ida.trazado.coordinates.length - 1][0],
-                  ]}
-                  icon={createBoardAlightIcon(selectedRoute.color || '#06B6D4', '🔄 Fin / Retorno')}
-                />
-              </>
-            )}
-          </>
-        )}
-        {/* ======= INCIDENT REPORT MARKERS ======= */}
-        {activeReports.map(report => {
-          const coord = report.location?.coordinates;
-          if (!coord || coord.length < 2) return null;
-          return (
-            <Marker
-              key={report._id}
-              position={[coord[1], coord[0]]}
-              icon={L.divIcon({
-                className: '',
-                html: `<div style="width:32px;height:32px;border-radius:50%;background:${report.color || '#F59E0B'};border:2px solid rgba(255,255,255,0.8);display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 10px rgba(0,0,0,0.4);animation:pulse 2s ease-in-out infinite;cursor:pointer">${report.emoji || '⚠️'}</div>`,
-                iconSize: [32, 32],
-                iconAnchor: [16, 16],
-              })}
-              eventHandlers={{
-                click: (e) => {
-                  e.originalEvent?.stopPropagation?.();
-                  onReportClick?.(report);
-                },
-              }}
-            />
-          );
-        })}
-
-        {/* ======= SPONSORED MARKERS ======= */}
-        {!isPremium && sponsoredLocations.map(sponsor => (
-          <Marker
-            key={sponsor.id}
-            position={[sponsor.coordinates[1], sponsor.coordinates[0]]}
-            icon={createSponsorIcon(sponsor.color)}
+      {/* Google-style floating category chips */}
+      {showPOIs && !pinMode && (
+        <div className="poi-chips" role="toolbar" aria-label="Filtrar lugares de interés">
+          <button
+            type="button"
+            className={`poi-chip${poiCategory === 'all' ? ' active' : ''}`}
+            style={{ '--chip-color': '#F59E0B' }}
+            onClick={() => handleSelectCategory('all')}
           >
-            <Popup>
-              <div style={{ minWidth: 200 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                  <span style={{
-                    background: sponsor.color, color: '#000',
-                    padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
-                  }}>{sponsor.promo}</span>
-                  <span style={{ fontSize: 10, color: '#94A3B8' }}>PATROCINADO</span>
-                </div>
-                <strong style={{ fontSize: 14 }}>{sponsor.name}</strong>
-                <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>{sponsor.description}</div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+            <Layers size={13} color={poiCategory === 'all' ? '#F59E0B' : undefined} />
+            <span>Todo</span>
+          </button>
+          {POI_CHIP_ORDER.map((catId) => {
+            const meta = POI_CATEGORIES[catId];
+            const IconComp = ICON_COMPONENTS[meta.icon] || MapPin;
+            const active = poiCategory === catId;
+            return (
+              <button
+                key={catId}
+                type="button"
+                className={`poi-chip${active ? ' active' : ''}`}
+                style={{ '--chip-color': meta.color }}
+                onClick={() => handleSelectCategory(active ? 'all' : catId)}
+              >
+                <IconComp size={13} color={active ? meta.color : meta.color} />
+                <span>{meta.chip}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
-        {/* ======= GPS TRACKING ======= */}
-        {gpsTrack.length > 1 && (
-          <Polyline
-            positions={gpsTrack.map(p => [p.lat, p.lng])}
-            pathOptions={{
-              color: '#EF4444', weight: 4, opacity: 0.9,
-              dashArray: isCapturing ? '4, 8' : null,
+      {/* Subtle zoom hint when zoomed out */}
+      {showPOIs && mapZoom < 13.8 && !pinMode && !navigationResult && !selectedRoute && (
+        <div className="map-hint-pill animate-fade-in">
+          <MapPin size={12} color="#F59E0B" />
+          <span>Acércate para ver más lugares en esta zona</span>
+        </div>
+      )}
+
+      {/* Custom glass map control dock (top-right) */}
+      <div className="map-dock" role="group" aria-label="Controles del mapa">
+        <button
+          type="button"
+          className="map-dock-btn"
+          onClick={handleZoomIn}
+          title="Acercar"
+          aria-label="Acercar mapa"
+        >
+          <Plus size={16} />
+        </button>
+        <button
+          type="button"
+          className="map-dock-btn"
+          onClick={handleZoomOut}
+          title="Alejar"
+          aria-label="Alejar mapa"
+        >
+          <Minus size={16} />
+        </button>
+        <button
+          type="button"
+          className="map-dock-btn"
+          onClick={handleResetNorth}
+          title="Orientar al norte"
+          aria-label="Orientar mapa al norte"
+        >
+          <Compass
+            size={16}
+            style={{
+              transform: `rotate(${-Math.round(mapBearing)}deg)`,
+              transition: 'transform 0.15s ease-out',
+              color: Math.abs(mapBearing) > 2 || is3D ? 'var(--primary-amber)' : undefined,
             }}
           />
-        )}
+        </button>
 
-        {userPosition && (
-          <>
-            {/* Accuracy radius circle */}
-            <Circle
-              center={[userPosition.lat, userPosition.lng]}
-              radius={userPosition.accuracy || 30}
-              pathOptions={{
-                color: '#3B82F6',
-                fillColor: '#3B82F6',
-                fillOpacity: 0.08,
-                weight: 1,
-                opacity: 0.25,
-              }}
-            />
-            {/* User dot marker */}
-            <Marker
-              position={[userPosition.lat, userPosition.lng]}
-              icon={createUserIcon()}
-            >
-              <Popup>
-                <div>
-                  <strong>Tu posición</strong>
-                  <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>
-                    Precisión: ±{userPosition.accuracy?.toFixed(0)}m
+        <div className="map-dock-divider" />
+
+        <button
+          type="button"
+          className={`map-dock-btn${is3D ? ' active-amber' : ''}`}
+          onClick={handleToggle3D}
+          title={is3D ? 'Vista 2D' : 'Vista 3D'}
+          aria-label={is3D ? 'Cambiar a vista 2D' : 'Cambiar a vista 3D'}
+          style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.02em' }}
+        >
+          {is3D ? '2D' : '3D'}
+        </button>
+        <button
+          type="button"
+          className={`map-dock-btn${userPosition ? ' text-cyan' : ''}`}
+          onClick={handleRecenterGPS}
+          disabled={!userPosition}
+          title={userPosition ? 'Centrar en mi ubicación' : 'Ubicación GPS no disponible'}
+          aria-label="Centrar en mi ubicación"
+        >
+          <Crosshair size={16} />
+        </button>
+        <button
+          type="button"
+          className={`map-dock-btn${showPOIs ? ' active-cyan' : ''}`}
+          onClick={() => setShowPOIs((prev) => !prev)}
+          title={showPOIs ? 'Ocultar puntos de interés (POI)' : 'Mostrar puntos de interés (POI)'}
+          aria-label={showPOIs ? 'Ocultar puntos de interés' : 'Mostrar puntos de interés'}
+        >
+          <MapPin size={16} />
+        </button>
+      </div>
+
+      {/* Floating selected-route legend & quick control bar */}
+      {selectedRoute && !navigationResult && !pinMode && (
+        <div className="selected-route-pill animate-slide-up" role="region" aria-label="Ruta seleccionada">
+          <div className="selected-route-pill-accent" style={{ background: safeColor(selectedRoute.color, '#06B6D4') }} />
+          <div className="selected-route-pill-body">
+            <div className="selected-route-pill-top">
+              <div className="selected-route-pill-title-group">
+                {selectedRoute.codigo && (
+                  <span
+                    className="transit-code flex-shrink-0"
+                    style={{
+                      background: `${safeColor(selectedRoute.color, '#06B6D4')}22`,
+                      color: safeColor(selectedRoute.color, '#06B6D4'),
+                      border: `1px solid ${safeColor(selectedRoute.color, '#06B6D4')}45`,
+                    }}
+                  >
+                    {selectedRoute.codigo}
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="selected-route-pill-name">
+                    {selectedRoute.nombre && selectedRoute.nombre !== selectedRoute.codigo
+                      ? selectedRoute.nombre
+                      : selectedRoute.operador}
+                  </div>
+                  <div className="selected-route-pill-sub">
+                    {selectedRoute.descripcion &&
+                    selectedRoute.descripcion !== selectedRoute.nombre
+                      ? `${selectedRoute.descripcion} · `
+                      : ''}
+                    {selectedRoute.operador}
+                    {Number(selectedRoute.distanciaKm) > 0 && ` · ${Number(selectedRoute.distanciaKm).toFixed(1)} km`}
                   </div>
                 </div>
-              </Popup>
-            </Marker>
-          </>
-        )}
-      </MapContainer>
+              </div>
+
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                {onOpenSidebarRoutes && (
+                  <button
+                    type="button"
+                    onClick={onOpenSidebarRoutes}
+                    className="selected-route-action md:hidden"
+                    title="Ver horarios y detalles"
+                  >
+                    <PanelLeftOpen size={13} />
+                    <span>Ficha</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => onClearSelectedRoute?.()}
+                  className="selected-route-close"
+                  title="Cerrar ruta"
+                  aria-label="Cerrar ruta seleccionada"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+
+            <div className="selected-route-pill-footer">
+              {loadingRouteId === selectedRoute._id ? (
+                <span className="selected-route-loading">
+                  <Loader2 size={12} className="animate-spin" />
+                  Cargando trazado exacto...
+                </span>
+              ) : rawSelectedVueltaCoords ? (
+                <div className="selected-route-dir-group" role="group" aria-label="Filtrar sentido de ruta">
+                  <button
+                    type="button"
+                    className={`dir-chip${routeDirectionFilter === 'all' ? ' active' : ''}`}
+                    onClick={() => setRouteDirectionFilter('all')}
+                  >
+                    Ida + Regreso
+                  </button>
+                  <button
+                    type="button"
+                    className={`dir-chip${routeDirectionFilter === 'ida' ? ' active-ida' : ''}`}
+                    onClick={() => setRouteDirectionFilter('ida')}
+                  >
+                    <span className="dir-dot" style={{ background: '#10B981' }} />
+                    Ida
+                  </button>
+                  <button
+                    type="button"
+                    className={`dir-chip${routeDirectionFilter === 'regreso' ? ' active-regreso' : ''}`}
+                    onClick={() => setRouteDirectionFilter('regreso')}
+                  >
+                    <span className="dir-dot" style={{ background: '#EF4444' }} />
+                    Regreso
+                  </button>
+                </div>
+              ) : (
+                <span className="selected-route-linear-badge">
+                  <span className="dir-dot" style={{ background: '#10B981' }} />
+                  Recorrido lineal único
+                </span>
+              )}
+
+              {selectedRoute.paradas?.length > 0 && loadingRouteId !== selectedRoute._id && (
+                <span className="selected-route-stops-badge tabular-nums">
+                  <MapPin size={11} />
+                  {selectedRoute.paradas.length} paradas
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Pin mode overlay label */}
       {pinMode && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1100] animate-slide-up"
+        <div
+          className="absolute top-4 left-1/2 -translate-x-1/2 z-[1100] animate-slide-up"
           style={{
-            background: pinMode === 'origin'
-              ? 'rgba(16, 185, 129, 0.9)' : 'rgba(239, 68, 68, 0.9)',
+            background:
+              pinMode === 'origin' ? 'rgba(16, 185, 129, 0.92)' : 'rgba(239, 68, 68, 0.92)',
             color: '#fff',
             padding: '8px 20px',
             borderRadius: 12,
             fontSize: 13,
             fontWeight: 600,
             boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
-          }}>
+          }}
+        >
           📌 Toca el mapa para marcar {pinMode === 'origin' ? 'el origen' : 'el destino'}
         </div>
       )}

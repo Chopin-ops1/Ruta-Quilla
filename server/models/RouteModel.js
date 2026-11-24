@@ -53,10 +53,22 @@ const routeSchema = new mongoose.Schema({
     trim: true,
     maxlength: [100, 'El nombre no puede exceder los 100 caracteres'],
   },
+  externalId: {
+    type: String,
+    trim: true,
+    unique: true,
+    sparse: true,
+    index: true,
+  },
   codigo: {
     type: String,
     trim: true,
     index: true,
+  },
+  descripcion: {
+    type: String,
+    trim: true,
+    default: '',
   },
   operador: {
     type: String,
@@ -64,6 +76,34 @@ const routeSchema = new mongoose.Schema({
     trim: true,
     index: true,
     maxlength: [100, 'El operador no puede exceder los 100 caracteres'],
+  },
+  sistema: {
+    type: String,
+    enum: ['urbano', 'masivo'],
+    default: 'urbano',
+    index: true,
+  },
+  tipoVehiculo: {
+    type: String,
+    default: 'bus',
+  },
+  tipoRecorrido: {
+    type: String,
+    enum: ['circular', 'lineal'],
+    default: 'circular',
+  },
+  esIntermunicipal: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
+  distanciaKm: {
+    type: Number,
+    default: 0,
+  },
+  tieneRegreso: {
+    type: Boolean,
+    default: false,
   },
   origen: {
     type: String,
@@ -77,6 +117,27 @@ const routeSchema = new mongoose.Schema({
     type: String,
     trim: true,
   }],
+  horarios: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null,
+  },
+  metodosPago: [{
+    type: String,
+    trim: true,
+  }],
+  paradas: [{
+    orden: Number,
+    indice: Number,
+    sentido: String,
+    nombre: String,
+    lat: Number,
+    lng: Number,
+    _id: false,
+  }],
+  actualizadoFuente: {
+    type: Date,
+    default: null,
+  },
   recorridoTextual: {
     ida: { type: String, default: '' },
     regreso: { type: String, default: '' },
@@ -97,7 +158,7 @@ const routeSchema = new mongoose.Schema({
     default: false,
   },
   ida: { type: segmentSchema, required: true },
-  regreso: { type: segmentSchema, required: true },
+  regreso: { type: segmentSchema, required: false, default: undefined },
   activa: {
     type: Boolean,
     default: true,
@@ -118,7 +179,7 @@ const routeSchema = new mongoose.Schema({
   },
   fuente: {
     type: String,
-    enum: ['openstreetmap', 'nominatim', 'geocoded', 'manual', 'google_maps_verified'],
+    enum: ['openstreetmap', 'nominatim', 'geocoded', 'manual', 'google_maps_verified', 'dataset_2026'],
     required: true,
   },
   // Metadata AMBQ
@@ -138,7 +199,7 @@ const routeSchema = new mongoose.Schema({
   },
   fare: {
     type: Number,
-    default: 2600,
+    default: 3700,
   },
   createdAt: {
     type: Date,

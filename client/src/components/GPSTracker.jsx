@@ -14,6 +14,7 @@ import { Navigation, Satellite, Signal, Save, X, AlertTriangle, Bus, ArrowRight,
 import { startTracking, stopTracking, getSignalQuality, isGeolocationAvailable } from '../services/gpsService';
 import { routesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 const COMPANIES = [
   'Sobrusa', 'Coolitoral', 'Transmecar', 'Sobusa',
@@ -31,6 +32,7 @@ export default function GPSTracker({
   onCloseConfigModal,
 }) {
   const { isAuthenticated } = useAuth();
+  const toast = useToast();
   const [gpsPoints, setGpsPoints] = useState([]);
   const [accuracy, setAccuracy] = useState(null);
   const [pointCount, setPointCount] = useState(0);
@@ -68,7 +70,7 @@ export default function GPSTracker({
     } else {
       // Show config first (this is handled by App.jsx now, so this might be unused, but kept for compatibility)
       if (!isAuthenticated) {
-        alert('Debes iniciar sesión para capturar rutas');
+        toast.warning('Debes iniciar sesión para capturar rutas');
         return;
       }
       onCloseConfigModal?.(); // Just in case, though it's not the opener
@@ -214,7 +216,7 @@ export default function GPSTracker({
         <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => onCloseConfigModal?.()} />
           <div className="relative w-full max-w-sm rounded-2xl p-6 animate-slide-up"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', boxShadow: '0 25px 60px rgba(0,0,0,0.6)' }}>
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', boxShadow: '0 25px 60px var(--shadow-color)' }}>
 
             <button onClick={() => onCloseConfigModal?.()} className="absolute top-3 right-3 btn-icon w-8 h-8">
               <X size={14} />
@@ -230,10 +232,10 @@ export default function GPSTracker({
                 <Bus size={18} color="#F59E0B" />
               </div>
               <div>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: '#F1F5F9', margin: 0, fontFamily: 'Outfit, sans-serif' }}>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: 'Outfit, sans-serif' }}>
                   Capturar ruta
                 </h3>
-                <p style={{ fontSize: 10, color: '#475569', margin: 0 }}>
+                <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: 0 }}>
                   Configura antes de iniciar la grabación GPS
                 </p>
               </div>
@@ -242,7 +244,7 @@ export default function GPSTracker({
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {/* Route name */}
               <div>
-                <label style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8', marginBottom: 4, display: 'block' }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4, display: 'block' }}>
                   Nombre del bus / ruta
                 </label>
                 <input
@@ -256,7 +258,7 @@ export default function GPSTracker({
 
               {/* Company */}
               <div>
-                <label style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8', marginBottom: 4, display: 'block' }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4, display: 'block' }}>
                   Empresa de transporte
                 </label>
                 <select value={COMPANIES.includes(routeCompany) ? routeCompany : 'Otra'} onChange={e => setRouteCompany(e.target.value)} className="input-field" style={{ marginBottom: (!COMPANIES.includes(routeCompany) || routeCompany === 'Otra') ? 8 : 0 }}>
@@ -275,7 +277,7 @@ export default function GPSTracker({
 
               {/* Direction */}
               <div>
-                <label style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8', marginBottom: 6, display: 'block' }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6, display: 'block' }}>
                   Dirección del recorrido
                 </label>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -288,9 +290,9 @@ export default function GPSTracker({
                       onClick={() => setRouteDirection(opt.value)}
                       style={{
                         flex: 1, padding: '10px', borderRadius: 10, cursor: 'pointer',
-                        background: routeDirection === opt.value ? `${opt.color}15` : 'rgba(255,255,255,0.03)',
-                        border: `1.5px solid ${routeDirection === opt.value ? opt.color + '50' : 'rgba(255,255,255,0.08)'}`,
-                        color: routeDirection === opt.value ? opt.color : '#64748B',
+                        background: routeDirection === opt.value ? `${opt.color}15` : 'var(--subtle-bg)',
+                        border: `1.5px solid ${routeDirection === opt.value ? opt.color + '50' : 'var(--subtle-border)'}`,
+                        color: routeDirection === opt.value ? opt.color : 'var(--text-muted)',
                         fontSize: 12, fontWeight: 700,
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                         transition: 'all 0.2s',
@@ -314,8 +316,8 @@ export default function GPSTracker({
                   width: '100%', padding: '12px', borderRadius: 12, border: 'none',
                   background: routeName.trim()
                     ? 'linear-gradient(135deg, #F59E0B, #D97706)'
-                    : 'rgba(255,255,255,0.05)',
-                  color: routeName.trim() ? '#000' : '#475569',
+                    : 'var(--subtle-bg)',
+                  color: routeName.trim() ? '#000' : 'var(--text-muted)',
                   fontSize: 13, fontWeight: 700, cursor: routeName.trim() ? 'pointer' : 'not-allowed',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   boxShadow: routeName.trim() ? '0 4px 16px rgba(245,158,11,0.3)' : 'none',
@@ -325,7 +327,7 @@ export default function GPSTracker({
                 <Play size={14} /> Iniciar captura GPS
               </button>
 
-              <p style={{ fontSize: 9, color: '#334155', textAlign: 'center', margin: 0 }}>
+              <p style={{ fontSize: 9, color: 'var(--text-muted)', textAlign: 'center', margin: 0 }}>
                 📍 Sube al bus antes de iniciar. El primer punto GPS será tu punto de abordaje.
               </p>
             </div>
@@ -340,13 +342,13 @@ export default function GPSTracker({
             <div className="gps-dot recording" />
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold" style={{ color: '#F87171' }}>
+                <span className="text-xs font-semibold" style={{ color: '#EF4444' }}>
                   GRABANDO
                 </span>
                 <span style={{
                   fontSize: 9, padding: '1px 6px', borderRadius: 6,
                   background: routeDirection === 'ida' ? 'rgba(16,185,129,0.12)' : 'rgba(139,92,246,0.12)',
-                  color: routeDirection === 'ida' ? '#34D399' : '#A78BFA',
+                  color: routeDirection === 'ida' ? '#10B981' : '#8B5CF6',
                   fontWeight: 700, textTransform: 'uppercase',
                 }}>
                   {routeDirection}
@@ -361,15 +363,15 @@ export default function GPSTracker({
                   </span>
                 )}
               </div>
-              <p style={{ fontSize: 10, color: '#94A3B8', margin: '2px 0 0', fontWeight: 500 }}>
+              <p style={{ fontSize: 10, color: 'var(--text-secondary)', margin: '2px 0 0', fontWeight: 500 }}>
                 🚌 {routeName} — {routeCompany}
               </p>
               <div className="flex items-center gap-4 mt-1">
-                <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                <span className="text-[11px] tabular-nums" style={{ color: 'var(--text-muted)' }}>
                   📍 {pointCount} puntos
                 </span>
                 {accuracy && (
-                  <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                  <span className="text-[11px] tabular-nums" style={{ color: 'var(--text-muted)' }}>
                     🎯 ±{accuracy.toFixed(0)}m
                   </span>
                 )}
@@ -378,14 +380,14 @@ export default function GPSTracker({
             <button
               onClick={handleCaptureButton}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold"
-              style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#F87171', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+              style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}
             >
               Detener
             </button>
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 mt-2 text-[11px]" style={{ color: '#FBBF24' }}>
+            <div className="flex items-center gap-2 mt-2 text-[11px]" style={{ color: '#F59E0B' }}>
               <AlertTriangle size={12} />
               {error}
             </div>
@@ -398,33 +400,33 @@ export default function GPSTracker({
         <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowSaveDialog(false)} />
           <div className="relative w-full max-w-sm rounded-2xl p-6 animate-slide-up"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', boxShadow: '0 25px 60px rgba(0,0,0,0.6)' }}>
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', boxShadow: '0 25px 60px var(--shadow-color)' }}>
             
             <button onClick={() => setShowSaveDialog(false)} className="absolute top-3 right-3 btn-icon w-8 h-8">
               <X size={14} />
             </button>
 
-            <h3 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 4px', fontFamily: 'Outfit, sans-serif', color: '#F1F5F9' }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 4px', fontFamily: 'Outfit, sans-serif', color: 'var(--text-primary)' }}>
               Guardar captura
             </h3>
-            <p style={{ fontSize: 11, color: '#475569', margin: '0 0 16px' }}>
+            <p className="tabular-nums" style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 16px' }}>
               {pointsRef.current.length} puntos capturados
             </p>
 
             {/* Summary */}
             <div style={{
               padding: '10px 12px', borderRadius: 12, marginBottom: 12,
-              background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+              background: 'var(--subtle-bg)', border: '1px solid var(--subtle-border)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                 <Bus size={14} color="#F59E0B" />
-                <span style={{ fontSize: 12, fontWeight: 600, color: '#F1F5F9' }}>{routeName}</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{routeName}</span>
               </div>
               <div style={{ display: 'flex', gap: 12 }}>
-                <span style={{ fontSize: 10, color: '#94A3B8' }}>🏢 {routeCompany}</span>
+                <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>🏢 {routeCompany}</span>
                 <span style={{
                   fontSize: 10, fontWeight: 600,
-                  color: routeDirection === 'ida' ? '#34D399' : '#A78BFA',
+                  color: routeDirection === 'ida' ? '#10B981' : '#8B5CF6',
                 }}>
                   {routeDirection === 'ida' ? '→ IDA' : '← VUELTA'}
                 </span>
@@ -455,7 +457,7 @@ export default function GPSTracker({
         <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={dismissFeedback} />
           <div className="relative w-full max-w-sm rounded-2xl p-6 animate-slide-up"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', boxShadow: '0 25px 60px rgba(0,0,0,0.6)' }}>
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', boxShadow: '0 25px 60px var(--shadow-color)' }}>
 
             <button onClick={dismissFeedback} className="absolute top-3 right-3 btn-icon w-8 h-8">
               <X size={14} />
@@ -471,10 +473,10 @@ export default function GPSTracker({
               }}>
                 <CheckCircle2 size={28} color="#10B981" />
               </div>
-              <h3 style={{ fontSize: 17, fontWeight: 700, color: '#F1F5F9', margin: 0, fontFamily: 'Outfit, sans-serif' }}>
+              <h3 style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: 'Outfit, sans-serif' }}>
                 ¡Captura exitosa! 🎉
               </h3>
-              <p style={{ fontSize: 11, color: '#64748B', margin: '4px 0 0' }}>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '4px 0 0' }}>
                 Tu recorrido fue fusionado con la ruta colaborativa
               </p>
             </div>
@@ -482,19 +484,19 @@ export default function GPSTracker({
             {/* Route info */}
             <div style={{
               padding: '10px 14px', borderRadius: 12, marginBottom: 14,
-              background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+              background: 'var(--subtle-bg)', border: '1px solid var(--subtle-border)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 <Bus size={14} color="#F59E0B" />
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#F1F5F9' }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
                   {collabFeedback.routeName}
                 </span>
               </div>
-              <div style={{ display: 'flex', gap: 10, fontSize: 10, color: '#94A3B8' }}>
+              <div className="tabular-nums" style={{ display: 'flex', gap: 10, fontSize: 10, color: 'var(--text-secondary)' }}>
                 <span>🏢 {collabFeedback.company}</span>
                 <span style={{
                   fontWeight: 600,
-                  color: collabFeedback.direction === 'ida' ? '#34D399' : '#A78BFA',
+                  color: collabFeedback.direction === 'ida' ? '#10B981' : '#8B5CF6',
                 }}>
                   {collabFeedback.direction === 'ida' ? '→ IDA' : '← VUELTA'}
                 </span>
@@ -511,10 +513,10 @@ export default function GPSTracker({
                 textAlign: 'center',
               }}>
                 <TrendingUp size={16} color="#10B981" style={{ margin: '0 auto 4px' }} />
-                <div style={{ fontSize: 20, fontWeight: 800, color: '#10B981', fontFamily: 'Outfit, sans-serif' }}>
+                <div className="tabular-nums" style={{ fontSize: 20, fontWeight: 800, color: '#10B981', fontFamily: 'Outfit, sans-serif' }}>
                   {collabFeedback.contributionPercent}%
                 </div>
-                <div style={{ fontSize: 9, color: '#64748B', fontWeight: 600 }}>TU APORTE</div>
+                <div style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 600 }}>TU APORTE</div>
               </div>
 
               {/* Contribuidores */}
@@ -523,11 +525,11 @@ export default function GPSTracker({
                 background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.15)',
                 textAlign: 'center',
               }}>
-                <Users size={16} color="#A78BFA" style={{ margin: '0 auto 4px' }} />
-                <div style={{ fontSize: 20, fontWeight: 800, color: '#A78BFA', fontFamily: 'Outfit, sans-serif' }}>
+                <Users size={16} color="#8B5CF6" style={{ margin: '0 auto 4px' }} />
+                <div className="tabular-nums" style={{ fontSize: 20, fontWeight: 800, color: '#8B5CF6', fontFamily: 'Outfit, sans-serif' }}>
                   {collabFeedback.totalContributors}
                 </div>
-                <div style={{ fontSize: 9, color: '#64748B', fontWeight: 600 }}>
+                <div style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 600 }}>
                   {collabFeedback.totalContributors === 1 ? 'PIONERO 🏅' : 'CONTRIBUIDORES'}
                 </div>
               </div>
@@ -536,8 +538,8 @@ export default function GPSTracker({
             {/* Route completion progress bar */}
             <div style={{ marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8' }}>Progreso de ruta</span>
-                <span style={{
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>Progreso de ruta</span>
+                <span className="tabular-nums" style={{
                   fontSize: 12, fontWeight: 700,
                   color: collabFeedback.routeCompletion >= 90 ? '#10B981'
                        : collabFeedback.routeCompletion >= 50 ? '#F59E0B' : '#06B6D4',
@@ -547,7 +549,7 @@ export default function GPSTracker({
               </div>
               <div style={{
                 width: '100%', height: 8, borderRadius: 4,
-                background: 'rgba(255,255,255,0.05)',
+                background: 'var(--subtle-bg)',
                 overflow: 'hidden',
               }}>
                 <div style={{
@@ -564,7 +566,7 @@ export default function GPSTracker({
                 }} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-                <span style={{ fontSize: 9, color: '#475569' }}>
+                <span className="tabular-nums" style={{ fontSize: 9, color: 'var(--text-muted)' }}>
                   {collabFeedback.totalSegments} segmento{collabFeedback.totalSegments > 1 ? 's' : ''} capturado{collabFeedback.totalSegments > 1 ? 's' : ''}
                 </span>
                 <span style={{
@@ -595,7 +597,7 @@ export default function GPSTracker({
               ¡Entendido!
             </button>
 
-            <p style={{ fontSize: 9, color: '#334155', textAlign: 'center', margin: '10px 0 0' }}>
+            <p style={{ fontSize: 9, color: 'var(--text-muted)', textAlign: 'center', margin: '10px 0 0' }}>
               {collabFeedback.routeCompletion < 100
                 ? '🚌 ¡Invita a otros pasajeros a capturar los tramos faltantes!'
                 : '🎉 ¡La ruta está completa! Un admin la revisará pronto.'}

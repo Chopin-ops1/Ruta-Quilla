@@ -9,11 +9,24 @@ import { Bus, User, Crown, LogOut, Menu, X, ChevronDown, Zap, Search, Shield, Su
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
-export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLegal, onAdminClick }) {
+export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLegal, onAdminClick, routeCount = 0 }) {
   const { user, isAuthenticated, isPremium, logout, remainingFreeSearches, maxFreeSearches } = useAuth();
-  const { theme, toggleTheme, isDark } = useTheme();
+  const { isDark, toggleTheme } = useTheme();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => (typeof navigator !== 'undefined' ? navigator.onLine : true));
   const menuRef = useRef(null);
+
+  // Track browser online/offline state
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Close menu on outside click
   useEffect(() => {
@@ -91,16 +104,16 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
         <div style={{
           display: 'flex', alignItems: 'center', gap: 6,
           padding: '5px 12px', borderRadius: 20,
-          background: 'rgba(16,185,129,0.08)',
-          border: '1px solid rgba(16,185,129,0.2)',
+          background: isOnline ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.1)',
+          border: `1px solid ${isOnline ? 'rgba(16,185,129,0.22)' : 'rgba(239,68,68,0.28)'}`,
         }}>
           <div style={{
             width: 6, height: 6, borderRadius: '50%',
-            background: '#10B981',
-            boxShadow: '0 0 8px rgba(16,185,129,0.7)',
+            background: isOnline ? '#10B981' : '#EF4444',
+            boxShadow: isOnline ? '0 0 8px rgba(16,185,129,0.7)' : '0 0 8px rgba(239,68,68,0.7)',
           }} />
-          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--success)', letterSpacing: '0.03em' }}>
-            En línea
+          <span style={{ fontSize: 11, fontWeight: 600, color: isOnline ? 'var(--success)' : 'var(--danger)', letterSpacing: '0.03em' }}>
+            {isOnline ? 'En línea' : 'Sin conexión'}
           </span>
         </div>
 
@@ -110,16 +123,16 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
             display: 'flex', alignItems: 'center', gap: 5,
             padding: '5px 12px', borderRadius: 20,
             background: remainingFreeSearches > 0
-              ? 'rgba(245,158,11,0.07)'
-              : 'rgba(239,68,68,0.07)',
+              ? 'rgba(245,158,11,0.08)'
+              : 'rgba(239,68,68,0.08)',
             border: `1px solid ${remainingFreeSearches > 0
-              ? 'rgba(245,158,11,0.2)'
-              : 'rgba(239,68,68,0.2)'}`,
+              ? 'rgba(245,158,11,0.24)'
+              : 'rgba(239,68,68,0.24)'}`,
           }}>
             <Search size={11} color={remainingFreeSearches > 0 ? '#F59E0B' : '#EF4444'} />
-            <span style={{
+            <span className="tabular-nums" style={{
               fontSize: 11, fontWeight: 600,
-              color: remainingFreeSearches > 0 ? '#FBBF24' : '#F87171',
+              color: remainingFreeSearches > 0 ? '#F59E0B' : '#EF4444',
             }}>
               {remainingFreeSearches}/{maxFreeSearches} gratis
             </span>
@@ -130,12 +143,12 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
         <div style={{
           display: 'flex', alignItems: 'center', gap: 5,
           padding: '5px 12px', borderRadius: 20,
-          background: 'rgba(6,182,212,0.07)',
-          border: '1px solid rgba(6,182,212,0.15)',
+          background: 'rgba(6,182,212,0.08)',
+          border: '1px solid rgba(6,182,212,0.18)',
         }}>
           <Zap size={11} color="#06B6D4" />
-          <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--accent-cyan)' }}>
-            Transporte BQ
+          <span className="tabular-nums" style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent-cyan)' }}>
+            {routeCount > 0 ? `${routeCount} rutas BQ` : 'Transporte BQ'}
           </span>
         </div>
       </div>
@@ -154,7 +167,7 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
             width: 34, height: 34, borderRadius: 10, flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             background: 'var(--subtle-bg)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            border: '1px solid var(--subtle-border-strong)',
             color: 'var(--text-secondary)',
             textDecoration: 'none',
             transition: 'all 0.25s ease',
@@ -168,7 +181,7 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
           }}
           onMouseLeave={e => {
             e.currentTarget.style.background = 'var(--subtle-bg)';
-            e.currentTarget.style.border = '1px solid rgba(255,255,255,0.08)';
+            e.currentTarget.style.border = '1px solid var(--subtle-border-strong)';
             e.currentTarget.style.color = 'var(--text-secondary)';
             e.currentTarget.style.boxShadow = 'none';
             e.currentTarget.style.transform = 'translateY(0)';

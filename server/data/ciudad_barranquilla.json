@@ -1,0 +1,30 @@
+{
+  "nombre": "Barranquilla",
+  "departamento": "Atlántico",
+  "pais": "Colombia",
+  "centro": {
+    "lat": 10.964202,
+    "lng": -74.797049
+  },
+  "zoom_sugerido": 12,
+  "modelo_transporte": "hibrido",
+  "modelo_descripcion": "Esta ciudad tiene dos sistemas de transporte diferentes que funcionan al mismo tiempo: el SITM y el TPC. El sistema masivo usa estaciones y carriles rápidos, mientras que el sistema tradicional usa las calles normales. Sin embargo, estos dos sistemas no están integrados. Esto significa que los pasajeros no pueden usar la misma tarjeta para ambos y deben pagar un pasaje nuevo cada vez que cambian de un sistema al otro. Las rutas de ambos sistemas pueden seguir caminos similares pero operan de forma totalmente separada.",
+  "sistema_masivo": "Transmetro",
+  "cobertura": [
+    "Barranquilla",
+    "Soledad",
+    "Puerto Colombia",
+    "Malambo",
+    "Galapa",
+    "Juan Mina",
+    "Baranoa"
+  ],
+  "tarifas": {
+    "Lunes a sábado": "$3.700",
+    "Domingos y festivos": "$3.800"
+  },
+  "metodos_pago": [
+    "Efectivo",
+    "Tarjeta recargable"
+  ]
+}

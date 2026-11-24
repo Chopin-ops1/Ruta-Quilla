@@ -38,6 +38,33 @@ function escapeRegex(str) {
 }
 
 /**
+ * Escape HTML special characters to prevent HTML/XSS injection
+ * in email templates or rendered HTML strings.
+ */
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Validate geographic coordinates.
+ * When metroAreaOnly is true, enforces Barranquilla / Atlántico metro bounds.
+ */
+function isValidCoord(lat, lng, metroAreaOnly = false) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return false;
+  if (metroAreaOnly) {
+    return lat >= 10.3 && lat <= 11.3 && lng >= -75.3 && lng <= -74.5;
+  }
+  return true;
+}
+
+/**
  * Log auth-related events for security monitoring.
  */
 function logAuthEvent(event, email, ip, success = true) {
@@ -46,4 +73,11 @@ function logAuthEvent(event, email, ip, success = true) {
   console.log(`[AUTH] ${status} ${event} | email=${email} | ip=${ip} | time=${timestamp}`);
 }
 
-module.exports = { isValidObjectId, validateObjectId, escapeRegex, logAuthEvent };
+module.exports = {
+  isValidObjectId,
+  validateObjectId,
+  escapeRegex,
+  escapeHtml,
+  isValidCoord,
+  logAuthEvent,
+};

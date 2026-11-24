@@ -7,7 +7,9 @@
  * Incluye plantilla HTML profesional para verificación de cuentas.
  */
 
+const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const { escapeHtml } = require('../middleware/security');
 
 // Crear transporter con Zoho Mail SMTP
 const transporter = nodemailer.createTransport({
@@ -21,16 +23,25 @@ const transporter = nodemailer.createTransport({
 });
 
 /**
- * Genera un código de verificación de 6 dígitos.
+ * Genera un código de verificación criptográficamente seguro de 6 dígitos.
  */
 function generateVerificationCode() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return crypto.randomInt(100000, 1000000).toString();
+}
+
+/**
+ * Sanitiza texto para headers de email (previene header injection con CR/LF).
+ */
+function sanitizeEmailHeader(str) {
+  return String(str || '').replace(/[\r\n]+/g, ' ').trim();
 }
 
 /**
  * Plantilla HTML profesional para el email de verificación.
  */
 function getVerificationEmailHTML(userName, code) {
+  const safeName = escapeHtml(userName);
+  const safeCode = escapeHtml(code);
   return `
 <!DOCTYPE html>
 <html lang="es">
@@ -65,7 +76,7 @@ function getVerificationEmailHTML(userName, code) {
                 Verifica tu cuenta
               </h1>
               <p style="margin: 0 0 30px; text-align: center; font-size: 14px; color: #64748B; line-height: 1.6;">
-                Hola <strong style="color: #94A3B8;">${userName}</strong>, usa este código para completar tu registro en RutaQuilla.
+                Hola <strong style="color: #94A3B8;">${safeName}</strong>, usa este código para completar tu registro en RutaQuilla.
               </p>
 
               <!-- Code box -->
@@ -74,7 +85,7 @@ function getVerificationEmailHTML(userName, code) {
                   Tu código de verificación
                 </p>
                 <div style="font-size: 36px; font-weight: 800; color: #F59E0B; letter-spacing: 8px; font-family: 'Courier New', monospace; text-shadow: 0 0 20px rgba(245,158,11,0.3);">
-                  ${code}
+                  ${safeCode}
                 </div>
                 <p style="margin: 12px 0 0; font-size: 12px; color: #475569;">
                   Este código expira en <strong style="color: #F59E0B;">15 minutos</strong>
@@ -134,12 +145,14 @@ function getVerificationEmailHTML(userName, code) {
  * @param {string} code - Código de 6 dígitos
  */
 async function sendVerificationEmail(to, userName, code) {
+  const safeSubjectName = sanitizeEmailHeader(userName);
+  const safeSubjectCode = sanitizeEmailHeader(code);
   const mailOptions = {
     from: `"RutaQuilla" <${process.env.ZOHO_EMAIL}>`,
     to,
-    subject: `🚌 Tu código de verificación: ${code} — RutaQuilla`,
+    subject: `🚌 Tu código de verificación: ${safeSubjectCode} — RutaQuilla`,
     html: getVerificationEmailHTML(userName, code),
-    text: `Hola ${userName}, tu código de verificación en RutaQuilla es: ${code}. Este código expira en 15 minutos.`,
+    text: `Hola ${safeSubjectName}, tu código de verificación en RutaQuilla es: ${safeSubjectCode}. Este código expira en 15 minutos.`,
   };
 
   try {
@@ -175,10 +188,12 @@ async function verifyConnection() {
  * Incluye incentivo para apoyar el proyecto.
  */
 async function sendQuillaBuilderEmail(to, userName) {
+  const safeName = escapeHtml(userName);
+  const safeSubjectName = sanitizeEmailHeader(userName);
   const mailOptions = {
     from: `"RutaQuilla" <${process.env.ZOHO_EMAIL}>`,
     to,
-    subject: `⚡ ¡${userName}, alcanzaste Quilla Builder! — RutaQuilla`,
+    subject: `⚡ ¡${safeSubjectName}, alcanzaste Quilla Builder! — RutaQuilla`,
     html: `
 <!DOCTYPE html>
 <html lang="es">
@@ -194,7 +209,7 @@ async function sendQuillaBuilderEmail(to, userName) {
           </div>
           <h1 style="margin:0 0 8px;text-align:center;font-size:24px;font-weight:700;color:#F1F5F9;">¡Eres Quilla Builder!</h1>
           <p style="margin:0 0 20px;text-align:center;font-size:14px;color:#64748B;line-height:1.6;">
-            <strong style="color:#F59E0B;">${userName}</strong>, alcanzaste <strong style="color:#F59E0B;">500 XP</strong> contribuyendo a la comunidad de transporte de Barranquilla.
+            <strong style="color:#F59E0B;">${safeName}</strong>, alcanzaste <strong style="color:#F59E0B;">500 XP</strong> contribuyendo a la comunidad de transporte de Barranquilla.
           </p>
           <div style="background:rgba(245,158,11,0.06);border:2px solid rgba(245,158,11,0.2);border-radius:16px;padding:24px;text-align:center;margin-bottom:24px;">
             <p style="margin:0 0 8px;font-size:28px;">🏆</p>
@@ -231,9 +246,71 @@ async function sendQuillaBuilderEmail(to, userName) {
   }
 }
 
+/**
+ * Envía el código de recuperación de contraseña (expira en 15 minutos).
+ */
+async function sendPasswordResetEmail(to, userName, code) {
+  const safeName = escapeHtml(userName);
+  const safeCode = escapeHtml(code);
+  const safeSubjectCode = sanitizeEmailHeader(code);
+  const safeSubjectName = sanitizeEmailHeader(userName);
+
+  const mailOptions = {
+    from: `"RutaQuilla" <${process.env.ZOHO_EMAIL}>`,
+    to,
+    subject: `🔐 Código de recuperación: ${safeSubjectCode} — RutaQuilla`,
+    html: `
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#070C17;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#070C17;min-height:100vh;">
+    <tr><td align="center" style="padding:40px 16px;">
+      <table role="presentation" width="100%" style="max-width:480px;border-radius:24px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+        <tr><td style="height:4px;background:linear-gradient(90deg,#F59E0B,#06B6D4,#8B5CF6);"></td></tr>
+        <tr><td style="background:linear-gradient(145deg,#131E32,#070C17);padding:40px 36px;">
+          <div style="text-align:center;margin-bottom:24px;">
+            <div style="display:inline-block;width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#06B6D4,#0891B2);text-align:center;line-height:64px;font-size:30px;box-shadow:0 8px 24px rgba(6,182,212,0.3);">🔐</div>
+          </div>
+          <h1 style="margin:0 0 8px;text-align:center;font-size:22px;font-weight:700;color:#F8FAFC;">Recuperar contraseña</h1>
+          <p style="margin:0 0 28px;text-align:center;font-size:14px;color:#94A3B8;line-height:1.6;">
+            Hola <strong style="color:#F8FAFC;">${safeName}</strong>, recibimos una solicitud para restablecer tu contraseña en RutaQuilla.
+          </p>
+          <div style="background:rgba(6,182,212,0.08);border:2px solid rgba(6,182,212,0.25);border-radius:16px;padding:24px;text-align:center;margin-bottom:24px;">
+            <p style="margin:0 0 8px;font-size:11px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.15em;font-weight:600;">Código de recuperación</p>
+            <div style="font-size:36px;font-weight:800;color:#06B6D4;letter-spacing:8px;font-family:'Courier New',monospace;">${safeCode}</div>
+            <p style="margin:12px 0 0;font-size:12px;color:#64748B;">Este código expira en <strong style="color:#F59E0B;">15 minutos</strong></p>
+          </div>
+          <p style="margin:0;font-size:11px;color:#64748B;text-align:center;line-height:1.6;">
+            Si no solicitaste este cambio, puedes ignorar este correo. Tu contraseña actual no ha cambiado.
+          </p>
+        </td></tr>
+        <tr><td style="background:rgba(255,255,255,0.02);padding:20px 36px;border-top:1px solid rgba(255,255,255,0.06);">
+          <p style="margin:0;text-align:center;font-size:11px;color:#64748B;"><strong style="color:#94A3B8;">RutaQuilla</strong> — Transporte inteligente para Barranquilla 🇨🇴</p>
+        </td></tr>
+        <tr><td style="height:3px;background:linear-gradient(90deg,#F59E0B,#06B6D4,#8B5CF6);"></td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+    text: `Hola ${safeSubjectName}, tu código para restablecer contraseña en RutaQuilla es: ${safeSubjectCode}. Expira en 15 minutos.`,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`🔐 Email de recuperación enviado a ${to} (${info.messageId})`);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Error enviando email de recuperación:', error.message);
+    throw new Error('No se pudo enviar el email de recuperación');
+  }
+}
+
 module.exports = {
   generateVerificationCode,
   sendVerificationEmail,
   sendQuillaBuilderEmail,
+  sendPasswordResetEmail,
   verifyConnection,
 };

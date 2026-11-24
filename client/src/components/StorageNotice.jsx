@@ -13,7 +13,7 @@ import { Cookie, X } from 'lucide-react';
 
 const CONSENT_KEY = 'rutaquilla_cookies_accepted';
 
-export default function CookieConsent({ onShowPrivacy }) {
+export default function StorageNotice({ onShowPrivacy }) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -45,9 +45,9 @@ export default function CookieConsent({ onShowPrivacy }) {
         maxWidth: 520,
         margin: '0 auto',
         borderRadius: 20,
-        background: 'rgba(17, 24, 39, 0.95)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset',
+        background: 'var(--panel-bg)',
+        border: '1px solid var(--subtle-border-strong)',
+        boxShadow: '0 20px 60px var(--shadow-color), 0 0 0 1px var(--subtle-border) inset',
         backdropFilter: 'blur(24px)',
         WebkitBackdropFilter: 'blur(24px)',
         padding: '16px',
@@ -70,14 +70,14 @@ export default function CookieConsent({ onShowPrivacy }) {
       {/* Text */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{
-          fontSize: 12.5, color: '#CBD5E1', lineHeight: 1.5, margin: 0,
+          fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0,
         }}>
           Usamos almacenamiento local para tu sesión y preferencias.{' '}
           <button
             onClick={onShowPrivacy}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
-              color: '#06B6D4', fontSize: 12.5, fontWeight: 600,
+              color: 'var(--accent-cyan)', fontSize: 12.5, fontWeight: 600,
               textDecoration: 'underline', padding: 0,
             }}
           >

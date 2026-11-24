@@ -43,6 +43,7 @@ Thumbs.db
 # Archivos de scratch / temporales
 scratch*.py
 scratch*.js
+server/data/backup_*.json
 
 # Presentación académica (proteger propiedad intelectual)
 presentacion/

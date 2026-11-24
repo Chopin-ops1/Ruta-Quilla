@@ -3,8 +3,23 @@
  */
 const express = require('express');
 const router = express.Router();
-const { downloadOfflineMap, getSponsoredLocations } = require('../controllers/mapController');
+const {
+  downloadOfflineMap,
+  getSponsoredLocations,
+  geocodePlaces,
+  reverseGeocodePoint,
+  getMapPOIs,
+} = require('../controllers/mapController');
 const { verifyToken, requirePremium } = require('../middleware/authMiddleware');
+
+// GET /api/maps/geocode?q=... - Búsqueda y autocompletado geocodificado (público, con caché)
+router.get('/geocode', geocodePlaces);
+
+// GET /api/maps/reverse?lat=...&lng=... - Geocodificación inversa (público, con caché)
+router.get('/reverse', reverseGeocodePoint);
+
+// GET /api/maps/pois?south=...&west=...&north=...&east=... - POIs OSM en vivo con caché
+router.get('/pois', getMapPOIs);
 
 // GET /api/maps/download - Descarga de mapa offline (SOLO PREMIUM)
 // El middleware requirePremium bloquea usuarios free

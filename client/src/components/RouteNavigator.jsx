@@ -12,12 +12,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Navigation, Search, Clock, Footprints,
-  Bus, Star, Crosshair, ArrowRight, X,
+  Bus, Star, Crosshair, X,
   Loader2, MapPin, ChevronDown, ChevronUp,
-  Zap, CornerDownRight, History
+  ArrowUpDown
 } from 'lucide-react';
 import { searchPlaces, reverseGeocode } from '../services/routingService';
 import { getCurrentPosition } from '../services/gpsService';
+import { useToast } from '../context/ToastContext';
 
 /* ---- Utility ---- */
 function InputRow({ id, color, placeholder, value, onChange, onFocus, onBlur, rightSlot, focused }) {
@@ -60,37 +61,56 @@ function SuggestionDropdown({ items, onSelect, accentColor }) {
         position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
         zIndex: 200, borderRadius: 14, overflow: 'hidden',
         background: 'var(--dropdown-bg)',
-        border: '1px solid rgba(255,255,255,0.09)',
-        boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
+        border: '1px solid var(--subtle-border-strong)',
+        boxShadow: '0 16px 40px var(--shadow-color)',
         backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
       }}
     >
-      {items.map((s, i) => (
-        <button
-          key={i}
-          onMouseDown={() => onSelect(s)}
-          style={{
-            width: '100%', background: 'none', border: 'none',
-            borderBottom: i < items.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-            padding: '10px 14px',
-            display: 'flex', alignItems: 'center', gap: 10,
-            cursor: 'pointer', transition: 'background 0.15s',
-            textAlign: 'left',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--subtle-bg)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
-        >
-          <MapPin size={13} style={{ color: accentColor, flexShrink: 0 }} />
-          <div>
-            <p style={{ fontSize: 12, color: 'var(--text-primary)', margin: 0, lineHeight: 1.4 }}>
-              {s.displayName?.split(',')[0]}
-            </p>
-            <p style={{ fontSize: 10, color: 'var(--text-secondary)', margin: 0, marginTop: 1 }}>
-              {s.displayName?.split(',').slice(1, 3).join(',')}
-            </p>
-          </div>
-        </button>
-      ))}
+      {items.map((s, i) => {
+        const primary = s.displayName?.split(',')[0] || s.displayName;
+        const secondary = s.subtitle || s.displayName?.split(',').slice(1, 3).join(',').trim();
+        return (
+          <button
+            key={i}
+            onMouseDown={() => onSelect(s)}
+            style={{
+              width: '100%', background: 'none', border: 'none',
+              borderBottom: i < items.length - 1 ? '1px solid var(--subtle-border)' : 'none',
+              padding: '10px 14px',
+              display: 'flex', alignItems: 'center', gap: 10,
+              cursor: 'pointer', transition: 'background 0.15s',
+              textAlign: 'left',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--subtle-bg)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
+          >
+            <MapPin size={13} style={{ color: accentColor, flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <p style={{ fontSize: 12, color: 'var(--text-primary)', margin: 0, lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {primary}
+                </p>
+                {s.source === 'local' && (
+                  <span style={{
+                    fontSize: 9, fontWeight: 700, letterSpacing: '0.04em',
+                    padding: '1px 5px', borderRadius: 5, flexShrink: 0,
+                    background: 'rgba(245,158,11,0.14)', color: '#F59E0B',
+                    border: '1px solid rgba(245,158,11,0.28)',
+                  }}>
+                    BQ
+                  </span>
+                )}
+              </div>
+              {secondary && (
+                <p style={{ fontSize: 10, color: 'var(--text-secondary)', margin: 0, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {secondary}
+                </p>
+              )}
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -119,7 +139,7 @@ export default function RouteNavigator({
 
   const [expandedOption, setExpandedOption] = useState(0);
   const [gpsLoading, setGpsLoading] = useState(false);
-  // selectedOptionIdx is now controlled from App
+  const toast = useToast();
 
   // Search history (persisted in localStorage)
   const [searchHistory, setSearchHistory] = useState(() => {
@@ -189,8 +209,25 @@ export default function RouteNavigator({
       onPreviewOriginChange?.({ lat: pos.lat, lng: pos.lng });
       const name = await reverseGeocode(pos.lat, pos.lng);
       setOriginText(`📍 ${name}`);
-    } catch { alert('No se pudo obtener tu ubicación. Verifica permisos del navegador.'); }
-    finally { setGpsLoading(false); }
+    } catch {
+      toast.error('No se pudo obtener tu ubicación. Verifica permisos del navegador.');
+    } finally {
+      setGpsLoading(false);
+    }
+  };
+
+  const handleSwap = () => {
+    if (!originText && !destText && !origin && !destination) return;
+    const prevOrig = origin;
+    const prevDest = destination;
+    const prevOrigText = originText;
+    const prevDestText = destText;
+    setOrigin(prevDest);
+    setDestination(prevOrig);
+    setOriginText(prevDestText);
+    setDestText(prevOrigText);
+    onPreviewOriginChange?.(prevDest);
+    onPreviewDestinationChange?.(prevOrig);
   };
 
   useEffect(() => {
@@ -235,7 +272,7 @@ export default function RouteNavigator({
       {/* ---- Origin + Dest inputs ---- */}
       <div style={{
         background: 'var(--subtle-bg)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: '1px solid var(--subtle-border)',
         borderRadius: 20, padding: '12px 12px 10px',
       }}>
         <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>
@@ -285,7 +322,7 @@ export default function RouteNavigator({
                   style={{
                     width: 26, height: 26, borderRadius: 7, border: 'none',
                     background: pinMode === 'origin' ? 'rgba(16,185,129,0.2)' : 'var(--subtle-bg)',
-                    color: pinMode === 'origin' ? '#34D399' : '#64748B',
+                    color: pinMode === 'origin' ? '#10B981' : 'var(--text-muted)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0,
                   }}
@@ -298,10 +335,30 @@ export default function RouteNavigator({
           {showOriginSugg && <SuggestionDropdown items={originSuggestions} onSelect={selectOrigin} accentColor="#10B981" />}
         </div>
 
-        {/* Connector line */}
-        <div style={{ display: 'flex', alignItems: 'center', padding: '3px 0 3px 9px', gap: 6 }}>
-          <div style={{ width: 1, height: 14, background: 'var(--subtle-border-strong)', borderRadius: 1 }} />
-          <span style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>en bus hasta</span>
+        {/* Connector line + Swap button */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 4px 4px 9px', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 1, height: 14, background: 'var(--subtle-border-strong)', borderRadius: 1 }} />
+            <span style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>en bus hasta</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleSwap}
+            title="Intercambiar origen y destino"
+            aria-label="Intercambiar origen y destino"
+            style={{
+              width: 24, height: 24, borderRadius: 7,
+              border: '1px solid var(--subtle-border)',
+              background: 'var(--subtle-bg)',
+              color: 'var(--text-secondary)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#F59E0B'; e.currentTarget.style.borderColor = 'rgba(245,158,11,0.35)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-secondary)'; e.currentTarget.style.borderColor = 'var(--subtle-border)'; }}
+          >
+            <ArrowUpDown size={12} />
+          </button>
         </div>
 
         {/* DESTINO */}
@@ -329,7 +386,7 @@ export default function RouteNavigator({
                   style={{
                     width: 26, height: 26, borderRadius: 7, border: 'none',
                     background: pinMode === 'destination' ? 'rgba(239,68,68,0.2)' : 'var(--subtle-bg)',
-                  color: pinMode === 'destination' ? '#F87171' : '#64748B',
+                  color: pinMode === 'destination' ? '#EF4444' : 'var(--text-muted)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0,
                 }}
@@ -457,20 +514,46 @@ export default function RouteNavigator({
                         }} />
 
                         <div style={{ padding: '12px 14px' }}>
-                          {/* Optimal badge */}
-                          {opt.isOptimal && (
-                            <div style={{
-                              display: 'inline-flex', alignItems: 'center', gap: 4,
-                              marginBottom: 8, padding: '3px 9px', borderRadius: 20,
-                              background: 'rgba(251,191,36,0.12)',
-                              border: '1px solid rgba(251,191,36,0.25)',
-                            }}>
-                              <Star size={9} style={{ color: '#FBBF24', fill: '#FBBF24' }} />
-                              <span style={{ fontSize: 9, fontWeight: 700, color: '#FBBF24', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                                Ruta óptima
-                              </span>
-                            </div>
-                          )}
+                          {/* Badges row */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: (opt.isOptimal || opt.isTransfer) ? 8 : 0 }}>
+                            {opt.isOptimal && (
+                              <div style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 4,
+                                padding: '3px 9px', borderRadius: 20,
+                                background: 'rgba(251,191,36,0.12)',
+                                border: '1px solid rgba(251,191,36,0.28)',
+                              }}>
+                                <Star size={9} style={{ color: '#F59E0B', fill: '#F59E0B' }} />
+                                <span style={{ fontSize: 9, fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                                  Ruta óptima
+                                </span>
+                              </div>
+                            )}
+                            {opt.isTransfer && (
+                              <div style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 4,
+                                padding: '3px 9px', borderRadius: 20,
+                                background: 'rgba(139,92,246,0.12)',
+                                border: '1px solid rgba(139,92,246,0.28)',
+                              }}>
+                                <span style={{ fontSize: 9, fontWeight: 700, color: '#A78BFA', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                                  1 transbordo
+                                </span>
+                              </div>
+                            )}
+                            {opt.transfer?.sistemasNoIntegrados && (
+                              <div style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 4,
+                                padding: '3px 8px', borderRadius: 20,
+                                background: 'rgba(245,158,11,0.1)',
+                                border: '1px solid rgba(245,158,11,0.28)',
+                              }}>
+                                <span style={{ fontSize: 9, fontWeight: 700, color: '#F59E0B' }}>
+                                  Doble pasaje (Transmetro + Urbano)
+                                </span>
+                              </div>
+                            )}
+                          </div>
 
                           {/* Route name */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
@@ -483,11 +566,20 @@ export default function RouteNavigator({
                               <Bus size={15} style={{ color: opt.route.color }} />
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0, lineHeight: 1.3 }}>
-                                {opt.route.name || opt.route.nombre}
-                              </p>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+                                {opt.route.codigo && (
+                                  <span className="transit-code">{opt.route.codigo}</span>
+                                )}
+                                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0, lineHeight: 1.3 }}>
+                                  {opt.isTransfer && opt.transfer?.secondRoute
+                                    ? `${opt.route.name || opt.route.nombre} → ${opt.transfer.secondRoute.codigo ? `[${opt.transfer.secondRoute.codigo}] ` : ''}${opt.transfer.secondRoute.name}`
+                                    : (opt.route.name || opt.route.nombre)}
+                                </p>
+                              </div>
                               <p style={{ fontSize: 10, color: opt.route.color, margin: 0, marginTop: 1 }}>
-                                {opt.route.company || opt.route.operador}
+                                {opt.isTransfer && opt.transfer?.secondRoute
+                                  ? `${opt.route.company || opt.route.operador} + ${opt.transfer.secondRoute.company}`
+                                  : (opt.route.company || opt.route.operador)}
                               </p>
                             </div>
                             {/* Direction pill */}
@@ -496,7 +588,7 @@ export default function RouteNavigator({
                               background: opt.direction === 'ida' ? 'rgba(16,185,129,0.1)' : 'rgba(139,92,246,0.1)',
                               border: `1px solid ${opt.direction === 'ida' ? 'rgba(16,185,129,0.25)' : 'rgba(139,92,246,0.25)'}`,
                             }}>
-                              <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: opt.direction === 'ida' ? '#34D399' : '#A78BFA' }}>
+                              <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: opt.direction === 'ida' ? '#10B981' : '#8B5CF6' }}>
                                 {opt.direction === 'ida' ? 'IDA' : 'VUELTA'}
                               </span>
                             </div>
@@ -512,55 +604,73 @@ export default function RouteNavigator({
                               }}>
                                 <Clock size={12} color="#F59E0B" />
                               </div>
-                              <span style={{ fontSize: 15, fontWeight: 700, color: '#F59E0B' }}>~{opt.totalMinutes}</span>
+                              <span className="tabular-nums" style={{ fontSize: 15, fontWeight: 700, color: '#F59E0B' }}>~{opt.totalMinutes}</span>
                               <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>min</span>
                             </div>
                             <div style={{ width: 1, height: 16, background: 'var(--subtle-border)' }} />
                             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                               <Footprints size={12} color="#60A5FA" />
-                              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{opt.totalWalkMinutes} min a pie</span>
+                              <span className="tabular-nums" style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{opt.totalWalkMinutes} min a pie</span>
                             </div>
-                            <div style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 600, color: '#F59E0B' }}>
+                            <div className="tabular-nums" style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 600, color: '#F59E0B' }}>
                               ${opt.route.fare?.toLocaleString()}
                             </div>
                           </div>
 
-                          {/* Expanded step-by-step */}
+                          {/* Expanded vertical transit timeline */}
                           {isExpanded && (
                             <div className="animate-fade-in" style={{
-                              paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)',
-                              display: 'flex', flexDirection: 'column', gap: 8,
+                              paddingTop: 12, borderTop: '1px solid var(--subtle-border)',
+                              display: 'flex', flexDirection: 'column',
                             }}>
                               {[
                                 {
                                   icon: <Footprints size={12} />, color: '#60A5FA',
                                   label: `Caminar ${opt.boardPoint.walkDistance}m (~${opt.boardPoint.walkMinutes} min)`,
-                                  sub: 'Hasta donde pasa la ruta',
+                                  sub: 'Hasta donde pasa el primer bus',
                                 },
                                 {
                                   icon: <Bus size={12} />, color: opt.route.color,
-                                  label: `${opt.route.nombre || opt.route.name} (~${opt.busMinutes} min)`,
-                                  sub: 'En bus',
+                                  label: `${opt.route.nombre || opt.route.name} (~${opt.isTransfer && opt.transfer ? Math.max(1, opt.busMinutes - opt.transfer.secondBusMinutes) : opt.busMinutes} min)`,
+                                  sub: opt.isTransfer ? 'Primer tramo en bus' : 'En bus',
                                 },
+                                ...(opt.isTransfer && opt.transfer ? [
+                                  {
+                                    icon: <Footprints size={12} />, color: '#A78BFA',
+                                    label: `Transbordo: caminar ${opt.transfer.walkDistance}m (~${opt.transfer.walkMinutes} min)`,
+                                    sub: `Conecta con ${opt.transfer.secondRoute.name}`,
+                                  },
+                                  {
+                                    icon: <Bus size={12} />, color: opt.transfer.secondRoute.color || '#8B5CF6',
+                                    label: `${opt.transfer.secondRoute.name} (~${opt.transfer.secondBusMinutes} min)`,
+                                    sub: `Segundo tramo (${opt.transfer.secondRoute.company})`,
+                                  },
+                                ] : []),
                                 {
-                                  icon: <MapPin size={12} />, color: '#F87171',
+                                  icon: <MapPin size={12} />, color: '#EF4444',
                                   label: opt.alightPoint.walkDistance < 50
                                     ? 'El bus pasa frente a tu destino 🎯'
                                     : `Caminar ${opt.alightPoint.walkDistance}m al destino`,
                                   sub: opt.alightPoint.walkDistance < 50 ? 'Bájate ahí mismo' : `~${opt.alightPoint.walkMinutes} min`,
                                 },
-                              ].map((step, i) => (
-                                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                                  <div style={{
-                                    width: 24, height: 24, borderRadius: 8, flexShrink: 0,
-                                    background: `${step.color}14`,
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    color: step.color, marginTop: 1,
-                                  }}>
-                                    {step.icon}
+                              ].map((step, i, arr) => (
+                                <div key={i} style={{ display: 'flex', alignItems: 'stretch', gap: 10 }}>
+                                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <div style={{
+                                      width: 24, height: 24, borderRadius: 8, flexShrink: 0,
+                                      background: `${step.color}16`,
+                                      border: `1px solid ${step.color}40`,
+                                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                      color: step.color,
+                                    }}>
+                                      {step.icon}
+                                    </div>
+                                    {i < arr.length - 1 && (
+                                      <div style={{ width: 2, flex: 1, minHeight: 12, margin: '2px 0', background: 'var(--subtle-border-strong)', borderRadius: 1 }} />
+                                    )}
                                   </div>
-                                  <div>
-                                    <p style={{ fontSize: 12, fontWeight: 500, color: step.color, margin: 0 }}>{step.label}</p>
+                                  <div style={{ paddingBottom: i < arr.length - 1 ? 10 : 2 }}>
+                                    <p style={{ fontSize: 12, fontWeight: 600, color: step.color, margin: 0 }}>{step.label}</p>
                                     <p style={{ fontSize: 10, color: 'var(--text-secondary)', margin: 0, marginTop: 1 }}>{step.sub}</p>
                                   </div>
                                 </div>
@@ -569,10 +679,10 @@ export default function RouteNavigator({
                           )}
 
                           {/* Expand/collapse */}
-                          <div style={{ display: 'flex', justifyContent: 'center', marginTop: isExpanded ? 10 : 0, paddingTop: isExpanded ? 8 : 0, borderTop: isExpanded ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                          <div style={{ display: 'flex', justifyContent: 'center', marginTop: isExpanded ? 10 : 0, paddingTop: isExpanded ? 8 : 0, borderTop: isExpanded ? '1px solid var(--subtle-border)' : 'none' }}>
                             {isExpanded
-                              ? <ChevronUp size={13} color="#334155" />
-                              : <ChevronDown size={13} color="#334155" />}
+                              ? <ChevronUp size={13} style={{ color: 'var(--text-muted)' }} />
+                              : <ChevronDown size={13} style={{ color: 'var(--text-muted)' }} />}
                           </div>
                         </div>
                       </div>

@@ -109,22 +109,22 @@ export default function MapQuickBar({
       className="animate-slide-up"
       style={{
         position: 'fixed',
-        bottom: 'calc(28px + env(safe-area-inset-bottom, 0px))',
+        bottom: 'calc(24px + env(safe-area-inset-bottom, 0px))',
         left: '50%', translate: '-50% 0',
         zIndex: 1200,
         width: 'calc(100% - 32px)', maxWidth: 420,
-        borderRadius: 18,
-        background: 'rgba(7, 11, 22, 0.94)',
+        borderRadius: 20,
+        background: 'var(--panel-bg)',
         backdropFilter: 'blur(24px) saturate(180%)',
         WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        boxShadow: '0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset',
+        border: '1px solid var(--subtle-border-strong)',
+        boxShadow: '0 12px 40px var(--shadow-color)',
         overflow: 'hidden',
       }}
     >
       {/* Gradient top accent */}
       <div style={{
-        height: 2,
+        height: 3,
         background: effectiveOrigin && effectiveDest
           ? 'linear-gradient(90deg, #10B981, #F59E0B, #EF4444)'
           : effectiveOrigin
@@ -132,7 +132,9 @@ export default function MapQuickBar({
             : 'linear-gradient(90deg, #EF444460, #EF4444)',
       }} />
 
-      <div style={{ padding: '10px 14px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div className="sheet-handle" />
+
+      <div style={{ padding: '6px 14px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
         {/* Points row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* Origin chip */}
@@ -140,8 +142,8 @@ export default function MapQuickBar({
             <div style={{
               flex: 1, display: 'flex', alignItems: 'center', gap: 6,
               padding: '6px 10px', borderRadius: 10,
-              background: 'rgba(16,185,129,0.08)',
-              border: '1px solid rgba(16,185,129,0.2)',
+              background: 'rgba(16,185,129,0.1)',
+              border: '1px solid rgba(16,185,129,0.24)',
               minWidth: 0,
             }}>
               <div style={{
@@ -149,7 +151,7 @@ export default function MapQuickBar({
                 background: '#10B981', boxShadow: '0 0 6px rgba(16,185,129,0.6)',
               }} />
               <span style={{
-                fontSize: 11, color: '#34D399', fontWeight: 500,
+                fontSize: 11, color: '#10B981', fontWeight: 600,
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
                 {originName || 'Cargando...'}
@@ -159,7 +161,7 @@ export default function MapQuickBar({
 
           {/* Arrow */}
           {effectiveOrigin && effectiveDest && (
-            <Navigation size={12} style={{ color: '#475569', flexShrink: 0, transform: 'rotate(90deg)' }} />
+            <Navigation size={12} style={{ color: 'var(--text-muted)', flexShrink: 0, transform: 'rotate(90deg)' }} />
           )}
 
           {/* Destination chip */}
@@ -167,8 +169,8 @@ export default function MapQuickBar({
             <div style={{
               flex: 1, display: 'flex', alignItems: 'center', gap: 6,
               padding: '6px 10px', borderRadius: 10,
-              background: 'rgba(239,68,68,0.08)',
-              border: '1px solid rgba(239,68,68,0.2)',
+              background: 'rgba(239,68,68,0.1)',
+              border: '1px solid rgba(239,68,68,0.24)',
               minWidth: 0,
             }}>
               <div style={{
@@ -176,7 +178,7 @@ export default function MapQuickBar({
                 background: '#EF4444', boxShadow: '0 0 6px rgba(239,68,68,0.6)',
               }} />
               <span style={{
-                fontSize: 11, color: '#F87171', fontWeight: 500,
+                fontSize: 11, color: '#EF4444', fontWeight: 600,
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
                 {destName || 'Cargando...'}
@@ -187,11 +189,12 @@ export default function MapQuickBar({
           {/* Close button */}
           <button
             onClick={handleClose}
+            aria-label="Limpiar puntos"
             style={{
               width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              color: '#64748B', cursor: 'pointer',
+              background: 'var(--subtle-bg)',
+              border: '1px solid var(--subtle-border-strong)',
+              color: 'var(--text-muted)', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'all 0.2s',
             }}
@@ -203,7 +206,7 @@ export default function MapQuickBar({
         {/* Hint or search button */}
         {!canSearch && (
           <p style={{
-            fontSize: 10, color: '#475569', textAlign: 'center',
+            fontSize: 10, color: 'var(--text-muted)', textAlign: 'center',
             margin: 0, padding: '2px 0',
           }}>
             {!effectiveOrigin ? '🖱️ Click derecho → Origen' : '🖱️ Ahora selecciona el destino'}

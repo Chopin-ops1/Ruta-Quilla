@@ -16,6 +16,8 @@
 
 const Report = require('../models/ReportModel');
 const User = require('../models/UserModel');
+const Route = require('../models/RouteModel');
+const { isValidObjectId, isValidCoord } = require('../middleware/security');
 
 const TYPE_META = {
   desvio:     { emoji: '🔀', label: 'Desvío de ruta',    color: '#F59E0B' },
@@ -39,19 +41,22 @@ const DISMISS_LABELS = {
  */
 async function createReport(req, res) {
   try {
-    const { type, description, location, routeId, routeName, routeCodigo, locationName } = req.body;
+    const { type, description, location, routeId, locationName } = req.body || {};
 
-    if (!type || !location?.lat || !location?.lng) {
+    const lat = parseFloat(location?.lat);
+    const lng = parseFloat(location?.lng);
+
+    if (!type || !isValidCoord(lat, lng, true)) {
       return res.status(400).json({
         success: false,
-        message: 'Campos requeridos: type, location { lat, lng }',
+        message: 'Se requiere tipo de reporte y una ubicación válida en Barranquilla / Atlántico',
       });
     }
 
-    if (!routeId || !routeName) {
+    if (!routeId || !isValidObjectId(routeId)) {
       return res.status(400).json({
         success: false,
-        message: 'Debes seleccionar la ruta de bus afectada',
+        message: 'Debes seleccionar una ruta de bus válida',
       });
     }
 
@@ -59,6 +64,14 @@ async function createReport(req, res) {
       return res.status(400).json({
         success: false,
         message: `Tipo inválido. Opciones: ${Report.REPORT_TYPES.join(', ')}`,
+      });
+    }
+
+    const route = await Route.findById(routeId).select('nombre codigo').lean();
+    if (!route) {
+      return res.status(404).json({
+        success: false,
+        message: 'La ruta seleccionada no existe',
       });
     }
 
@@ -75,17 +88,20 @@ async function createReport(req, res) {
       });
     }
 
+    const cleanDescription = typeof description === 'string' ? description.trim().slice(0, 200) : '';
+    const cleanLocationName = typeof locationName === 'string' ? locationName.trim().slice(0, 120) : '';
+
     const report = new Report({
       type,
-      description: (description || '').slice(0, 200),
+      description: cleanDescription,
       location: {
         type: 'Point',
-        coordinates: [parseFloat(location.lng), parseFloat(location.lat)],
+        coordinates: [lng, lat],
       },
-      locationName: locationName || '',
-      routeId,
-      routeName,
-      routeCodigo: routeCodigo || '',
+      locationName: cleanLocationName,
+      routeId: route._id,
+      routeName: route.nombre,
+      routeCodigo: route.codigo || '',
       userId: req.user._id,
       userName: req.user.name,
     });
@@ -122,16 +138,25 @@ async function createReport(req, res) {
 async function getActiveReports(req, res) {
   try {
     const { lat, lng, radius = 5000 } = req.query;
-    const cappedRadius = Math.min(parseInt(radius) || 5000, 10000);
+    const cappedRadius = Math.min(Math.max(parseInt(radius, 10) || 5000, 100), 10000);
 
     const filter = { expiresAt: { $gt: new Date() }, status: 'active' };
     let reports;
 
-    if (lat && lng) {
+    if (lat !== undefined && lng !== undefined) {
+      const parsedLat = parseFloat(lat);
+      const parsedLng = parseFloat(lng);
+      if (!isValidCoord(parsedLat, parsedLng)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Coordenadas inválidas',
+        });
+      }
+
       reports = await Report.aggregate([
         {
           $geoNear: {
-            near: { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] },
+            near: { type: 'Point', coordinates: [parsedLng, parsedLat] },
             distanceField: 'distance',
             maxDistance: cappedRadius,
             spherical: true,
@@ -177,28 +202,43 @@ async function getActiveReports(req, res) {
  */
 async function confirmReport(req, res) {
   try {
-    const report = await Report.findById(req.params.id);
-    if (!report || report.status !== 'active') {
-      return res.status(404).json({ success: false, message: 'Reporte no encontrado o inactivo' });
-    }
-    if (report.expiresAt < new Date()) {
-      return res.status(410).json({ success: false, message: 'Este reporte ya expiró' });
-    }
-    if (report.confirmedBy.includes(req.user._id)) {
+    const now = new Date();
+    const report = await Report.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        status: 'active',
+        expiresAt: { $gt: now },
+        userId: { $ne: req.user._id },
+        confirmedBy: { $ne: req.user._id },
+      },
+      {
+        $inc: { confirmations: 1 },
+        $addToSet: { confirmedBy: req.user._id },
+      },
+      { new: true }
+    );
+
+    if (!report) {
+      const existing = await Report.findById(req.params.id).select('status expiresAt userId').lean();
+      if (!existing || existing.status !== 'active') {
+        return res.status(404).json({ success: false, message: 'Reporte no encontrado o inactivo' });
+      }
+      if (existing.expiresAt < now) {
+        return res.status(410).json({ success: false, message: 'Este reporte ya expiró' });
+      }
+      if (existing.userId.toString() === req.user._id.toString()) {
+        return res.status(409).json({ success: false, message: 'No puedes confirmar tu propio reporte' });
+      }
       return res.status(409).json({ success: false, message: 'Ya confirmaste este reporte' });
     }
-    if (report.userId.toString() === req.user._id.toString()) {
-      return res.status(409).json({ success: false, message: 'No puedes confirmar tu propio reporte' });
-    }
-
-    report.confirmations += 1;
-    report.confirmedBy.push(req.user._id);
 
     const maxExpiry = new Date(report.createdAt.getTime() + 2 * 60 * 60 * 1000);
     const newExpiry = new Date(report.expiresAt.getTime() + 15 * 60 * 1000);
-    report.expiresAt = newExpiry < maxExpiry ? newExpiry : maxExpiry;
-
-    await report.save();
+    const clampedExpiry = newExpiry < maxExpiry ? newExpiry : maxExpiry;
+    if (clampedExpiry.getTime() !== report.expiresAt.getTime()) {
+      report.expiresAt = clampedExpiry;
+      await Report.updateOne({ _id: report._id }, { $set: { expiresAt: clampedExpiry } });
+    }
 
     try {
       const user = await User.findById(req.user._id);
@@ -224,7 +264,7 @@ async function confirmReport(req, res) {
  */
 async function dismissReport(req, res) {
   try {
-    const { reason } = req.body;
+    const { reason } = req.body || {};
     if (!reason || !Report.DISMISS_REASONS.includes(reason)) {
       return res.status(400).json({
         success: false,
@@ -232,29 +272,37 @@ async function dismissReport(req, res) {
       });
     }
 
-    const report = await Report.findById(req.params.id);
-    if (!report || report.status !== 'active') {
-      return res.status(404).json({ success: false, message: 'Reporte no encontrado o ya removido' });
-    }
-
-    // Check already voted
-    const alreadyVoted = report.dismissedBy.some(
-      d => d.userId.toString() === req.user._id.toString()
+    const report = await Report.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        status: 'active',
+        'dismissedBy.userId': { $ne: req.user._id },
+      },
+      {
+        $inc: { dismissals: 1 },
+        $push: { dismissedBy: { userId: req.user._id, reason } },
+      },
+      { new: true }
     );
-    if (alreadyVoted) {
+
+    if (!report) {
+      const existing = await Report.findById(req.params.id).select('status').lean();
+      if (!existing || existing.status !== 'active') {
+        return res.status(404).json({ success: false, message: 'Reporte no encontrado o ya removido' });
+      }
       return res.status(409).json({ success: false, message: 'Ya votaste para remover este reporte' });
     }
 
-    report.dismissals += 1;
-    report.dismissedBy.push({ userId: req.user._id, reason });
-
     // Auto-remove if threshold reached
     if (report.dismissals >= Report.DISMISS_THRESHOLD) {
+      const removeReason = `Removido por comunidad (${report.dismissals} votos)`;
+      await Report.updateOne(
+        { _id: report._id, status: 'active' },
+        { $set: { status: 'dismissed', removeReason } }
+      );
       report.status = 'dismissed';
-      report.removeReason = `Removido por comunidad (${report.dismissals} votos)`;
+      report.removeReason = removeReason;
     }
-
-    await report.save();
 
     const remaining = Math.max(0, Report.DISMISS_THRESHOLD - report.dismissals);
 
@@ -328,8 +376,9 @@ async function getReportTypes(req, res) {
 async function adminGetReports(req, res) {
   try {
     const { status, type, page = 1 } = req.query;
+    const safePage = Math.max(1, parseInt(page, 10) || 1);
     const limit = 20;
-    const skip = (parseInt(page) - 1) * limit;
+    const skip = (safePage - 1) * limit;
 
     const filter = {};
     if (status && status !== 'all') filter.status = status;
@@ -361,7 +410,7 @@ async function adminGetReports(req, res) {
       success: true,
       data: enriched,
       total,
-      page: parseInt(page),
+      page: safePage,
       totalPages: Math.ceil(total / limit),
       stats: stats.reduce((acc, s) => { acc[s._id] = s.count; return acc; }, {}),
     });

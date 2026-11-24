@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { Bus, CheckCircle2, XCircle, GitCompare } from 'lucide-react';
 import { adminAPI } from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
+import { useToast } from '../../context/ToastContext';
 
 const COLORS = ['#F59E0B', '#06B6D4', '#10B981', '#EF4444', '#8B5CF6', '#EC4899', '#F97316'];
 
@@ -75,6 +76,7 @@ function CompareResizer({ captures }) {
 
 export default function CapturesTab() {
   const { isDark } = useTheme();
+  const toast = useToast();
   const [captures, setCaptures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending');
@@ -101,7 +103,7 @@ export default function CapturesTab() {
       setReviewNotes('');
       setSelected(null);
       load();
-    } catch (e) { alert('Error: ' + (e.message || 'No se pudo guardar')); }
+    } catch (e) { toast.error('Error: ' + (e.message || 'No se pudo guardar')); }
     finally { setSaving(false); }
   };
 

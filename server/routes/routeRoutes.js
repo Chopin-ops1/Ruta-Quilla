@@ -16,8 +16,8 @@ const { validateObjectId } = require('../middleware/security');
 // GET /api/routes - Listar todas las rutas (público)
 router.get('/', getAllRoutes);
 
-// GET /api/routes/auditoria - Auditoría de rutas (público para db seeding check)
-router.get('/auditoria', getRouteAudit);
+// GET /api/routes/auditoria - Auditoría de rutas (solo admin)
+router.get('/auditoria', verifyToken, requireAdmin, getRouteAudit);
 
 // GET /api/routes/nearby - Búsqueda radial geoespacial (público)
 router.get('/nearby', getNearbyRoutes);

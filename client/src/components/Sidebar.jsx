@@ -1,29 +1,648 @@
 /**
  * ============================================
- * RutaQuilla - Sidebar (Panel Lateral v2)
+ * RutaQuilla - Sidebar (Panel Lateral v3)
  * ============================================
  *
- * Panel lateral con 3 tabs:
+ * Panel lateral con 4 tabs:
  * - Navegar: Panel de navegación origen→destino (Google Maps style)
- * - Rutas: Lista de rutas (click muestra solo esa ruta)
+ * - Rutas: Catálogo moderno agrupado por empresa con filtros, búsqueda y ficha técnica
+ * - Favoritos: Acceso rápido a rutas guardadas
  * - Capturar: Captura GPS para crowdsourcing
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
-  Route, Navigation, Filter, MapPin, Bus,
-  ChevronRight, Crown, Download,
-  CheckCircle2, Eye, EyeOff, Zap, Star
+  Route,
+  Navigation,
+  MapPin,
+  Bus,
+  ChevronRight,
+  ChevronDown,
+  Crown,
+  Download,
+  Eye,
+  EyeOff,
+  Zap,
+  Star,
+  Clock,
+  X,
+  Search,
+  Loader2,
+  ArrowLeftRight,
+  ArrowRight,
+  RotateCcw,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { formatDistance, getRouteLength } from '../utils/geoUtils';
+import { mapsAPI } from '../services/api';
+import { getRouteLength } from '../utils/geoUtils';
+import { safeColor } from '../utils/sanitize';
 import RouteNavigator from './RouteNavigator';
+
+function ScheduleRow({ label, block }) {
+  if (block === null || block === undefined) {
+    return (
+      <div className="flex items-center justify-between text-[11px] py-1">
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</span>
+        <span style={{ color: 'var(--text-muted)' }}>Sin información</span>
+      </div>
+    );
+  }
+  if (block.opera === false) {
+    return (
+      <div className="flex items-center justify-between text-[11px] py-1">
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</span>
+        <span style={{ color: '#EF4444', fontWeight: 600 }}>No opera</span>
+      </div>
+    );
+  }
+  const timeRange =
+    block.primera_salida && block.ultima_salida
+      ? `${block.primera_salida} – ${block.ultima_salida}`
+      : 'Servicio activo';
+  const freq = block.frecuencia_minutos;
+  const freqParts = [];
+  if (freq?.pico != null) freqParts.push(`pico ${freq.pico} min`);
+  if (freq?.valle != null && freq.valle !== freq?.pico) freqParts.push(`valle ${freq.valle} min`);
+  const freqStr = freqParts.length > 0 ? ` · ${freqParts.join(' / ')}` : '';
+
+  return (
+    <div className="flex items-center justify-between gap-2 text-[11px] py-1">
+      <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</span>
+      <span className="tabular-nums text-right" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+        {timeRange}
+        {freqStr && <span style={{ color: 'var(--accent-cyan)', fontWeight: 500 }}>{freqStr}</span>}
+      </span>
+    </div>
+  );
+}
+
+function getRouteDisplay(route) {
+  const hasCode = Boolean(route?.codigo);
+  const nameDiffersFromCode = Boolean(route?.nombre && route.nombre !== route?.codigo);
+  const title = nameDiffersFromCode
+    ? route.nombre
+    : route?.descripcion || route?.operador || route?.nombre || 'Ruta';
+  const showSubtitle =
+    Boolean(route?.descripcion) &&
+    route.descripcion !== title &&
+    route.descripcion !== route?.nombre;
+  const km = Number(route?.distanciaKm) || getRouteLength(route?.ida?.trazado?.coordinates);
+  const peakMin = route?.horarios?.lunes_a_viernes?.frecuencia_minutos?.pico;
+  const hasReturn = Boolean(route?.tieneRegreso || route?.regreso?.trazado?.coordinates?.length > 1);
+  return { hasCode, title, showSubtitle, km, peakMin, hasReturn };
+}
+
+function RoutePassCard({
+  route,
+  isSelected,
+  isLoading,
+  isFav,
+  isAffected,
+  showOperator = false,
+  onSelect,
+  onToggleFavorite,
+}) {
+  const routeColor = safeColor(route?.color, '#06B6D4');
+  const { hasCode, title, showSubtitle, km, peakMin, hasReturn } = getRouteDisplay(route);
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onSelect?.(route)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect?.(route);
+        }
+      }}
+      className={`route-pass-card${isSelected ? ' active' : ''}`}
+      style={{ '--route-color': routeColor }}
+    >
+      <div className="flex items-start gap-2.5">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0">
+            {hasCode && (
+              <span
+                className="transit-code flex-shrink-0"
+                style={{
+                  background: `${routeColor}1F`,
+                  color: routeColor,
+                  border: `1px solid ${routeColor}45`,
+                }}
+              >
+                {route.codigo}
+              </span>
+            )}
+            <span
+              className="text-[12.5px] font-semibold truncate block"
+              style={{ color: 'var(--text-primary)' }}
+              title={title}
+            >
+              {title}
+            </span>
+          </div>
+
+          {(showSubtitle || (showOperator && title !== route.operador)) && (
+            <p
+              className="text-[11px] truncate m-0 mt-0.5"
+              style={{ color: 'var(--text-secondary)' }}
+              title={showSubtitle ? route.descripcion : route.operador}
+            >
+              {showOperator && title !== route.operador ? route.operador : ''}
+              {showOperator && title !== route.operador && showSubtitle ? ' · ' : ''}
+              {showSubtitle ? route.descripcion : ''}
+            </p>
+          )}
+
+          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+            {route.sistema === 'masivo' && (
+              <span
+                className="text-[9.5px] px-1.5 py-0.5 rounded-full font-bold"
+                style={{
+                  background: 'rgba(6,182,212,0.12)',
+                  color: '#06B6D4',
+                  border: '1px solid rgba(6,182,212,0.28)',
+                }}
+              >
+                Transmetro
+              </span>
+            )}
+            {route.esIntermunicipal && (
+              <span
+                className="text-[9.5px] px-1.5 py-0.5 rounded-full font-bold"
+                style={{
+                  background: 'rgba(245,158,11,0.12)',
+                  color: '#F59E0B',
+                  border: '1px solid rgba(245,158,11,0.28)',
+                }}
+              >
+                Intermunicipal
+              </span>
+            )}
+            {route.type === 'community' && (
+              <span className="badge badge-community" style={{ fontSize: '9px', padding: '1px 6px' }}>
+                Comunidad
+              </span>
+            )}
+            {km > 0 && (
+              <span
+                className="inline-flex items-center text-[10px] font-medium tabular-nums px-1.5 py-0.5 rounded-md"
+                style={{
+                  background: 'var(--bg-card)',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--subtle-border)',
+                }}
+              >
+                {km.toFixed(1)} km
+              </span>
+            )}
+            <span
+              className="inline-flex items-center gap-1 text-[9.5px] px-1.5 py-0.5 rounded-md font-medium"
+              style={{
+                background: hasReturn ? 'rgba(139, 92, 246, 0.1)' : 'var(--bg-card)',
+                color: hasReturn ? '#A78BFA' : 'var(--text-muted)',
+                border: `1px solid ${hasReturn ? 'rgba(139, 92, 246, 0.22)' : 'var(--subtle-border)'}`,
+              }}
+            >
+              {hasReturn ? <ArrowLeftRight size={9} /> : <ArrowRight size={9} />}
+              {hasReturn ? 'Ida y reg.' : 'Lineal'}
+            </span>
+            {peakMin != null && (
+              <span
+                className="inline-flex items-center gap-0.5 text-[9.5px] px-1.5 py-0.5 rounded-md font-medium tabular-nums"
+                style={{
+                  background: 'rgba(16,185,129,0.1)',
+                  color: '#10B981',
+                  border: '1px solid rgba(16,185,129,0.24)',
+                }}
+              >
+                <Zap size={9} />
+                {peakMin}m
+              </span>
+            )}
+            {isAffected && (
+              <span
+                className="text-[9.5px] px-1.5 py-0.5 rounded-full font-bold"
+                style={{
+                  background: 'rgba(239,68,68,0.15)',
+                  color: '#EF4444',
+                  border: '1px solid rgba(239,68,68,0.3)',
+                  animation: 'pulse 2s infinite',
+                }}
+              >
+                ⚠️ Reporte
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
+          {isLoading && <Loader2 size={14} className="animate-spin" color="#06B6D4" />}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorite?.(route._id);
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 4,
+              display: 'flex',
+              transition: 'transform 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.18)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+            title={isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+            aria-label={isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+          >
+            <Star
+              size={14}
+              fill={isFav ? '#F59E0B' : 'none'}
+              color={isFav ? '#F59E0B' : 'var(--text-muted)'}
+            />
+          </button>
+          <ChevronRight size={13} style={{ color: 'var(--text-muted)' }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SelectedRouteFicha({
+  route,
+  isLoading,
+  onClose,
+  onFocusStop,
+}) {
+  const [showStopsList, setShowStopsList] = useState(false);
+  const [stopDirFilter, setStopDirFilter] = useState('all');
+  const [showAllZones, setShowAllZones] = useState(false);
+
+  if (!route) return null;
+
+  const routeColor = safeColor(route.color, '#06B6D4');
+  const { hasCode, title, showSubtitle, km, hasReturn } = getRouteDisplay(route);
+  const stops = Array.isArray(route.paradas) ? route.paradas : [];
+  const hasIdaStops = stops.some((p) => p.sentido !== 'regreso');
+  const hasRegStops = stops.some((p) => p.sentido === 'regreso');
+  const filteredStops = stops.filter((p) => {
+    if (stopDirFilter === 'all') return true;
+    const dir = p.sentido === 'regreso' ? 'regreso' : 'ida';
+    return dir === stopDirFilter;
+  });
+  const zones = Array.isArray(route.barriosCubiertos) ? route.barriosCubiertos : [];
+  const visibleZones = showAllZones ? zones : zones.slice(0, 8);
+
+  return (
+    <div
+      className="mx-3 mt-3 rounded-2xl overflow-hidden animate-fade-in"
+      style={{
+        background: 'var(--bg-card)',
+        border: `1px solid ${routeColor}55`,
+        boxShadow: '0 10px 28px var(--shadow-color)',
+      }}
+    >
+      {/* Top accent strip */}
+      <div style={{ height: 3, background: routeColor }} />
+
+      <div className="p-3.5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 flex-wrap mb-1">
+              {hasCode && (
+                <span
+                  className="transit-code"
+                  style={{
+                    background: `${routeColor}20`,
+                    color: routeColor,
+                    border: `1px solid ${routeColor}45`,
+                  }}
+                >
+                  {route.codigo}
+                </span>
+              )}
+              <span
+                className="text-[9.5px] px-2 py-0.5 rounded-full font-bold uppercase"
+                style={{
+                  background:
+                    route.sistema === 'masivo'
+                      ? 'rgba(6,182,212,0.14)'
+                      : route.esIntermunicipal
+                      ? 'rgba(245,158,11,0.14)'
+                      : 'var(--subtle-bg)',
+                  color:
+                    route.sistema === 'masivo'
+                      ? '#06B6D4'
+                      : route.esIntermunicipal
+                      ? '#F59E0B'
+                      : 'var(--text-secondary)',
+                }}
+              >
+                {route.sistema === 'masivo'
+                  ? 'Transmetro'
+                  : route.esIntermunicipal
+                  ? 'Intermunicipal'
+                  : 'Bus Urbano'}
+              </span>
+            </div>
+
+            <h4
+              className="text-[14px] font-bold leading-snug m-0"
+              style={{ color: 'var(--text-primary)', fontFamily: 'Outfit, Inter, sans-serif' }}
+            >
+              {title}
+            </h4>
+
+            {showSubtitle && (
+              <p className="text-[11.5px] mt-0.5 mb-0" style={{ color: 'var(--text-secondary)' }}>
+                {route.descripcion}
+              </p>
+            )}
+
+            {route.operador && title !== route.operador && (
+              <p className="text-[11px] mt-0.5 mb-0 font-medium" style={{ color: routeColor }}>
+                {route.operador}
+              </p>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onClose?.()}
+            aria-label="Cerrar ficha de ruta"
+            title="Cerrar ruta"
+            style={{
+              background: 'var(--subtle-bg)',
+              border: '1px solid var(--subtle-border)',
+              borderRadius: 9,
+              width: 28,
+              height: 28,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--text-muted)',
+              flexShrink: 0,
+            }}
+          >
+            <X size={14} />
+          </button>
+        </div>
+
+        {/* 3 quick metrics strip */}
+        <div
+          className="grid grid-cols-3 gap-1.5 mt-3 p-2 rounded-xl"
+          style={{ background: 'var(--subtle-bg)', border: '1px solid var(--subtle-border)' }}
+        >
+          <div className="text-center">
+            <div className="text-[9.5px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+              Distancia
+            </div>
+            <div className="text-[12px] font-bold tabular-nums mt-0.5" style={{ color: 'var(--text-primary)' }}>
+              {km > 0 ? `${km.toFixed(1)} km` : '—'}
+            </div>
+          </div>
+          <div className="text-center" style={{ borderLeft: '1px solid var(--subtle-border)', borderRight: '1px solid var(--subtle-border)' }}>
+            <div className="text-[9.5px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+              Recorrido
+            </div>
+            <div className="text-[11.5px] font-bold mt-0.5" style={{ color: 'var(--text-primary)' }}>
+              {hasReturn ? 'Ida ⇄ Reg.' : 'Lineal →'}
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-[9.5px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+              Tarifa
+            </div>
+            <div className="text-[11.5px] font-bold tabular-nums mt-0.5" style={{ color: '#F59E0B' }}>
+              $3.700 / $3.8k
+            </div>
+          </div>
+        </div>
+
+        {/* Horarios */}
+        <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--subtle-border)' }}>
+          <div className="flex items-center gap-1.5 mb-1">
+            <Clock size={12} color="#F59E0B" />
+            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+              Horarios y frecuencias
+            </span>
+          </div>
+          {route.horarios ? (
+            <div>
+              <ScheduleRow label="Lun – Vie" block={route.horarios.lunes_a_viernes} />
+              <ScheduleRow label="Sábado" block={route.horarios.sabado} />
+              <ScheduleRow label="Dom / Fest" block={route.horarios.domingo_y_festivos} />
+            </div>
+          ) : (
+            <p className="text-[11px] m-0 py-0.5" style={{ color: 'var(--text-muted)' }}>
+              Sin información de horarios
+            </p>
+          )}
+        </div>
+
+        {/* Métodos de pago */}
+        <div
+          className="mt-2.5 pt-2.5 flex items-center justify-between gap-2 flex-wrap"
+          style={{ borderTop: '1px solid var(--subtle-border)' }}
+        >
+          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+            Medios de pago
+          </span>
+          <div className="flex items-center gap-1 flex-wrap">
+            {(route.metodosPago?.length ? route.metodosPago : ['Efectivo']).map((m) => (
+              <span
+                key={m}
+                className="text-[10px] px-2 py-0.5 rounded-md font-medium"
+                style={{
+                  background: 'var(--subtle-bg)',
+                  border: '1px solid var(--subtle-border)',
+                  color: 'var(--text-secondary)',
+                }}
+              >
+                {m}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Paradas interactivas */}
+        {(stops.length > 0 || (route.tieneParadas && isLoading)) && (
+          <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--subtle-border)' }}>
+            {stops.length > 0 ? (
+              <div>
+                <div className="flex items-center justify-between gap-2">
+                  <span
+                    className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold px-2 py-1 rounded-lg"
+                    style={{
+                      background: 'rgba(16,185,129,0.1)',
+                      color: '#10B981',
+                      border: '1px solid rgba(16,185,129,0.25)',
+                    }}
+                  >
+                    <MapPin size={11} />
+                    <span className="tabular-nums">{stops.length} paradas nombradas</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowStopsList((v) => !v)}
+                    className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-2 py-1 rounded-lg cursor-pointer"
+                    style={{
+                      background: 'var(--subtle-bg)',
+                      color: 'var(--text-primary)',
+                      border: '1px solid var(--subtle-border)',
+                    }}
+                  >
+                    <span>{showStopsList ? 'Ocultar lista' : 'Ver paradas'}</span>
+                    <ChevronDown
+                      size={12}
+                      style={{
+                        transform: showStopsList ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.2s ease',
+                      }}
+                    />
+                  </button>
+                </div>
+
+                {showStopsList && (
+                  <div className="mt-2 space-y-1.5 animate-fade-in">
+                    {hasIdaStops && hasRegStops && (
+                      <div className="flex items-center gap-1">
+                        {[
+                          { id: 'all', label: 'Todas' },
+                          { id: 'ida', label: 'Ida' },
+                          { id: 'regreso', label: 'Regreso' },
+                        ].map((d) => (
+                          <button
+                            key={d.id}
+                            type="button"
+                            onClick={() => setStopDirFilter(d.id)}
+                            className="text-[10px] font-semibold px-2 py-0.5 rounded-md cursor-pointer"
+                            style={{
+                              background: stopDirFilter === d.id ? `${routeColor}20` : 'var(--subtle-bg)',
+                              color: stopDirFilter === d.id ? routeColor : 'var(--text-muted)',
+                              border: `1px solid ${stopDirFilter === d.id ? `${routeColor}45` : 'var(--subtle-border)'}`,
+                            }}
+                          >
+                            {d.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    <div
+                      className="max-h-44 overflow-y-auto space-y-1 pr-1 rounded-xl p-1.5"
+                      style={{ background: 'var(--subtle-bg)', border: '1px solid var(--subtle-border)' }}
+                    >
+                      {filteredStops.map((stop, idx) => {
+                        const isReg = stop.sentido === 'regreso';
+                        return (
+                          <button
+                            key={`${stop.sentido}-${stop.orden}-${idx}`}
+                            type="button"
+                            onClick={() => onFocusStop?.(stop)}
+                            className="w-full flex items-center gap-2 text-left px-2 py-1.5 rounded-lg cursor-pointer transition-colors"
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = 'var(--bg-card)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'transparent';
+                            }}
+                            title="Centrar mapa en esta parada"
+                          >
+                            <span
+                              className="w-2 h-2 rounded-full flex-shrink-0"
+                              style={{ background: isReg ? '#EF4444' : '#10B981' }}
+                            />
+                            <span
+                              className="text-[10px] font-bold tabular-nums flex-shrink-0"
+                              style={{ color: 'var(--text-muted)', minWidth: 20 }}
+                            >
+                              #{stop.orden || idx + 1}
+                            </span>
+                            <span
+                              className="text-[11px] flex-1 truncate"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {stop.nombre}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 text-[10.5px]" style={{ color: 'var(--text-muted)' }}>
+                <Loader2 size={11} className="animate-spin" color="#06B6D4" />
+                <span>Cargando paradas en el mapa...</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Zonas / Barrios */}
+        {zones.length > 0 && (
+          <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--subtle-border)' }}>
+            <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-muted)' }}>
+              Zonas cubiertas
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {visibleZones.map((zone, i) => (
+                <span
+                  key={`${zone}-${i}`}
+                  className="text-[10px] px-2 py-0.5 rounded-full"
+                  style={{
+                    background: 'var(--subtle-bg)',
+                    color: 'var(--text-secondary)',
+                    border: '1px solid var(--subtle-border)',
+                  }}
+                >
+                  {zone}
+                </span>
+              ))}
+              {zones.length > 8 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllZones((v) => !v)}
+                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full cursor-pointer"
+                  style={{
+                    background: `${routeColor}16`,
+                    color: routeColor,
+                    border: `1px solid ${routeColor}35`,
+                  }}
+                >
+                  {showAllZones ? 'Ver menos' : `+${zones.length - 8} más`}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function Sidebar({
   routes,
   isOpen,
   onRouteSelect,
   selectedRoute,
+  loadingRouteId = null,
+  onClearSelectedRoute,
+  onFocusStop,
   onToggleLayer,
   layerVisibility,
   onStartCapture,
@@ -43,27 +662,35 @@ export default function Sidebar({
   onPreviewDestinationChange,
   activeReports = [],
 }) {
-  const { user, isPremium, isAuthenticated, upgradeToPremium } = useAuth();
+  const { isPremium, isAuthenticated } = useAuth();
   const [filterType, setFilterType] = useState('all');
   const [filterCompany, setFilterCompany] = useState('all');
   const [activeTab, setActiveTab] = useState('navigate');
   const [searchText, setSearchText] = useState('');
   const [expandedCompany, setExpandedCompany] = useState(null);
+  const [showPremiumInfo, setShowPremiumInfo] = useState(false);
+  const [downloadingOffline, setDownloadingOffline] = useState(false);
+  const [offlineError, setOfflineError] = useState('');
 
   // Compute affected route IDs from active reports
-  const affectedRouteIds = new Set(activeReports.map(r => r.routeId).filter(Boolean));
+  const affectedRouteIds = useMemo(
+    () => new Set(activeReports.map((r) => r.routeId).filter(Boolean)),
+    [activeReports]
+  );
 
   // Favorites system (persisted in localStorage)
   const [favorites, setFavorites] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('rutaquilla_favorites') || '[]');
-    } catch { return []; }
+    } catch {
+      return [];
+    }
   });
 
   const toggleFavorite = (routeId) => {
-    setFavorites(prev => {
+    setFavorites((prev) => {
       const next = prev.includes(routeId)
-        ? prev.filter(id => id !== routeId)
+        ? prev.filter((id) => id !== routeId)
         : [...prev, routeId];
       localStorage.setItem('rutaquilla_favorites', JSON.stringify(next));
       return next;
@@ -79,23 +706,109 @@ export default function Sidebar({
     }
   }, [onSetOriginFromMap, onSetDestinationFromMap]);
 
-  // Filter routes by type and search text
-  const filteredRoutes = routes.filter(route => {
-    if (filterType !== 'all' && route.type !== filterType) return false;
-    if (filterCompany !== 'all' && (route.operador || route.company) !== filterCompany) return false;
-    if (searchText) {
-      const q = searchText.toLowerCase();
-      const n = (route.nombre || route.name || '').toLowerCase();
-      const c = (route.operador || route.company || '').toLowerCase();
-      return n.includes(q) || c.includes(q);
+  // Base routes visible according to layer toggles
+  const layerVisibleRoutes = useMemo(
+    () =>
+      routes.filter((route) => {
+        const routeType = route.type || 'official';
+        if (routeType === 'official' && layerVisibility?.official === false) return false;
+        if (routeType === 'community' && layerVisibility?.community === false) return false;
+        return true;
+      }),
+    [routes, layerVisibility]
+  );
+
+  const systemCounts = useMemo(
+    () => ({
+      all: layerVisibleRoutes.length,
+      masivo: layerVisibleRoutes.filter((r) => r.sistema === 'masivo').length,
+      urbano: layerVisibleRoutes.filter(
+        (r) => (r.sistema || 'urbano') === 'urbano' && !r.esIntermunicipal
+      ).length,
+      intermunicipal: layerVisibleRoutes.filter((r) => Boolean(r.esIntermunicipal)).length,
+    }),
+    [layerVisibleRoutes]
+  );
+
+  // Filter routes by system/intermunicipal filter, company, and search text
+  const filteredRoutes = useMemo(() => {
+    const q = searchText.trim().toLowerCase();
+    return layerVisibleRoutes.filter((route) => {
+      if (filterType === 'masivo' && route.sistema !== 'masivo') return false;
+      if (filterType === 'urbano' && ((route.sistema || 'urbano') !== 'urbano' || route.esIntermunicipal)) {
+        return false;
+      }
+      if (filterType === 'intermunicipal' && !route.esIntermunicipal) return false;
+      if (filterCompany !== 'all' && (route.operador || route.company) !== filterCompany) return false;
+      if (q) {
+        const n = (route.nombre || route.name || '').toLowerCase();
+        const cod = (route.codigo || '').toLowerCase();
+        const desc = (route.descripcion || '').toLowerCase();
+        const c = (route.operador || route.company || '').toLowerCase();
+        const zonas = (route.barriosCubiertos || []).join(' ').toLowerCase();
+        return n.includes(q) || cod.includes(q) || desc.includes(q) || c.includes(q) || zonas.includes(q);
+      }
+      return true;
+    });
+  }, [layerVisibleRoutes, filterType, filterCompany, searchText]);
+
+  const companies = useMemo(() => {
+    const unique = [...new Set(routes.map((r) => r.operador || r.company).filter(Boolean))];
+    return unique.sort((a, b) => {
+      if (a === 'Transmetro') return -1;
+      if (b === 'Transmetro') return 1;
+      return a.localeCompare(b, 'es');
+    });
+  }, [routes]);
+
+  const groupedOperators = useMemo(() => {
+    const grouped = new Map();
+    for (const route of filteredRoutes) {
+      const co = route.operador || 'Otra';
+      if (!grouped.has(co)) grouped.set(co, []);
+      grouped.get(co).push(route);
     }
-    return true;
-  });
+    return [...grouped.entries()].sort(([a], [b]) => {
+      if (a === 'Transmetro') return -1;
+      if (b === 'Transmetro') return 1;
+      return a.localeCompare(b, 'es');
+    });
+  }, [filteredRoutes]);
 
-  const companies = [...new Set(routes.map(r => r.operador || r.company))].sort();
+  const hasActiveFilters = filterType !== 'all' || filterCompany !== 'all' || searchText.trim().length > 0;
+  const forceExpandAll = searchText.trim().length > 0 || filterCompany !== 'all';
 
-  const handleUpgrade = async () => {
-    try { await upgradeToPremium(); } catch (err) { console.error(err); }
+  const handleResetFilters = () => {
+    setFilterType('all');
+    setFilterCompany('all');
+    setSearchText('');
+  };
+
+  const handleUpgrade = () => {
+    setShowPremiumInfo((prev) => !prev);
+  };
+
+  const handleDownloadOffline = async () => {
+    if (downloadingOffline) return;
+    setDownloadingOffline(true);
+    setOfflineError('');
+    try {
+      const geojson = await mapsAPI.downloadOffline();
+      const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/geo+json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'rutaquilla-offline.geojson';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      console.error('Error descargando mapa offline:', err);
+      setOfflineError(err?.message || 'No se pudo descargar el mapa offline');
+    } finally {
+      setDownloadingOffline(false);
+    }
   };
 
   return (
@@ -106,8 +819,8 @@ export default function Sidebar({
         left: 0,
         bottom: 0,
         zIndex: 1050,
-        width: '85vw',
-        maxWidth: '20rem',
+        width: '88vw',
+        maxWidth: '22.5rem',
         overflow: 'hidden',
         transition: 'transform 0.3s ease-out',
         transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
@@ -119,24 +832,28 @@ export default function Sidebar({
     >
       <div className="h-full flex flex-col">
         {/* Tabs — Mobile-first segmented control */}
-        <div style={{
-          padding: '10px 10px 0',
-          borderBottom: '1px solid var(--subtle-border)',
-        }}>
-          <div style={{
-            display: 'flex',
-            gap: 4,
-            padding: 4,
-            borderRadius: 14,
-            background: 'var(--subtle-bg)',
-            border: '1px solid var(--subtle-border)',
-          }}>
+        <div
+          style={{
+            padding: '10px 10px 0',
+            borderBottom: '1px solid var(--subtle-border)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              gap: 4,
+              padding: 4,
+              borderRadius: 14,
+              background: 'var(--subtle-bg)',
+              border: '1px solid var(--subtle-border)',
+            }}
+          >
             {[
               { id: 'navigate', icon: Navigation, label: 'Navegar', color: '#06B6D4' },
               { id: 'routes', icon: Route, label: 'Rutas', color: '#10B981' },
               { id: 'favorites', icon: Star, label: 'Favoritos', color: '#F59E0B' },
               { id: 'capture', icon: Zap, label: 'Capturar', color: '#EC4899' },
-            ].map(tab => (
+            ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -153,12 +870,14 @@ export default function Sidebar({
                   cursor: 'pointer',
                   transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                   position: 'relative',
-                  background: activeTab === tab.id
-                    ? `linear-gradient(135deg, ${tab.color}18, ${tab.color}08)`
-                    : 'transparent',
-                  boxShadow: activeTab === tab.id
-                    ? `0 2px 12px ${tab.color}15, inset 0 0 0 1px ${tab.color}25`
-                    : 'none',
+                  background:
+                    activeTab === tab.id
+                      ? `linear-gradient(135deg, ${tab.color}18, ${tab.color}08)`
+                      : 'transparent',
+                  boxShadow:
+                    activeTab === tab.id
+                      ? `0 2px 12px ${tab.color}15, inset 0 0 0 1px ${tab.color}25`
+                      : 'none',
                 }}
                 id={`tab-${tab.id}`}
               >
@@ -167,27 +886,30 @@ export default function Sidebar({
                   color={activeTab === tab.id ? tab.color : 'var(--text-secondary)'}
                   style={{ transition: 'all 0.2s', flexShrink: 0 }}
                 />
-                <span style={{
-                  fontSize: 9,
-                  fontWeight: activeTab === tab.id ? 700 : 500,
-                  color: activeTab === tab.id ? tab.color : 'var(--text-secondary)',
-                  letterSpacing: activeTab === tab.id ? '0.02em' : '0',
-                  transition: 'all 0.2s',
-                  lineHeight: 1,
-                }}>
+                <span
+                  style={{
+                    fontSize: 9.5,
+                    fontWeight: activeTab === tab.id ? 700 : 500,
+                    color: activeTab === tab.id ? tab.color : 'var(--text-secondary)',
+                    letterSpacing: activeTab === tab.id ? '0.02em' : '0',
+                    transition: 'all 0.2s',
+                    lineHeight: 1,
+                  }}
+                >
                   {tab.label}
                 </span>
-                {/* Active dot indicator */}
                 {activeTab === tab.id && (
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 3,
-                    width: 14,
-                    height: 2,
-                    borderRadius: 2,
-                    background: tab.color,
-                    boxShadow: `0 0 8px ${tab.color}80`,
-                  }} />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: 3,
+                      width: 14,
+                      height: 2,
+                      borderRadius: 2,
+                      background: tab.color,
+                      boxShadow: `0 0 8px ${tab.color}80`,
+                    }}
+                  />
                 )}
               </button>
             ))}
@@ -217,100 +939,203 @@ export default function Sidebar({
           {/* ---- Tab: Rutas ---- */}
           {activeTab === 'routes' && (
             <div className="animate-fade-in">
-              {/* Search + Filters */}
-              <div style={{ padding: '14px 14px 12px', borderBottom: '1px solid var(--subtle-border)' }}>
-                {/* Quick search */}
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '10px 12px', borderRadius: 14, marginBottom: 10,
-                  background: 'var(--subtle-bg)',
-                  border: '1px solid var(--subtle-border-strong)',
-                  transition: 'border-color 0.2s',
-                }}>
-                  <Bus size={14} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
+              {/* Catalog summary + Search + Filters */}
+              <div style={{ padding: '12px 14px 12px', borderBottom: '1px solid var(--subtle-border)' }}>
+                {/* Live summary bar */}
+                <div className="flex items-center justify-between gap-2 mb-2.5">
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className="text-[11px] font-bold tabular-nums"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      {filteredRoutes.length} {filteredRoutes.length === 1 ? 'ruta' : 'rutas'}
+                    </span>
+                    <span className="text-[11px] tabular-nums" style={{ color: 'var(--text-muted)' }}>
+                      · {groupedOperators.length} {groupedOperators.length === 1 ? 'empresa' : 'empresas'}
+                    </span>
+                  </div>
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      onClick={handleResetFilters}
+                      className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-2 py-0.5 rounded-full cursor-pointer"
+                      style={{
+                        background: 'rgba(245,158,11,0.12)',
+                        color: '#F59E0B',
+                        border: '1px solid rgba(245,158,11,0.3)',
+                      }}
+                    >
+                      <RotateCcw size={10} />
+                      Limpiar
+                    </button>
+                  )}
+                </div>
+
+                {/* Quick search input */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '9px 11px',
+                    borderRadius: 13,
+                    marginBottom: 10,
+                    background: 'var(--subtle-bg)',
+                    border: '1px solid var(--subtle-border-strong)',
+                  }}
+                >
+                  <Search size={14} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
                   <input
                     type="text"
-                    placeholder="Buscar ruta o empresa..."
+                    placeholder="Buscar ruta, código, empresa o zona..."
                     value={searchText}
-                    onChange={e => setSearchText(e.target.value)}
+                    onChange={(e) => setSearchText(e.target.value)}
                     className="flex-1 bg-transparent outline-none"
                     style={{ color: 'var(--text-primary)', fontSize: 12, minWidth: 0 }}
                   />
-                </div>
-
-                {/* Type filters */}
-                <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-                  {[
-                    { value: 'all', label: 'Todas' },
-                    { value: 'official', label: 'Oficiales' },
-                    { value: 'community', label: 'Comunidad' },
-                  ].map(opt => (
+                  {searchText && (
                     <button
-                      key={opt.value}
-                      onClick={() => setFilterType(opt.value)}
+                      type="button"
+                      onClick={() => setSearchText('')}
+                      aria-label="Borrar búsqueda"
                       style={{
-                        padding: '7px 14px', borderRadius: 10,
-                        fontSize: 11, fontWeight: 600,
-                        cursor: 'pointer', transition: 'all 0.2s',
-                        border: `1px solid ${filterType === opt.value ? '#06B6D4' + '40' : 'var(--subtle-border)'}`,
-                        background: filterType === opt.value ? 'rgba(6,182,212,0.1)' : 'var(--subtle-bg)',
-                        color: filterType === opt.value ? '#06B6D4' : '#64748B',
+                        background: 'var(--subtle-bg-hover)',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: 18,
+                        height: 18,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        flexShrink: 0,
                       }}
                     >
-                      {opt.label}
+                      <X size={11} />
                     </button>
-                  ))}
+                  )}
                 </div>
 
-                {/* Company filter dropdown */}
+                {/* System / type filter pills with dynamic counts */}
+                <div style={{ display: 'flex', gap: 5, marginBottom: 10, flexWrap: 'wrap' }}>
+                  {[
+                    { value: 'all', label: 'Todas', count: systemCounts.all, accent: '#06B6D4' },
+                    { value: 'masivo', label: 'Transmetro', count: systemCounts.masivo, accent: '#0EA5E9' },
+                    { value: 'urbano', label: 'Urbano', count: systemCounts.urbano, accent: '#10B981' },
+                    { value: 'intermunicipal', label: 'Intermunic.', count: systemCounts.intermunicipal, accent: '#F59E0B' },
+                  ].map((opt) => {
+                    const isActive = filterType === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setFilterType(opt.value)}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          padding: '5px 9px',
+                          borderRadius: 999,
+                          fontSize: 10.5,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          transition: 'all 0.18s',
+                          border: `1px solid ${isActive ? `${opt.accent}55` : 'var(--subtle-border)'}`,
+                          background: isActive ? `${opt.accent}18` : 'var(--subtle-bg)',
+                          color: isActive ? opt.accent : 'var(--text-secondary)',
+                        }}
+                      >
+                        <span>{opt.label}</span>
+                        <span
+                          className="tabular-nums text-[9.5px] opacity-80"
+                          style={{ fontWeight: 700 }}
+                        >
+                          {opt.count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Company filter select (theme-aware) */}
                 {companies.length > 1 && (
                   <select
                     value={filterCompany}
-                    onChange={e => setFilterCompany(e.target.value)}
+                    onChange={(e) => setFilterCompany(e.target.value)}
+                    aria-label="Filtrar por empresa operadora"
                     style={{
-                      width: '100%', padding: '9px 12px', borderRadius: 10,
-                      fontSize: 11, outline: 'none', marginBottom: 10,
-                      background: 'var(--subtle-bg)',
-                      color: 'var(--text-secondary)',
-                      border: '1px solid rgba(255,255,255,0.07)',
+                      width: '100%',
+                      padding: '8px 11px',
+                      borderRadius: 11,
+                      fontSize: 11.5,
+                      fontWeight: 500,
+                      outline: 'none',
+                      marginBottom: 9,
+                      background: 'var(--bg-card)',
+                      color: 'var(--text-primary)',
+                      border: '1px solid var(--subtle-border-strong)',
+                      cursor: 'pointer',
                     }}
                   >
-                    <option value="all">Todas las empresas ({routes.length})</option>
-                    {companies.map(c => (
-                      <option key={c} value={c}>
-                        {c} ({routes.filter(r => r.company === c).length})
+                    <option value="all" style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+                      Todas las empresas ({routes.length})
+                    </option>
+                    {companies.map((c) => (
+                      <option
+                        key={c}
+                        value={c}
+                        style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                      >
+                        {c} ({routes.filter((r) => (r.operador || r.company) === c).length})
                       </option>
                     ))}
                   </select>
                 )}
 
-                {/* Layer toggles */}
+                {/* Layer visibility toggles */}
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button
+                    type="button"
                     onClick={() => onToggleLayer?.('official')}
                     style={{
-                      flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      gap: 6, padding: '8px 10px', borderRadius: 10,
-                      fontSize: 10, fontWeight: 600, cursor: 'pointer',
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                      padding: '7px 10px',
+                      borderRadius: 10,
+                      fontSize: 10.5,
+                      fontWeight: 600,
+                      cursor: 'pointer',
                       transition: 'all 0.2s',
-                      background: layerVisibility?.official ? 'rgba(16,185,129,0.08)' : 'var(--subtle-bg)',
-                      color: layerVisibility?.official ? '#34D399' : 'var(--text-secondary)',
-                      border: `1px solid ${layerVisibility?.official ? 'rgba(16,185,129,0.25)' : 'var(--subtle-border)'}`,
+                      background: layerVisibility?.official ? 'rgba(16,185,129,0.1)' : 'var(--subtle-bg)',
+                      color: layerVisibility?.official ? '#10B981' : 'var(--text-secondary)',
+                      border: `1px solid ${layerVisibility?.official ? 'rgba(16,185,129,0.28)' : 'var(--subtle-border)'}`,
                     }}
                   >
                     {layerVisibility?.official ? <Eye size={12} /> : <EyeOff size={12} />}
                     Oficiales
                   </button>
                   <button
+                    type="button"
                     onClick={() => onToggleLayer?.('community')}
                     style={{
-                      flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      gap: 6, padding: '8px 10px', borderRadius: 10,
-                      fontSize: 10, fontWeight: 600, cursor: 'pointer',
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                      padding: '7px 10px',
+                      borderRadius: 10,
+                      fontSize: 10.5,
+                      fontWeight: 600,
+                      cursor: 'pointer',
                       transition: 'all 0.2s',
-                      background: layerVisibility?.community ? 'rgba(139,92,246,0.08)' : 'var(--subtle-bg)',
+                      background: layerVisibility?.community ? 'rgba(139,92,246,0.1)' : 'var(--subtle-bg)',
                       color: layerVisibility?.community ? '#A78BFA' : 'var(--text-secondary)',
-                      border: `1px solid ${layerVisibility?.community ? 'rgba(139,92,246,0.25)' : 'var(--subtle-border)'}`,
+                      border: `1px solid ${layerVisibility?.community ? 'rgba(139,92,246,0.28)' : 'var(--subtle-border)'}`,
                     }}
                   >
                     {layerVisibility?.community ? <Eye size={12} /> : <EyeOff size={12} />}
@@ -319,158 +1144,129 @@ export default function Sidebar({
                 </div>
               </div>
 
+              {/* Selected Route Ficha */}
+              {selectedRoute && (
+                <SelectedRouteFicha
+                  key={selectedRoute._id}
+                  route={selectedRoute}
+                  isLoading={loadingRouteId === selectedRoute._id}
+                  onClose={() => onClearSelectedRoute?.()}
+                  onFocusStop={onFocusStop}
+                />
+              )}
+
               {/* Route list grouped by company */}
-              <div className="p-2 space-y-1">
-                {filteredRoutes.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Bus size={32} style={{ color: 'var(--text-muted)', margin: '0 auto' }} />
-                    <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
-                      No se encontraron rutas
+              <div className="p-2.5 space-y-1.5">
+                {groupedOperators.length === 0 ? (
+                  <div className="text-center py-8 px-4">
+                    <Bus size={32} style={{ color: 'var(--text-muted)', margin: '0 auto', opacity: 0.5 }} />
+                    <p className="text-xs font-medium mt-2" style={{ color: 'var(--text-secondary)' }}>
+                      No se encontraron rutas con ese filtro
                     </p>
+                    {hasActiveFilters && (
+                      <button
+                        type="button"
+                        onClick={handleResetFilters}
+                        className="mt-2.5 text-[11px] font-semibold px-3 py-1.5 rounded-lg cursor-pointer"
+                        style={{
+                          background: 'var(--subtle-bg)',
+                          color: 'var(--accent-cyan)',
+                          border: '1px solid var(--subtle-border-strong)',
+                        }}
+                      >
+                        Restablecer filtros
+                      </button>
+                    )}
                   </div>
                 ) : (
-                  (() => {
-                    // Group routes by operador
-                    const grouped = {};
-                    filteredRoutes.forEach(route => {
-                      const co = route.operador || 'Otra';
-                      if (!grouped[co]) grouped[co] = [];
-                      grouped[co].push(route);
-                    });
+                  groupedOperators.map(([operador, operadorRoutes]) => {
+                    const opColor = safeColor(operadorRoutes[0]?.color, '#06B6D4');
+                    const isExpanded = forceExpandAll || expandedCompany === operador;
+                    const isTransmetro = operador === 'Transmetro';
 
-                    return Object.entries(grouped).map(([operador, operadorRoutes]) => (
-                      <div key={operador} className="mb-1">
+                    return (
+                      <div key={operador}>
                         {/* Operador header accordion */}
                         <button
-                          onClick={() => setExpandedCompany?.(expandedCompany === operador ? null : operador)}
-                          className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all"
-                          style={{
-                            background: expandedCompany === operador ? 'var(--bg-card)' : 'transparent',
-                            border: `1px solid ${expandedCompany === operador ? (operadorRoutes[0]?.color || 'var(--border-color)') + '30' : 'transparent'}`,
+                          type="button"
+                          onClick={() => {
+                            if (forceExpandAll) return;
+                            setExpandedCompany(expandedCompany === operador ? null : operador);
                           }}
+                          className={`operator-group-btn${isExpanded ? ' expanded' : ''}`}
+                          style={{ '--op-color': opColor }}
                         >
-                          <div className="w-3 h-3 rounded-full flex-shrink-0"
+                          <div
                             style={{
-                              background: operadorRoutes[0]?.color || '#6B7280',
-                              boxShadow: `0 0 6px ${(operadorRoutes[0]?.color || '#6B7280')}40`,
-                            }} />
-                          <span className="flex-1 text-left text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
-                            {operador}
-                          </span>
-                          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{
-                            background: 'var(--bg-surface)',
-                            color: 'var(--text-muted)',
-                            border: '1px solid var(--border-color)',
-                          }}>
-                            {operadorRoutes.length} ruta{operadorRoutes.length > 1 ? 's' : ''}
-                          </span>
-                          {expandedCompany === operador
-                            ? <ChevronRight size={12} style={{ color: 'var(--text-muted)', transform: 'rotate(90deg)', transition: 'transform 0.2s' }} />
-                            : <ChevronRight size={12} style={{ color: 'var(--text-muted)', transition: 'transform 0.2s' }} />
-                          }
-                        </button>
-
-                        {/* Operador routes (expanded) */}
-                        {expandedCompany === operador && (
-                          <div className="pl-3 space-y-0.5 mt-0.5 animate-fade-in">
-                            {operadorRoutes.map(route => (
-                              <button
-                                key={route._id}
-                                onClick={() => onRouteSelect?.(route)}
-                                className="w-full text-left p-2.5 rounded-xl transition-all duration-200"
+                              width: 4,
+                              height: 22,
+                              borderRadius: 4,
+                              background: opColor,
+                              boxShadow: `0 0 8px ${opColor}55`,
+                              flexShrink: 0,
+                            }}
+                          />
+                          <div className="flex-1 min-w-0 text-left flex items-center gap-1.5">
+                            <span
+                              className="text-[12.5px] font-bold truncate"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {operador}
+                            </span>
+                            {isTransmetro && (
+                              <span
+                                className="text-[9px] px-1.5 py-0.5 rounded-md font-extrabold uppercase tracking-wider flex-shrink-0"
                                 style={{
-                                  background: selectedRoute?._id === route._id ? 'var(--bg-card)' : 'transparent',
-                                  border: `1px solid ${selectedRoute?._id === route._id ? route.color + '40' : 'transparent'}`,
-                                }}
-                                onMouseEnter={e => {
-                                  if (selectedRoute?._id !== route._id) e.currentTarget.style.background = 'var(--bg-card)';
-                                }}
-                                onMouseLeave={e => {
-                                  if (selectedRoute?._id !== route._id) e.currentTarget.style.background = 'transparent';
+                                  background: 'rgba(14,165,233,0.16)',
+                                  color: '#0EA5E9',
+                                  border: '1px solid rgba(14,165,233,0.35)',
                                 }}
                               >
-                                <div className="flex items-start gap-2">
-                                  <div className="w-2 h-2 rounded-full mt-1 flex-shrink-0"
-                                    style={{ background: route.color, boxShadow: `0 0 6px ${route.color}40` }} />
-                                  <div className="flex-1 min-w-0">
-                                    <span className="text-[12px] font-medium truncate block" style={{ color: 'var(--text-primary)' }}>
-                                      {route.nombre}
-                                    </span>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                      <span className={`badge ${route.type === 'official' ? 'badge-official' : 'badge-community'}`}
-                                        style={{ fontSize: '9px', padding: '1px 6px' }}>
-                                        {route.verified && <CheckCircle2 size={8} />}
-                                        {route.type === 'official' ? 'Oficial' : 'Comunidad'}
-                                      </span>
-                                      <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                                        {getRouteLength(route.ida?.trazado?.coordinates).toFixed(1)} km
-                                      </span>
-                                      {affectedRouteIds.has(route._id) && (
-                                        <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{
-                                          background: 'rgba(239,68,68,0.15)',
-                                          color: '#EF4444',
-                                          border: '1px solid rgba(239,68,68,0.3)',
-                                          animation: 'pulse 2s infinite',
-                                        }}>
-                                          ⚠️ Afectada
-                                        </span>
-                                      )}
-                                      {route.regreso?.trazado?.coordinates?.length > 1 && (
-                                        <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium" style={{
-                                          background: 'rgba(139, 92, 246, 0.1)',
-                                          color: '#A78BFA',
-                                          border: '1px solid rgba(139, 92, 246, 0.2)',
-                                        }}>
-                                          Ida + Vuelta
-                                        </span>
-                                      )}
-                                      {route.resolucionPdf && (
-                                        <a
-                                          href={route.resolucionPdf}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          onClick={(e) => e.stopPropagation()}
-                                          className="text-[9px] px-1.5 py-0.5 rounded-full font-medium flex items-center gap-0.5"
-                                          style={{
-                                            background: 'rgba(16, 185, 129, 0.1)',
-                                            color: '#10B981',
-                                            border: '1px solid rgba(16, 185, 129, 0.2)',
-                                            textDecoration: 'none',
-                                          }}
-                                          title={`Ver resolución oficial AMBQ ${route.codigoAMBQ || ''}`}
-                                        >
-                                          <Download size={8} />
-                                          {route.codigoAMBQ || 'PDF'}
-                                        </a>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); toggleFavorite(route._id); }}
-                                    style={{
-                                      background: 'none', border: 'none', cursor: 'pointer',
-                                      padding: 4, flexShrink: 0, display: 'flex',
-                                      transition: 'transform 0.2s',
-                                    }}
-                                    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.2)'; }}
-                                    onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
-                                    title={isFavorite(route._id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                                  >
-                                    <Star
-                                      size={14}
-                                      fill={isFavorite(route._id) ? '#F59E0B' : 'none'}
-                                      color={isFavorite(route._id) ? '#F59E0B' : 'var(--text-muted)'}
-                                    />
-                                  </button>
-                                  <ChevronRight size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-                                </div>
-                              </button>
+                                BRT
+                              </span>
+                            )}
+                          </div>
+                          <span
+                            className="text-[10.5px] px-2 py-0.5 rounded-full font-semibold tabular-nums flex-shrink-0"
+                            style={{
+                              background: isExpanded ? `${opColor}1A` : 'var(--subtle-bg)',
+                              color: isExpanded ? opColor : 'var(--text-secondary)',
+                              border: `1px solid ${isExpanded ? `${opColor}38` : 'var(--subtle-border)'}`,
+                            }}
+                          >
+                            {operadorRoutes.length}
+                          </span>
+                          <ChevronRight
+                            size={14}
+                            style={{
+                              color: 'var(--text-muted)',
+                              transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                              transition: 'transform 0.2s ease',
+                              flexShrink: 0,
+                            }}
+                          />
+                        </button>
+
+                        {/* Operador routes */}
+                        {isExpanded && (
+                          <div className="pl-2.5 pr-0.5 space-y-1.5 mt-1.5 mb-2 animate-fade-in">
+                            {operadorRoutes.map((route) => (
+                              <RoutePassCard
+                                key={route._id}
+                                route={route}
+                                isSelected={selectedRoute?._id === route._id}
+                                isLoading={loadingRouteId === route._id}
+                                isFav={isFavorite(route._id)}
+                                isAffected={affectedRouteIds.has(route._id)}
+                                onSelect={onRouteSelect}
+                                onToggleFavorite={toggleFavorite}
+                              />
                             ))}
                           </div>
                         )}
                       </div>
-                    ));
-                  })()
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -480,7 +1276,7 @@ export default function Sidebar({
           {activeTab === 'favorites' && (
             <div className="animate-fade-in p-3">
               {(() => {
-                const favRoutes = routes.filter(r => isFavorite(r._id));
+                const favRoutes = routes.filter((r) => isFavorite(r._id));
                 if (favRoutes.length === 0) {
                   return (
                     <div className="text-center py-12">
@@ -488,48 +1284,36 @@ export default function Sidebar({
                       <p className="text-sm mt-3 font-medium" style={{ color: 'var(--text-secondary)' }}>
                         Sin favoritos aún
                       </p>
-                      <p className="text-xs mt-1" style={{ color: 'var(--text-muted)', maxWidth: 220, margin: '4px auto 0' }}>
+                      <p
+                        className="text-xs mt-1"
+                        style={{ color: 'var(--text-muted)', maxWidth: 230, margin: '4px auto 0' }}
+                      >
                         Toca la ⭐ en cualquier ruta para guardarla aquí y acceder rápido.
                       </p>
                     </div>
                   );
                 }
                 return (
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>
-                      ⭐ {favRoutes.length} ruta{favRoutes.length > 1 ? 's' : ''} favorita{favRoutes.length > 1 ? 's' : ''}
+                  <div className="space-y-1.5">
+                    <p
+                      className="text-[10.5px] font-bold uppercase tracking-wider mb-2"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      ⭐ {favRoutes.length} ruta{favRoutes.length > 1 ? 's' : ''} favorita
+                      {favRoutes.length > 1 ? 's' : ''}
                     </p>
-                    {favRoutes.map(route => (
-                      <button
+                    {favRoutes.map((route) => (
+                      <RoutePassCard
                         key={route._id}
-                        onClick={() => onRouteSelect?.(route)}
-                        className="w-full text-left p-3 rounded-xl transition-all duration-200"
-                        style={{
-                          background: selectedRoute?._id === route._id ? 'var(--bg-card)' : 'var(--subtle-bg)',
-                          border: `1px solid ${selectedRoute?._id === route._id ? (route.color || '#555') + '40' : 'var(--border-color)'}`,
-                        }}
-                        onMouseEnter={e => { if (selectedRoute?._id !== route._id) e.currentTarget.style.background = 'var(--bg-card)'; }}
-                        onMouseLeave={e => { if (selectedRoute?._id !== route._id) e.currentTarget.style.background = 'var(--subtle-bg)'; }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-3 h-3 rounded-full flex-shrink-0"
-                            style={{ background: route.color, boxShadow: `0 0 8px ${route.color}50` }} />
-                          <div className="flex-1 min-w-0">
-                            <span className="text-[12px] font-semibold truncate block" style={{ color: 'var(--text-primary)' }}>
-                              {route.nombre}
-                            </span>
-                            <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                              {route.operador} · {getRouteLength(route.ida?.trazado?.coordinates).toFixed(1)} km
-                            </span>
-                          </div>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); toggleFavorite(route._id); }}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
-                          >
-                            <Star size={14} fill="#F59E0B" color="#F59E0B" />
-                          </button>
-                        </div>
-                      </button>
+                        route={route}
+                        isSelected={selectedRoute?._id === route._id}
+                        isLoading={loadingRouteId === route._id}
+                        isFav={true}
+                        isAffected={affectedRouteIds.has(route._id)}
+                        showOperator={true}
+                        onSelect={onRouteSelect}
+                        onToggleFavorite={toggleFavorite}
+                      />
                     ))}
                   </div>
                 );
@@ -541,24 +1325,40 @@ export default function Sidebar({
           {activeTab === 'capture' && (
             <div className="animate-fade-in" style={{ padding: '16px 14px' }}>
               {/* Hero section */}
-              <div style={{
-                textAlign: 'center', padding: '20px 16px 16px',
-                borderRadius: 16, marginBottom: 14,
-                background: 'linear-gradient(135deg, rgba(236,72,153,0.08), rgba(139,92,246,0.06))',
-                border: '1px solid rgba(236,72,153,0.12)',
-              }}>
-                <div style={{
-                  width: 48, height: 48, borderRadius: 14, margin: '0 auto 10px',
-                  background: 'linear-gradient(135deg, rgba(236,72,153,0.15), rgba(245,158,11,0.15))',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 0 20px rgba(236,72,153,0.15)',
-                }}>
+              <div
+                style={{
+                  textAlign: 'center',
+                  padding: '20px 16px 16px',
+                  borderRadius: 16,
+                  marginBottom: 14,
+                  background: 'linear-gradient(135deg, rgba(236,72,153,0.08), rgba(139,92,246,0.06))',
+                  border: '1px solid rgba(236,72,153,0.12)',
+                }}
+              >
+                <div
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 14,
+                    margin: '0 auto 10px',
+                    background: 'linear-gradient(135deg, rgba(236,72,153,0.15), rgba(245,158,11,0.15))',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 0 20px rgba(236,72,153,0.15)',
+                  }}
+                >
                   <Bus size={22} color="#EC4899" />
                 </div>
-                <h3 style={{
-                  fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px',
-                  fontFamily: 'Outfit, sans-serif',
-                }}>
+                <h3
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 700,
+                    color: 'var(--text-primary)',
+                    margin: '0 0 4px',
+                    fontFamily: 'Outfit, sans-serif',
+                  }}
+                >
                   Capturar Ruta GPS
                 </h3>
                 <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, lineHeight: 1.4 }}>
@@ -567,19 +1367,28 @@ export default function Sidebar({
               </div>
 
               {/* GPS status card */}
-              <div style={{
-                padding: '12px 14px', borderRadius: 14, marginBottom: 12,
-                background: 'var(--subtle-bg)',
-                border: `1px solid ${isCapturing ? 'rgba(239,68,68,0.2)' : 'var(--subtle-border)'}`,
-                transition: 'border-color 0.3s',
-              }}>
+              <div
+                style={{
+                  padding: '12px 14px',
+                  borderRadius: 14,
+                  marginBottom: 12,
+                  background: 'var(--subtle-bg)',
+                  border: `1px solid ${isCapturing ? 'rgba(239,68,68,0.2)' : 'var(--subtle-border)'}`,
+                  transition: 'border-color 0.3s',
+                }}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <div className={`gps-dot ${isCapturing ? 'recording' : 'inactive'}`}
-                    style={{ width: 10, height: 10, flexShrink: 0 }} />
-                  <span style={{
-                    fontSize: 12, fontWeight: 600,
-                    color: isCapturing ? '#F87171' : '#64748B',
-                  }}>
+                  <div
+                    className={`gps-dot ${isCapturing ? 'recording' : 'inactive'}`}
+                    style={{ width: 10, height: 10, flexShrink: 0 }}
+                  />
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: isCapturing ? '#F87171' : '#64748B',
+                    }}
+                  >
                     {isCapturing ? '● Grabando ruta...' : 'GPS listo para capturar'}
                   </span>
                 </div>
@@ -591,7 +1400,16 @@ export default function Sidebar({
                     { icon: '🎯', text: 'Filtro de precisión: ≤ 20 metros' },
                     { icon: '🤝', text: 'Se fusiona con capturas de otros usuarios' },
                   ].map((f, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--text-secondary)' }}>
+                    <div
+                      key={i}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        fontSize: 11,
+                        color: 'var(--text-secondary)',
+                      }}
+                    >
                       <span style={{ fontSize: 12, lineHeight: 1 }}>{f.icon}</span>
                       {f.text}
                     </div>
@@ -630,11 +1448,18 @@ export default function Sidebar({
               </button>
 
               {!isAuthenticated && (
-                <p style={{
-                  fontSize: 10, color: '#F59E0B', textAlign: 'center', marginTop: 10,
-                  background: 'rgba(245,158,11,0.06)', padding: '8px 12px', borderRadius: 10,
-                  border: '1px solid rgba(245,158,11,0.1)',
-                }}>
+                <p
+                  style={{
+                    fontSize: 10,
+                    color: '#F59E0B',
+                    textAlign: 'center',
+                    marginTop: 10,
+                    background: 'rgba(245,158,11,0.06)',
+                    padding: '8px 12px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(245,158,11,0.1)',
+                  }}
+                >
                   ⚠️ Debes iniciar sesión para capturar rutas
                 </p>
               )}
@@ -651,12 +1476,13 @@ export default function Sidebar({
               style={{
                 background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1))',
                 border: '1px solid rgba(245, 158, 11, 0.2)',
+                cursor: 'pointer',
               }}
-              onMouseEnter={e => {
+              onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.5)';
                 e.currentTarget.style.boxShadow = '0 0 20px rgba(245, 158, 11, 0.15)';
               }}
-              onMouseLeave={e => {
+              onMouseLeave={(e) => {
                 e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.2)';
                 e.currentTarget.style.boxShadow = 'none';
               }}
@@ -664,22 +1490,46 @@ export default function Sidebar({
             >
               <Crown size={20} style={{ color: '#FBBF24' }} />
               <div className="text-left">
-                <p className="text-xs font-semibold" style={{ color: '#FBBF24' }}>Quilla-Pass Premium</p>
-                <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Sin publicidad • Descarga offline</p>
+                <p className="text-xs font-semibold" style={{ color: '#FBBF24' }}>
+                  Quilla-Pass Premium
+                </p>
+                <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                  Sin publicidad • Descarga offline
+                </p>
               </div>
             </button>
+            {showPremiumInfo && (
+              <div
+                className="animate-fade-in mt-2 p-2.5 rounded-xl text-[11px] leading-relaxed"
+                style={{
+                  background: 'rgba(245, 158, 11, 0.06)',
+                  border: '1px solid rgba(245, 158, 11, 0.2)',
+                  color: 'var(--text-secondary)',
+                }}
+              >
+                Activa Quilla-Pass contactando al equipo en{' '}
+                <strong style={{ color: '#FBBF24' }}>@ruta.quilla</strong>. Si alcanzas{' '}
+                <strong style={{ color: '#FBBF24' }}>500 XP (Quilla Builder)</strong> obtienes 30% de descuento.
+              </div>
+            )}
           </div>
         )}
 
         {isPremium && (
           <div className="p-3" style={{ borderTop: '1px solid var(--border-color)' }}>
             <button
-              onClick={() => window.open('/api/maps/download', '_blank')}
+              onClick={handleDownloadOffline}
+              disabled={downloadingOffline}
               className="btn-secondary w-full flex items-center justify-center gap-2 text-xs"
               id="download-offline-btn"
             >
-              <Download size={14} /> Descargar mapa offline
+              <Download size={14} /> {downloadingOffline ? 'Descargando...' : 'Descargar mapa offline'}
             </button>
+            {offlineError && (
+              <p className="text-[10px] mt-1.5 text-center" style={{ color: '#EF4444' }}>
+                {offlineError}
+              </p>
+            )}
           </div>
         )}
       </div>

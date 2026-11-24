@@ -8,6 +8,7 @@ export default defineConfig({
   // Load .env from the root directory (parent of client/)
   envDir: '..',
   server: {
+    host: true,
     port: 5173,
     // Proxy para redirigir requests /api al backend Express
     proxy: {

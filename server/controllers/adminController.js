@@ -90,19 +90,39 @@ async function getDashboardStats(req, res) {
  */
 async function getCapturedRoutes(req, res) {
   try {
-    const { status, company, routeName } = req.query;
+    const { status, company, routeName, page = 1, limit = 100 } = req.query;
+    const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 100, 1), 200);
+    const safePage = Math.max(1, parseInt(page, 10) || 1);
+    const skip = (safePage - 1) * safeLimit;
+
     const filter = {};
-    if (status) filter.status = status;
-    if (company) filter.company = company;
-    if (routeName) filter.routeName = { $regex: escapeRegex(routeName), $options: 'i' };
+    if (typeof status === 'string' && ['pending', 'approved', 'rejected'].includes(status)) {
+      filter.status = status;
+    }
+    if (typeof company === 'string' && company) filter.company = company;
+    if (typeof routeName === 'string' && routeName) {
+      filter.routeName = { $regex: escapeRegex(routeName), $options: 'i' };
+    }
 
-    const captures = await CapturedRoute.find(filter)
-      .sort({ createdAt: -1 })
-      .populate('userId', 'name email')
-      .populate('reviewedBy', 'name email')
-      .lean();
+    const [captures, total] = await Promise.all([
+      CapturedRoute.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(safeLimit)
+        .populate('userId', 'name email')
+        .populate('reviewedBy', 'name email')
+        .lean(),
+      CapturedRoute.countDocuments(filter),
+    ]);
 
-    res.json({ success: true, count: captures.length, data: captures });
+    res.json({
+      success: true,
+      count: captures.length,
+      total,
+      page: safePage,
+      totalPages: Math.ceil(total / safeLimit),
+      data: captures,
+    });
   } catch (error) {
     console.error('Error al listar capturas:', error);
     res.status(500).json({ success: false, message: 'Error al listar capturas' });
@@ -141,22 +161,39 @@ async function getCaptureById(req, res) {
  */
 async function reviewCapture(req, res) {
   try {
-    const { status, adminNotes } = req.body;
+    const { status, adminNotes } = req.body || {};
 
     if (!['approved', 'rejected'].includes(status)) {
       return res.status(400).json({ success: false, message: 'Status debe ser approved o rejected' });
     }
 
-    const capture = await CapturedRoute.findById(req.params.id);
-    if (!capture) {
-      return res.status(404).json({ success: false, message: 'Captura no encontrada' });
-    }
+    const cleanNotes = typeof adminNotes === 'string' ? adminNotes.trim() : '';
 
-    capture.status = status;
-    capture.adminNotes = adminNotes || '';
-    capture.reviewedBy = req.user._id;
-    capture.reviewedAt = new Date();
-    await capture.save();
+    // Transición atómica solo desde 'pending' para evitar doble aprobación / XP duplicado
+    const capture = await CapturedRoute.findOneAndUpdate(
+      { _id: req.params.id, status: 'pending' },
+      {
+        $set: {
+          status,
+          adminNotes: cleanNotes,
+          reviewedBy: req.user._id,
+          reviewedAt: new Date(),
+        },
+      },
+      { new: true }
+    );
+
+    if (!capture) {
+      const existing = await CapturedRoute.findById(req.params.id).select('_id status').lean();
+      if (!existing) {
+        return res.status(404).json({ success: false, message: 'Captura no encontrada' });
+      }
+      return res.status(409).json({
+        success: false,
+        message: 'Esta captura ya fue revisada anteriormente',
+        code: 'ALREADY_REVIEWED',
+      });
+    }
 
     // ---- Sistema XP ----
     let xpResult = null;
@@ -168,7 +205,7 @@ async function reviewCapture(req, res) {
           // de capturas se evalúen con el nuevo total.
           contributor.contributions += 1;
           xpResult = await contributor.awardXP(50);
-        } else if (status === 'rejected' && adminNotes) {
+        } else if (status === 'rejected' && cleanNotes) {
           // XP simbólico por participar aunque sea rechazada
           xpResult = await contributor.awardXP(5);
         }
@@ -234,10 +271,20 @@ async function getTrafficStats(req, res) {
  */
 async function getUsers(req, res) {
   try {
-    const users = await User.find()
-      .select('name email role isPremium contributions isVerified createdAt updatedAt')
-      .sort({ createdAt: -1 })
-      .lean();
+    const { page = 1, limit = 100 } = req.query;
+    const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 100, 1), 200);
+    const safePage = Math.max(1, parseInt(page, 10) || 1);
+    const skip = (safePage - 1) * safeLimit;
+
+    const [users, total] = await Promise.all([
+      User.find()
+        .select('name email role isPremium contributions isVerified createdAt updatedAt')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(safeLimit)
+        .lean(),
+      User.countDocuments(),
+    ]);
 
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const enriched = users.map(u => ({
@@ -245,7 +292,14 @@ async function getUsers(req, res) {
       isActive: new Date(u.updatedAt) >= sevenDaysAgo,
     }));
 
-    res.json({ success: true, count: enriched.length, data: enriched });
+    res.json({
+      success: true,
+      count: enriched.length,
+      total,
+      page: safePage,
+      totalPages: Math.ceil(total / safeLimit),
+      data: enriched,
+    });
   } catch (error) {
     console.error('Error al listar usuarios:', error);
     res.status(500).json({ success: false, message: 'Error al listar usuarios' });
@@ -345,7 +399,7 @@ async function promoteComposite(req, res) {
       operador: composite.company,
       color: color || companyColors[composite.company] || '#06B6D4',
       type: 'community', // Source is community collaboration
-      fare: fare || 2600,
+      fare: fare || 3700,
       fuente: 'manual',
       activa: true,
       trazadoIncompleto: false,

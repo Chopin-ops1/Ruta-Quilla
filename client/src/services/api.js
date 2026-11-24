@@ -233,6 +233,20 @@ export const usersAPI = {
       body: JSON.stringify({ email }),
     }),
 
+  /** Solicitar código de recuperación de contraseña */
+  forgotPassword: (email) =>
+    apiRequest('/users/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+
+  /** Restablecer contraseña con código OTP */
+  resetPassword: (email, code, newPassword) =>
+    apiRequest('/users/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, code, newPassword }),
+    }),
+
   /** Iniciar sesión */
   login: (credentials) =>
     apiRequest('/users/login', {
@@ -243,9 +257,12 @@ export const usersAPI = {
   /** Obtener perfil del usuario autenticado */
   getProfile: () => apiRequest('/users/profile'),
 
-  /** Actualizar a premium */
-  upgrade: () =>
-    apiRequest('/users/upgrade', { method: 'PATCH' }),
+  /** Actualizar plan de usuario (solo admin) */
+  upgrade: (userId, role = 'premium') =>
+    apiRequest('/users/upgrade', {
+      method: 'PATCH',
+      body: JSON.stringify({ userId, role }),
+    }),
 };
 
 // ---- Mapas ----
@@ -255,6 +272,16 @@ export const mapsAPI = {
 
   /** Descargar mapa offline (solo premium) */
   downloadOffline: () => apiRequest('/maps/download'),
+
+  /** Autocompletado geocodificado via proxy del backend (con caché) */
+  geocode: (q) => apiRequest(`/maps/geocode?q=${encodeURIComponent(q)}`, {}, 1),
+
+  /** Geocodificación inversa via proxy del backend (con caché) */
+  reverse: (lat, lng) => apiRequest(`/maps/reverse?lat=${lat}&lng=${lng}`, {}, 1),
+
+  /** Puntos de interés (POIs) en vivo de OpenStreetMap via proxy del backend */
+  getPOIs: ({ south, west, north, east }) =>
+    apiRequest(`/maps/pois?south=${south}&west=${west}&north=${north}&east=${east}`, {}, 1),
 };
 
 // ---- Health ----

@@ -305,12 +305,12 @@ export default function LiveNavigation({
         <div
           className={config.pulse ? 'animate-pulse-border' : ''}
           style={{
-            borderRadius: 16,
-            background: 'rgba(7, 11, 22, 0.96)',
+            borderRadius: 18,
+            background: 'var(--panel-bg)',
             backdropFilter: 'blur(24px)',
             WebkitBackdropFilter: 'blur(24px)',
             border: `1.5px solid ${config.borderColor}`,
-            boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset`,
+            boxShadow: '0 10px 32px var(--shadow-color)',
             overflow: 'hidden',
           }}
         >
@@ -339,7 +339,7 @@ export default function LiveNavigation({
                 }}>
                   {config.title}
                 </p>
-                <p style={{ fontSize: 11, color: '#94A3B8', margin: '2px 0 0' }}>
+                <p className="tabular-nums" style={{ fontSize: 11, color: 'var(--text-secondary)', margin: '2px 0 0' }}>
                   {config.subtitle}
                 </p>
               </div>
@@ -347,11 +347,12 @@ export default function LiveNavigation({
               {/* Sound toggle */}
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
+                aria-label={soundEnabled ? 'Silenciar alertas' : 'Activar alertas'}
                 style={{
                   width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  color: soundEnabled ? '#F59E0B' : '#334155',
+                  background: 'var(--subtle-bg)',
+                  border: '1px solid var(--subtle-border-strong)',
+                  color: soundEnabled ? '#F59E0B' : 'var(--text-muted)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: 'pointer',
                 }}
@@ -362,7 +363,7 @@ export default function LiveNavigation({
 
             {/* Instruction text */}
             <p style={{
-              fontSize: 11, color: '#64748B', margin: '8px 0 0',
+              fontSize: 11, color: 'var(--text-muted)', margin: '8px 0 0',
               paddingLeft: 46,
             }}>
               {config.instruction}
@@ -381,16 +382,18 @@ export default function LiveNavigation({
       >
         <div
           style={{
-            borderRadius: '18px 18px 0 0',
-            background: 'rgba(7, 11, 22, 0.97)',
+            borderRadius: '20px 20px 0 0',
+            background: 'var(--panel-bg)',
             backdropFilter: 'blur(24px)',
             WebkitBackdropFilter: 'blur(24px)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            border: '1px solid var(--subtle-border-strong)',
             borderBottom: 'none',
-            boxShadow: '0 -8px 32px rgba(0,0,0,0.5)',
-            padding: '10px 16px 14px',
+            boxShadow: '0 -8px 32px var(--shadow-color)',
+            padding: '8px 16px 14px',
           }}
         >
+          <div className="sheet-handle" style={{ marginBottom: 8 }} />
+
           {/* Route info pill */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8,
@@ -399,7 +402,7 @@ export default function LiveNavigation({
             <div style={{
               display: 'flex', alignItems: 'center', gap: 5,
               padding: '4px 10px', borderRadius: 8,
-              background: `${routeColor}15`, border: `1px solid ${routeColor}30`,
+              background: `${routeColor}18`, border: `1px solid ${routeColor}35`,
             }}>
               <Bus size={11} style={{ color: routeColor }} />
               <span style={{ fontSize: 11, fontWeight: 600, color: routeColor }}>
@@ -410,10 +413,10 @@ export default function LiveNavigation({
             <div style={{
               display: 'flex', alignItems: 'center', gap: 4,
               padding: '4px 8px', borderRadius: 8,
-              background: 'rgba(255,255,255,0.04)',
+              background: 'var(--subtle-bg)',
             }}>
-              <Clock size={10} color="#64748B" />
-              <span style={{ fontSize: 10, color: '#64748B', fontFamily: 'monospace' }}>
+              <Clock size={10} style={{ color: 'var(--text-muted)' }} />
+              <span className="tabular-nums" style={{ fontSize: 10, color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
                 {formatTime(elapsedSeconds)}
               </span>
             </div>
@@ -427,7 +430,7 @@ export default function LiveNavigation({
                   width: 6, height: 6, borderRadius: '50%',
                   background: phase === p ? config.color
                     : Object.values(PHASE).indexOf(phase) > i ? '#10B981'
-                    : 'rgba(255,255,255,0.1)',
+                    : 'var(--subtle-border-strong)',
                   transition: 'all 0.3s',
                 }} />
               ))}
@@ -438,40 +441,40 @@ export default function LiveNavigation({
           <div style={{
             display: 'flex', alignItems: 'center', gap: 4,
             padding: '6px 8px', borderRadius: 10,
-            background: 'rgba(255,255,255,0.03)',
+            background: 'var(--subtle-bg)',
             marginBottom: config.action ? 10 : 0,
           }}>
             {/* Walk → Board */}
             <div style={{
               display: 'flex', alignItems: 'center', gap: 3,
-              opacity: phase === PHASE.WALKING_TO_BOARD ? 1 : 0.4,
+              opacity: phase === PHASE.WALKING_TO_BOARD ? 1 : 0.45,
             }}>
               <Footprints size={10} color="#60A5FA" />
-              <span style={{ fontSize: 9, color: '#60A5FA', fontWeight: 500 }}>
+              <span className="tabular-nums" style={{ fontSize: 9, color: '#60A5FA', fontWeight: 600 }}>
                 {navigationOption?.boardPoint?.walkDistance || '?'}m
               </span>
             </div>
-            <CornerDownRight size={8} color="#334155" />
+            <CornerDownRight size={8} style={{ color: 'var(--text-muted)' }} />
 
             {/* Bus ride */}
             <div style={{
               display: 'flex', alignItems: 'center', gap: 3,
-              opacity: [PHASE.WAITING_FOR_BUS, PHASE.RIDING_BUS, PHASE.ALERT_ALIGHT].includes(phase) ? 1 : 0.4,
+              opacity: [PHASE.WAITING_FOR_BUS, PHASE.RIDING_BUS, PHASE.ALERT_ALIGHT].includes(phase) ? 1 : 0.45,
             }}>
               <Bus size={10} color={routeColor} />
-              <span style={{ fontSize: 9, color: routeColor, fontWeight: 500 }}>
+              <span className="tabular-nums" style={{ fontSize: 9, color: routeColor, fontWeight: 600 }}>
                 ~{navigationOption?.busMinutes || '?'} min
               </span>
             </div>
-            <CornerDownRight size={8} color="#334155" />
+            <CornerDownRight size={8} style={{ color: 'var(--text-muted)' }} />
 
             {/* Walk → Dest */}
             <div style={{
               display: 'flex', alignItems: 'center', gap: 3,
-              opacity: phase === PHASE.WALKING_TO_DEST ? 1 : 0.4,
+              opacity: phase === PHASE.WALKING_TO_DEST ? 1 : 0.45,
             }}>
-              <MapPin size={10} color="#F87171" />
-              <span style={{ fontSize: 9, color: '#F87171', fontWeight: 500 }}>
+              <MapPin size={10} color="#EF4444" />
+              <span className="tabular-nums" style={{ fontSize: 9, color: '#EF4444', fontWeight: 600 }}>
                 {navigationOption?.alightPoint?.walkDistance < 50
                   ? 'Directo 🎯'
                   : `${navigationOption?.alightPoint?.walkDistance || '?'}m`}
@@ -479,7 +482,7 @@ export default function LiveNavigation({
             </div>
 
             <div style={{ flex: 1 }} />
-            <span style={{ fontSize: 10, fontWeight: 600, color: '#F59E0B' }}>
+            <span className="tabular-nums" style={{ fontSize: 10, fontWeight: 700, color: '#F59E0B' }}>
               ${navigationOption?.route?.fare?.toLocaleString() || '2,600'}
             </span>
           </div>
@@ -494,9 +497,9 @@ export default function LiveNavigation({
                 background: phase === PHASE.ALERT_ALIGHT
                   ? 'linear-gradient(135deg, #EF4444, #DC2626)'
                   : phase === PHASE.ARRIVED
-                    ? 'rgba(255,255,255,0.06)'
+                    ? 'var(--subtle-bg)'
                     : `linear-gradient(135deg, ${routeColor}, ${routeColor}CC)`,
-                color: phase === PHASE.ARRIVED ? '#94A3B8' : '#fff',
+                color: phase === PHASE.ARRIVED ? 'var(--text-secondary)' : '#fff',
                 fontSize: 14, fontWeight: 700,
                 cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -518,9 +521,9 @@ export default function LiveNavigation({
               style={{
                 width: '100%', marginTop: 8, padding: '8px 0',
                 borderRadius: 10, border: 'none',
-                background: 'rgba(239,68,68,0.06)',
-                color: '#64748B',
-                fontSize: 11, fontWeight: 500,
+                background: 'rgba(239,68,68,0.08)',
+                color: 'var(--text-secondary)',
+                fontSize: 11, fontWeight: 600,
                 cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                 transition: 'all 0.2s',

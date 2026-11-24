@@ -13,16 +13,38 @@
  * 5. Perfil: Retorna datos del usuario autenticado
  */
 
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const User = require('../models/UserModel');
-const { generateVerificationCode, sendVerificationEmail, verifyConnection } = require('../services/emailService');
-const { logAuthEvent } = require('../middleware/security');
+const { generateVerificationCode, sendVerificationEmail, sendPasswordResetEmail, verifyConnection } = require('../services/emailService');
+const { logAuthEvent, isValidObjectId } = require('../middleware/security');
 
 const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/jwt');
 
-// Check SMTP on startup
-let emailEnabled = false;
-verifyConnection().then(ok => { emailEnabled = ok; });
+const smtpConfigured = Boolean(process.env.ZOHO_EMAIL && process.env.ZOHO_PASSWORD);
+const verificationRequired = smtpConfigured || process.env.NODE_ENV === 'production';
+
+// Check SMTP on startup (for diagnostic logging)
+verifyConnection();
+
+/**
+ * Hashea el código de verificación con SHA-256 antes de persistirlo en BD.
+ */
+function hashVerificationCode(code) {
+  return crypto.createHash('sha256').update(String(code)).digest('hex');
+}
+
+/**
+ * Compara un código recibido contra el hash guardado en tiempo constante.
+ */
+function compareVerificationCode(inputCode, storedHash) {
+  if (!inputCode || !storedHash || typeof storedHash !== 'string') return false;
+  const inputHash = hashVerificationCode(inputCode);
+  const inputBuf = Buffer.from(inputHash, 'utf8');
+  const storedBuf = Buffer.from(storedHash, 'utf8');
+  if (inputBuf.length !== storedBuf.length) return false;
+  return crypto.timingSafeEqual(inputBuf, storedBuf);
+}
 
 /**
  * Genera un token JWT firmado con el ID del usuario.
@@ -41,33 +63,46 @@ function generateToken(userId) {
  */
 async function register(req, res) {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password } = req.body || {};
 
-    // Validar campos requeridos
-    if (!name || !email || !password) {
+    // Validar tipos y campos requeridos
+    if (typeof name !== 'string' || typeof email !== 'string' || typeof password !== 'string' ||
+        !name.trim() || !email.trim() || !password) {
       return res.status(400).json({
         success: false,
         message: 'Todos los campos son requeridos: name, email, password',
       });
     }
 
+    if (password.length < 8 || password.length > 128) {
+      return res.status(400).json({
+        success: false,
+        message: 'La contraseña debe tener entre 8 y 128 caracteres',
+      });
+    }
+
+    const cleanName = name.trim();
+    const normalizedEmail = email.trim().toLowerCase();
+
     // Verificar si el email ya existe
-    const existingUser = await User.findOne({ email: email.toLowerCase() }).select('+verificationCode +verificationCodeExpiry');
+    const existingUser = await User.findOne({ email: normalizedEmail })
+      .select('+verificationCode +verificationCodeExpiry +verificationAttempts');
     
     if (existingUser) {
       // Si existe pero NO está verificado, permitir re-registro (reenviar código)
       if (!existingUser.isVerified) {
         const code = generateVerificationCode();
-        existingUser.name = name;
+        existingUser.name = cleanName;
         existingUser.password = password; // Se re-hashea en pre-save
-        existingUser.verificationCode = code;
+        existingUser.verificationCode = hashVerificationCode(code);
         existingUser.verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 min
+        existingUser.verificationAttempts = 0;
         await existingUser.save();
 
         // Enviar email
-        if (emailEnabled) {
+        if (smtpConfigured) {
           try {
-            await sendVerificationEmail(email.toLowerCase(), name, code);
+            await sendVerificationEmail(normalizedEmail, cleanName, code);
           } catch (emailErr) {
             console.error('Error enviando email:', emailErr);
           }
@@ -76,7 +111,7 @@ async function register(req, res) {
         return res.status(200).json({
           success: true,
           message: 'Código de verificación reenviado a tu email',
-          data: { requiresVerification: true, email: email.toLowerCase() },
+          data: { requiresVerification: true, email: normalizedEmail },
         });
       }
 
@@ -90,37 +125,42 @@ async function register(req, res) {
     // Generar código de verificación
     const code = generateVerificationCode();
 
-    // Crear usuario no verificado
+    // Crear usuario
     const user = new User({
-      name,
-      email: email.toLowerCase(),
+      name: cleanName,
+      email: normalizedEmail,
       password,
       role: 'free',
       isPremium: false,
-      isVerified: !emailEnabled, // Auto-verify if email is not configured
-      verificationCode: code,
-      verificationCodeExpiry: new Date(Date.now() + 15 * 60 * 1000), // 15 min
+      isVerified: !verificationRequired, // Solo auto-verifica en dev si SMTP no está configurado
+      verificationCode: verificationRequired ? hashVerificationCode(code) : undefined,
+      verificationCodeExpiry: verificationRequired ? new Date(Date.now() + 15 * 60 * 1000) : undefined,
+      verificationAttempts: 0,
     });
 
     await user.save();
 
-    // Enviar email de verificación
-    if (emailEnabled) {
-      try {
-        await sendVerificationEmail(email.toLowerCase(), name, code);
-      } catch (emailErr) {
-        console.error('Error enviando email:', emailErr);
-        // Still return success — user can request resend
+    // Enviar email de verificación si verificación requerida
+    if (verificationRequired) {
+      if (smtpConfigured) {
+        try {
+          await sendVerificationEmail(normalizedEmail, cleanName, code);
+        } catch (emailErr) {
+          console.error('Error enviando email:', emailErr);
+          // Still return success — user can request resend
+        }
+      } else {
+        console.error('⚠️ Verificación requerida pero SMTP no está configurado.');
       }
 
       return res.status(201).json({
         success: true,
         message: 'Cuenta creada. Revisa tu email para el código de verificación.',
-        data: { requiresVerification: true, email: email.toLowerCase() },
+        data: { requiresVerification: true, email: normalizedEmail },
       });
     }
 
-    // If email not configured, auto-verify and return token
+    // Solo en desarrollo cuando SMTP no está configurado: auto-verify and return token
     const token = generateToken(user._id);
     res.status(201).json({
       success: true,
@@ -163,22 +203,24 @@ async function register(req, res) {
  */
 async function verifyEmail(req, res) {
   try {
-    const { email, code } = req.body;
+    const { email, code } = req.body || {};
 
-    if (!email || !code) {
+    if (typeof email !== 'string' || typeof code !== 'string' || !email.trim() || !code.trim()) {
       return res.status(400).json({
         success: false,
         message: 'Email y código son requeridos',
       });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() })
-      .select('+verificationCode +verificationCodeExpiry +password');
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail })
+      .select('+verificationCode +verificationCodeExpiry +verificationAttempts +password');
 
     if (!user) {
-      return res.status(404).json({
+      return res.status(400).json({
         success: false,
-        message: 'No se encontró una cuenta con este email',
+        message: 'Código inválido o expirado',
+        code: 'INVALID_CODE',
       });
     }
 
@@ -190,8 +232,19 @@ async function verifyEmail(req, res) {
       });
     }
 
+    if ((user.verificationAttempts || 0) >= 5) {
+      user.verificationCode = undefined;
+      user.verificationCodeExpiry = undefined;
+      await user.save();
+      return res.status(429).json({
+        success: false,
+        message: 'Demasiados intentos fallidos. Solicita un nuevo código.',
+        code: 'TOO_MANY_ATTEMPTS',
+      });
+    }
+
     // Check if code expired
-    if (!user.verificationCodeExpiry || user.verificationCodeExpiry < new Date()) {
+    if (!user.verificationCode || !user.verificationCodeExpiry || user.verificationCodeExpiry < new Date()) {
       return res.status(400).json({
         success: false,
         message: 'El código ha expirado. Solicita uno nuevo.',
@@ -199,11 +252,13 @@ async function verifyEmail(req, res) {
       });
     }
 
-    // Check code
-    if (user.verificationCode !== code.trim()) {
+    // Check code using constant-time comparison against SHA-256 hash
+    if (!compareVerificationCode(code.trim(), user.verificationCode)) {
+      user.verificationAttempts = (user.verificationAttempts || 0) + 1;
+      await user.save();
       return res.status(400).json({
         success: false,
-        message: 'Código incorrecto. Verifica e intenta de nuevo.',
+        message: 'Código inválido o expirado',
         code: 'INVALID_CODE',
       });
     }
@@ -212,6 +267,7 @@ async function verifyEmail(req, res) {
     user.isVerified = true;
     user.verificationCode = undefined;
     user.verificationCodeExpiry = undefined;
+    user.verificationAttempts = 0;
     await user.save();
 
     // Generate JWT
@@ -248,45 +304,40 @@ async function verifyEmail(req, res) {
  */
 async function resendCode(req, res) {
   try {
-    const { email } = req.body;
+    const { email } = req.body || {};
 
-    if (!email) {
+    if (typeof email !== 'string' || !email.trim()) {
       return res.status(400).json({
         success: false,
         message: 'Email es requerido',
       });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() })
-      .select('+verificationCode +verificationCodeExpiry');
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail })
+      .select('+verificationCode +verificationCodeExpiry +verificationAttempts');
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'No se encontró una cuenta con este email',
-      });
-    }
-
-    if (user.isVerified) {
-      return res.status(400).json({
-        success: false,
-        message: 'Esta cuenta ya está verificada',
+    if (!user || user.isVerified) {
+      return res.status(200).json({
+        success: true,
+        message: 'Si la cuenta existe y está pendiente de verificación, enviamos un nuevo código.',
       });
     }
 
     // Generate new code
     const code = generateVerificationCode();
-    user.verificationCode = code;
+    user.verificationCode = hashVerificationCode(code);
     user.verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000);
+    user.verificationAttempts = 0;
     await user.save();
 
-    if (emailEnabled) {
-      await sendVerificationEmail(email.toLowerCase(), user.name, code);
+    if (smtpConfigured) {
+      await sendVerificationEmail(normalizedEmail, user.name, code);
     }
 
     res.json({
       success: true,
-      message: 'Nuevo código enviado a tu email',
+      message: 'Si la cuenta existe y está pendiente de verificación, enviamos un nuevo código.',
     });
   } catch (error) {
     console.error('Error reenviando código:', error);
@@ -304,20 +355,22 @@ async function resendCode(req, res) {
  */
 async function login(req, res) {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
 
-    if (!email || !password) {
+    if (typeof email !== 'string' || typeof password !== 'string' || !email.trim() || !password) {
       return res.status(400).json({
         success: false,
         message: 'Email y contraseña son requeridos',
       });
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     // Buscar usuario incluyendo la contraseña
-    const user = await User.findByCredentials(email.toLowerCase());
+    const user = await User.findByCredentials(normalizedEmail);
 
     if (!user) {
-      logAuthEvent('LOGIN_FAIL_USER_NOT_FOUND', email, req.ip, false);
+      logAuthEvent('LOGIN_FAIL_USER_NOT_FOUND', normalizedEmail, req.ip, false);
       return res.status(401).json({
         success: false,
         message: 'Credenciales incorrectas',
@@ -325,8 +378,20 @@ async function login(req, res) {
       });
     }
 
-    // Check if verified
-    if (!user.isVerified && emailEnabled) {
+    // Comparar contraseña ANTES de verificar isVerified para evitar enumeración de cuentas
+    const isMatch = await user.comparePassword(password);
+
+    if (!isMatch) {
+      logAuthEvent('LOGIN_FAIL_BAD_PASSWORD', normalizedEmail, req.ip, false);
+      return res.status(401).json({
+        success: false,
+        message: 'Credenciales incorrectas',
+        code: 'INVALID_CREDENTIALS',
+      });
+    }
+
+    // Check if verified (después de validar la contraseña)
+    if (!user.isVerified && verificationRequired) {
       return res.status(403).json({
         success: false,
         message: 'Tu email no está verificado. Revisa tu bandeja de entrada.',
@@ -335,22 +400,10 @@ async function login(req, res) {
       });
     }
 
-    // Comparar contraseña
-    const isMatch = await user.comparePassword(password);
-
-    if (!isMatch) {
-      logAuthEvent('LOGIN_FAIL_BAD_PASSWORD', email, req.ip, false);
-      return res.status(401).json({
-        success: false,
-        message: 'Credenciales incorrectas',
-        code: 'INVALID_CREDENTIALS',
-      });
-    }
-
     // Generar token JWT
     const token = generateToken(user._id);
     
-    logAuthEvent('LOGIN_SUCCESS', email, req.ip, true);
+    logAuthEvent('LOGIN_SUCCESS', normalizedEmail, req.ip, true);
 
     res.json({
       success: true,
@@ -404,28 +457,200 @@ async function getProfile(req, res) {
 
 /**
  * PATCH /api/users/upgrade
+ * Actualiza el plan ('free' | 'premium') de un usuario objetivo (solo admin).
  */
 async function upgradeToPremium(req, res) {
   try {
-    req.user.role = 'premium';
-    req.user.isPremium = true;
-    await req.user.save();
+    const { userId, role = 'premium' } = req.body || {};
+
+    if (!userId || !isValidObjectId(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Se requiere un userId válido',
+        code: 'INVALID_USER_ID',
+      });
+    }
+
+    if (!['free', 'premium'].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Rol inválido. Opciones permitidas: free, premium',
+        code: 'INVALID_ROLE',
+      });
+    }
+
+    const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado',
+        code: 'USER_NOT_FOUND',
+      });
+    }
+
+    if (targetUser.role === 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'No se puede modificar el rol de un administrador desde este endpoint',
+        code: 'FORBIDDEN_ADMIN_MUTATION',
+      });
+    }
+
+    targetUser.role = role;
+    targetUser.isPremium = role === 'premium';
+    await targetUser.save();
 
     res.json({
       success: true,
-      message: '¡Bienvenido a Quilla-Pass Premium! 🎉',
+      message: role === 'premium'
+        ? `Usuario ${targetUser.name} actualizado a Quilla-Pass Premium 🎉`
+        : `Plan de ${targetUser.name} actualizado a Free`,
       data: {
-        id: req.user._id,
-        name: req.user.name,
-        role: req.user.role,
-        isPremium: req.user.isPremium,
+        id: targetUser._id,
+        name: targetUser.name,
+        email: targetUser.email,
+        role: targetUser.role,
+        isPremium: targetUser.isPremium,
       },
     });
   } catch (error) {
-    console.error('Error al actualizar a premium:', error);
+    console.error('Error al actualizar plan:', error);
     res.status(500).json({
       success: false,
       message: 'Error al actualizar plan',
+    });
+  }
+}
+
+/**
+ * POST /api/users/forgot-password
+ * Envía un código de recuperación de 6 dígitos al email si la cuenta existe.
+ */
+async function forgotPassword(req, res) {
+  try {
+    const { email } = req.body || {};
+    if (typeof email !== 'string' || !email.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email es requerido',
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail })
+      .select('+resetCode +resetCodeExpiry +resetAttempts');
+
+    if (user) {
+      const code = generateVerificationCode();
+      user.resetCode = hashVerificationCode(code);
+      user.resetCodeExpiry = new Date(Date.now() + 15 * 60 * 1000);
+      user.resetAttempts = 0;
+      await user.save();
+
+      if (smtpConfigured) {
+        try {
+          await sendPasswordResetEmail(normalizedEmail, user.name, code);
+        } catch (emailErr) {
+          console.error('Error enviando código de recuperación:', emailErr);
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Si el correo está registrado, te enviamos un código de recuperación.',
+    });
+  } catch (error) {
+    console.error('Error en forgotPassword:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al procesar solicitud de recuperación',
+    });
+  }
+}
+
+/**
+ * POST /api/users/reset-password
+ * Valida el código OTP y actualiza la contraseña del usuario.
+ */
+async function resetPassword(req, res) {
+  try {
+    const { email, code, newPassword } = req.body || {};
+
+    if (typeof email !== 'string' || typeof code !== 'string' || typeof newPassword !== 'string' ||
+        !email.trim() || !code.trim() || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email, código y nueva contraseña son requeridos',
+      });
+    }
+
+    if (newPassword.length < 8 || newPassword.length > 128) {
+      return res.status(400).json({
+        success: false,
+        message: 'La nueva contraseña debe tener entre 8 y 128 caracteres',
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail })
+      .select('+resetCode +resetCodeExpiry +resetAttempts');
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Código inválido o expirado',
+        code: 'INVALID_RESET_CODE',
+      });
+    }
+
+    if ((user.resetAttempts || 0) >= 5) {
+      user.resetCode = undefined;
+      user.resetCodeExpiry = undefined;
+      await user.save();
+      return res.status(429).json({
+        success: false,
+        message: 'Demasiados intentos fallidos. Solicita un nuevo código.',
+        code: 'TOO_MANY_ATTEMPTS',
+      });
+    }
+
+    if (!user.resetCode || !user.resetCodeExpiry || user.resetCodeExpiry < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: 'El código ha expirado. Solicita uno nuevo.',
+        code: 'CODE_EXPIRED',
+      });
+    }
+
+    if (!compareVerificationCode(code.trim(), user.resetCode)) {
+      user.resetAttempts = (user.resetAttempts || 0) + 1;
+      await user.save();
+      return res.status(400).json({
+        success: false,
+        message: 'Código inválido o expirado',
+        code: 'INVALID_RESET_CODE',
+      });
+    }
+
+    user.password = newPassword;
+    user.resetCode = undefined;
+    user.resetCodeExpiry = undefined;
+    user.resetAttempts = 0;
+    user.isVerified = true;
+    await user.save();
+
+    logAuthEvent('PASSWORD_RESET_SUCCESS', normalizedEmail, req.ip, true);
+
+    res.json({
+      success: true,
+      message: 'Contraseña actualizada exitosamente. Ya puedes iniciar sesión.',
+    });
+  } catch (error) {
+    console.error('Error en resetPassword:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno al restablecer contraseña',
     });
   }
 }
@@ -437,4 +662,6 @@ module.exports = {
   login,
   getProfile,
   upgradeToPremium,
+  forgotPassword,
+  resetPassword,
 };

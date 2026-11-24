@@ -43,6 +43,7 @@ const reportRoutes = require('./routes/reportRoutes');
 const { trafficTracker } = require('./middleware/trafficTracker');
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
 
 // ============================================
@@ -61,19 +62,26 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: isProduction ? ["'self'"] : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
       imgSrc: [
         "'self'", 'data:', 'blob:',
         '*.openstreetmap.org',
         '*.tile.openstreetmap.org',
         'tiles.stadiamaps.com',
+        'https://tiles.openfreemap.org',
         '*.cartocdn.com',
         '*.googleapis.com',
         '*.gstatic.com',
         '*.google.com',
       ],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://tiles.openfreemap.org'],
+      workerSrc: ["'self'", 'blob:'],
+      childSrc: ["'self'", 'blob:'],
       connectSrc: [
         "'self'",
+        'blob:',
+        'data:',
+        'https://tiles.openfreemap.org',
+        'https://photon.komoot.io',
         'https://nominatim.openstreetmap.org',
         'https://router.project-osrm.org',
         'https://overpass-api.de',
@@ -137,7 +145,24 @@ const limiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => req.path === '/api/health',
+  skip: (req) => {
+    const urlPath = (req.originalUrl || req.path || '').split('?')[0];
+    return (
+      urlPath === '/api/health' ||
+      urlPath === '/api/ping' ||
+      urlPath === '/api/maps/geocode' ||
+      urlPath === '/api/maps/reverse' ||
+      urlPath === '/api/maps/pois'
+    );
+  },
+});
+
+// Rate limit dedicado para geocoding/autocompletado en vivo
+const geocodeLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  message: { success: false, message: 'Demasiadas búsquedas en poco tiempo. Espera un momento.', code: 'GEOCODE_RATE_LIMIT' },
+  standardHeaders: true, legacyHeaders: false,
 });
 
 // Stricter limit for auth endpoints
@@ -145,6 +170,14 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   message: { success: false, message: 'Demasiados intentos. Espera 15 minutos.', code: 'AUTH_RATE_LIMIT' },
+  standardHeaders: true, legacyHeaders: false,
+});
+
+// Stricter limit for verification code resends
+const resendLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { success: false, message: 'Demasiados reenvíos de código. Espera 15 minutos.', code: 'RESEND_RATE_LIMIT' },
   standardHeaders: true, legacyHeaders: false,
 });
 
@@ -158,7 +191,14 @@ const captureLimiter = rateLimit({
 
 app.use('/api/users/login', authLimiter);
 app.use('/api/users/register', authLimiter);
+app.use('/api/users/verify', authLimiter);
+app.use('/api/users/reset-password', authLimiter);
+app.use('/api/users/resend-code', resendLimiter);
+app.use('/api/users/forgot-password', resendLimiter);
 app.use('/api/routes/capture', captureLimiter);
+app.use('/api/maps/geocode', geocodeLimiter);
+app.use('/api/maps/reverse', geocodeLimiter);
+app.use('/api/maps/pois', geocodeLimiter);
 app.use('/api/', limiter);
 
 // Parsear JSON con límite de tamaño
@@ -384,8 +424,11 @@ async function startServer() {
     // An uncaught exception in a route handler would normally crash Node.js,
     // causing a full restart → memory DB wipe → all sessions invalidated.
     process.on('uncaughtException', (err) => {
-      console.error('🔴 Uncaught Exception (servidor NO reiniciado):', err.message);
+      console.error('🔴 Uncaught Exception:', err.message);
       console.error(err.stack);
+      if (isProduction) {
+        process.exit(1);
+      }
     });
 
     process.on('unhandledRejection', (reason, promise) => {

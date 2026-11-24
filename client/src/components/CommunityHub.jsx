@@ -73,29 +73,35 @@ export default function CommunityHub({ isOpen, onClose }) {
         style={{
           width: '100%', maxWidth: 440,
           maxHeight: '80vh',
-          background: 'linear-gradient(160deg, #111827, #0B1120)',
-          borderRadius: '20px 20px 0 0',
+          background: 'var(--panel-bg)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderTop: '1px solid var(--subtle-border-strong)',
+          borderLeft: '1px solid var(--subtle-border)',
+          borderRight: '1px solid var(--subtle-border)',
+          borderRadius: '22px 22px 0 0',
           overflow: 'hidden',
           display: 'flex', flexDirection: 'column',
-          boxShadow: '0 -10px 40px rgba(0,0,0,0.5)',
+          boxShadow: '0 -10px 40px var(--shadow-color)',
           fontFamily: 'Inter, sans-serif',
         }}
       >
+        <div className="sheet-handle" style={{ marginTop: 10, marginBottom: 4 }} />
         {/* Header */}
         <div style={{
-          padding: '14px 16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '6px 16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Users size={15} color="#F59E0B" />
-            <span style={{ fontSize: 15, fontWeight: 700, color: '#F1F5F9', fontFamily: 'Outfit, sans-serif' }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'Outfit, sans-serif' }}>
               Comunidad Quilla
             </span>
           </div>
           <button onClick={onClose} style={{
-            background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '50%',
+            background: 'var(--subtle-bg)', border: '1px solid var(--subtle-border)', borderRadius: '50%',
             width: 30, height: 30, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <X size={14} color="#94A3B8" />
+            <X size={14} color="var(--text-secondary)" />
           </button>
         </div>
 
@@ -110,8 +116,8 @@ export default function CommunityHub({ isOpen, onClose }) {
               style={{
                 padding: '7px 14px', borderRadius: 10, border: 'none', cursor: 'pointer',
                 fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap',
-                background: tab === t.id ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.04)',
-                color: tab === t.id ? '#F59E0B' : '#64748B',
+                background: tab === t.id ? 'rgba(245,158,11,0.15)' : 'var(--subtle-bg)',
+                color: tab === t.id ? '#F59E0B' : 'var(--text-muted)',
                 transition: 'all 0.15s',
               }}
             >
@@ -123,7 +129,7 @@ export default function CommunityHub({ isOpen, onClose }) {
         {/* Content */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 20px' }}>
           {loading ? (
-            <p style={{ fontSize: 12, color: '#475569', textAlign: 'center', padding: 20 }}>Cargando...</p>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: 20 }}>Cargando...</p>
           ) : tab === 'ranking' ? (
             <RankingTab data={leaderboard} />
           ) : tab === 'feed' ? (
@@ -131,7 +137,7 @@ export default function CommunityHub({ isOpen, onClose }) {
           ) : tab === 'profile' && profile ? (
             <ProfileTab data={profile} />
           ) : (
-            <p style={{ fontSize: 12, color: '#475569', textAlign: 'center', padding: 20 }}>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: 20 }}>
               Inicia sesión para ver tu perfil
             </p>
           )}
@@ -146,9 +152,9 @@ function RankingTab({ data }) {
   if (!data.length) {
     return (
       <div style={{ textAlign: 'center', padding: 30 }}>
-        <Trophy size={28} color="#334155" style={{ marginBottom: 8 }} />
-        <p style={{ fontSize: 13, color: '#475569', margin: 0 }}>Aún no hay contribuidores</p>
-        <p style={{ fontSize: 11, color: '#334155', marginTop: 4 }}>¡Sé el primero en capturar una ruta!</p>
+        <Trophy size={28} color="var(--text-muted)" style={{ marginBottom: 8 }} />
+        <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>Aún no hay contribuidores</p>
+        <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>¡Sé el primero en capturar una ruta!</p>
       </div>
     );
   }
@@ -163,9 +169,9 @@ function RankingTab({ data }) {
       <div key={u._id} style={{
         display: 'flex', alignItems: 'center', gap: 10,
         padding: '10px 0',
-        borderBottom: i < data.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+        borderBottom: i < data.length - 1 ? '1px solid var(--subtle-border)' : 'none',
       }}>
-        <span style={{ fontSize: 14, width: 24, textAlign: 'center', flexShrink: 0 }}>
+        <span className="tabular-nums" style={{ fontSize: 14, width: 24, textAlign: 'center', flexShrink: 0, color: 'var(--text-secondary)' }}>
           {i < 3 ? rankIcons[i] : `${i + 1}°`}
         </span>
         <div style={{
@@ -176,14 +182,14 @@ function RankingTab({ data }) {
         }}>{initials}</div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#E2E8F0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {u.name}
             </span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: u.levelColor, flexShrink: 0 }}>
+            <span className="tabular-nums" style={{ fontSize: 11, fontWeight: 700, color: u.levelColor, flexShrink: 0 }}>
               {u.xp} XP
             </span>
           </div>
-          <div style={{ height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+          <div style={{ height: 4, borderRadius: 2, background: 'var(--subtle-bg)', overflow: 'hidden' }}>
             <div style={{ width: `${barW}%`, height: '100%', borderRadius: 2, background: `linear-gradient(90deg, ${u.levelColor}88, ${u.levelColor})`, transition: 'width 0.5s' }} />
           </div>
         </div>
@@ -204,8 +210,8 @@ function FeedTab({ data }) {
   if (!data.length) {
     return (
       <div style={{ textAlign: 'center', padding: 30 }}>
-        <Zap size={28} color="#334155" style={{ marginBottom: 8 }} />
-        <p style={{ fontSize: 13, color: '#475569', margin: 0 }}>Sin actividad reciente</p>
+        <Zap size={28} color="var(--text-muted)" style={{ marginBottom: 8 }} />
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>Sin actividad reciente</p>
       </div>
     );
   }
@@ -226,16 +232,16 @@ function FeedTab({ data }) {
       <div key={i} style={{
         display: 'flex', alignItems: 'flex-start', gap: 10,
         padding: '10px 0',
-        borderBottom: i < data.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+        borderBottom: i < data.length - 1 ? '1px solid var(--subtle-border)' : 'none',
       }}>
         <span style={{ fontSize: 18, flexShrink: 0, lineHeight: 1.3 }}>{item.icon}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ margin: 0, fontSize: 12, color: '#E2E8F0', lineHeight: 1.4 }}>{item.text}</p>
+          <p style={{ margin: 0, fontSize: 12, color: 'var(--text-primary)', lineHeight: 1.4 }}>{item.text}</p>
           {item.detail && (
-            <p style={{ margin: '3px 0 0', fontSize: 11, color: '#64748B' }}>{item.detail}</p>
+            <p style={{ margin: '3px 0 0', fontSize: 11, color: 'var(--text-secondary)' }}>{item.detail}</p>
           )}
         </div>
-        <span style={{ fontSize: 10, color: '#334155', flexShrink: 0, paddingTop: 2 }}>{ago}</span>
+        <span style={{ fontSize: 10, color: 'var(--text-muted)', flexShrink: 0, paddingTop: 2 }}>{ago}</span>
       </div>
     );
   });
@@ -253,7 +259,7 @@ function ProfileTab({ data }) {
       {/* Profile Card */}
       <div style={{
         padding: 20, borderRadius: 16,
-        background: `linear-gradient(135deg, ${data.levelColor}12, rgba(255,255,255,0.02))`,
+        background: `linear-gradient(135deg, ${data.levelColor}12, var(--subtle-bg))`,
         border: `1px solid ${data.levelColor}30`,
         marginBottom: 16, textAlign: 'center',
       }}>
@@ -266,7 +272,7 @@ function ProfileTab({ data }) {
           {data.name?.charAt(0)?.toUpperCase() || '?'}
         </div>
 
-        <h3 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 700, color: '#F1F5F9', fontFamily: 'Outfit, sans-serif' }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'Outfit, sans-serif' }}>
           {data.name}
         </h3>
         <div style={{
@@ -282,10 +288,10 @@ function ProfileTab({ data }) {
         {/* XP Bar */}
         <div style={{ marginTop: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontSize: 20, fontWeight: 800, color: data.levelColor }}>{data.xp} XP</span>
-            <span style={{ fontSize: 11, color: '#475569' }}>Rango #{data.rank}</span>
+            <span className="tabular-nums" style={{ fontSize: 20, fontWeight: 800, color: data.levelColor }}>{data.xp} XP</span>
+            <span className="tabular-nums" style={{ fontSize: 11, color: 'var(--text-muted)' }}>Rango #{data.rank}</span>
           </div>
-          <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+          <div style={{ height: 6, borderRadius: 3, background: 'var(--subtle-bg)', overflow: 'hidden' }}>
             <div style={{
               width: `${levelProgress}%`, height: '100%', borderRadius: 3,
               background: `linear-gradient(90deg, ${data.levelColor}88, ${data.levelColor})`,
@@ -293,7 +299,7 @@ function ProfileTab({ data }) {
             }} />
           </div>
           {data.nextLevelName && (
-            <p style={{ fontSize: 10, color: '#475569', marginTop: 6 }}>
+            <p style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 6 }}>
               {nextXP} XP para <strong style={{ color: data.levelColor }}>{data.nextLevelName}</strong>
             </p>
           )}
@@ -306,8 +312,8 @@ function ProfileTab({ data }) {
             { label: 'Miembro desde', value: new Date(data.memberSince).toLocaleDateString('es-CO', { month: 'short', year: 'numeric' }) },
           ].map(s => (
             <div key={s.label}>
-              <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#F1F5F9' }}>{s.value}</p>
-              <p style={{ margin: '2px 0 0', fontSize: 10, color: '#64748B' }}>{s.label}</p>
+              <p className="tabular-nums" style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{s.value}</p>
+              <p style={{ margin: '2px 0 0', fontSize: 10, color: 'var(--text-muted)' }}>{s.label}</p>
             </div>
           ))}
         </div>
@@ -316,7 +322,7 @@ function ProfileTab({ data }) {
       {/* Badges */}
       {data.badges?.length > 0 && (
         <div>
-          <p style={{ fontSize: 12, fontWeight: 700, color: '#94A3B8', marginBottom: 8 }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8 }}>
             <Award size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
             Insignias ({data.badges.length})
           </p>
@@ -324,9 +330,9 @@ function ProfileTab({ data }) {
             {data.badges.map(b => (
               <div key={b.id} title={b.desc} style={{
                 padding: '6px 12px', borderRadius: 10,
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                fontSize: 12, color: '#E2E8F0',
+                background: 'var(--subtle-bg)',
+                border: '1px solid var(--subtle-border)',
+                fontSize: 12, color: 'var(--text-primary)',
               }}>
                 {b.label}
               </div>

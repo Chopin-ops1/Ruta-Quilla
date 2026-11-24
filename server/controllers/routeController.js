@@ -15,6 +15,12 @@
 const Route = require('../models/RouteModel');
 const CapturedRoute = require('../models/CapturedRouteModel');
 const { mergeSegment } = require('../services/mergeService');
+const { isValidCoord } = require('../middleware/security');
+
+function getDefaultFare() {
+  const colombiaNow = new Date(Date.now() - 5 * 60 * 60 * 1000);
+  return colombiaNow.getUTCDay() === 0 ? 3800 : 3700;
+}
 
 /**
  * POST /api/routes/capture
@@ -45,11 +51,20 @@ async function captureRoute(req, res) {
       });
     }
 
-    // Validate required fields
-    if (!routeName || !company || !direction || !coordinates) {
+    // Validate required fields & input bounds
+    if (typeof routeName !== 'string' || typeof company !== 'string' || !direction || !coordinates) {
       return res.status(400).json({
         success: false,
         message: 'Campos requeridos: routeName, company, direction, coordinates',
+      });
+    }
+
+    const cleanRouteName = routeName.trim();
+    const cleanCompany = company.trim();
+    if (!cleanRouteName || cleanRouteName.length > 100 || !cleanCompany || cleanCompany.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: 'routeName y company deben tener entre 1 y 100 caracteres',
       });
     }
 
@@ -60,10 +75,10 @@ async function captureRoute(req, res) {
       });
     }
 
-    if (!Array.isArray(coordinates) || coordinates.length < 2) {
+    if (!Array.isArray(coordinates) || coordinates.length < 2 || coordinates.length > 5000) {
       return res.status(400).json({
         success: false,
-        message: 'Se requieren al menos 2 coordenadas para trazar una ruta',
+        message: 'Se requieren entre 2 y 5000 coordenadas para trazar una ruta',
       });
     }
 
@@ -71,10 +86,7 @@ async function captureRoute(req, res) {
     const validCoordinates = coordinates.filter(coord => {
       return Array.isArray(coord) &&
              coord.length === 2 &&
-             typeof coord[0] === 'number' &&
-             typeof coord[1] === 'number' &&
-             coord[0] >= -180 && coord[0] <= 180 &&
-             coord[1] >= -90 && coord[1] <= 90;
+             isValidCoord(coord[1], coord[0]);
     });
 
     if (validCoordinates.length < 2) {
@@ -94,8 +106,8 @@ async function captureRoute(req, res) {
     const boardingCoord = cleanedCoordinates[0];
 
     const capture = new CapturedRoute({
-      routeName,
-      company,
+      routeName: cleanRouteName,
+      company: cleanCompany,
       direction,
       boardingPoint: {
         type: 'Point',
@@ -120,8 +132,8 @@ async function captureRoute(req, res) {
     let mergeResult = null;
     try {
       mergeResult = await mergeSegment({
-        routeName,
-        company,
+        routeName: cleanRouteName,
+        company: cleanCompany,
         direction,
         coordinates: cleanedCoordinates,
         captureId: capture._id,
@@ -191,7 +203,7 @@ async function getNearbyRoutes(req, res) {
     const { lat, lng, radius = 500, limit = 10 } = req.query;
 
     // Validar parámetros requeridos
-    if (!lat || !lng) {
+    if (lat === undefined || lng === undefined) {
       return res.status(400).json({
         success: false,
         message: 'Parámetros requeridos: lat (latitud), lng (longitud)',
@@ -200,62 +212,80 @@ async function getNearbyRoutes(req, res) {
 
     const latitude = parseFloat(lat);
     const longitude = parseFloat(lng);
-    const searchRadius = parseInt(radius);
-    const maxResults = parseInt(limit);
+    const searchRadius = Math.min(Math.max(parseInt(radius, 10) || 500, 50), 5000);
+    const maxResults = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 50);
 
     // Validar rangos
-    if (isNaN(latitude) || isNaN(longitude) ||
-        latitude < -90 || latitude > 90 ||
-        longitude < -180 || longitude > 180) {
+    if (!isValidCoord(latitude, longitude)) {
       return res.status(400).json({
         success: false,
         message: 'Coordenadas fuera de rango. Lat: -90 a 90, Lng: -180 a 180',
       });
     }
 
-    /**
-     * Pipeline de agregación $geoNear
-     * 
-     * Etapa $geoNear debe ser la primera en el pipeline.
-     * 
-     * - near: Punto GeoJSON desde donde se mide la distancia
-     * - distanceField: Campo donde se almacena la distancia calculada
-     * - maxDistance: Radio máximo de búsqueda en metros
-     * - spherical: true = usar geometría esférica (obligatorio con 2dsphere)
-     * 
-     * MongoDB recorre el índice 2dsphere para encontrar los
-     * LineStrings cuyo punto más cercano esté dentro del radio.
-     */
-    const routes = await Route.aggregate([
-      {
-        $geoNear: {
-          near: {
-            type: 'Point',
-            coordinates: [longitude, latitude], // GeoJSON: [lng, lat]
+    const projectFields = {
+      nombre: 1,
+      codigo: 1,
+      operador: 1,
+      origen: 1,
+      destino: 1,
+      color: 1,
+      type: 1,
+      fare: 1,
+      ida: 1,
+      regreso: 1,
+      distance: { $round: ['$distance', 0] },
+    };
+
+    const [nearIda, nearRegreso] = await Promise.all([
+      Route.aggregate([
+        {
+          $geoNear: {
+            near: {
+              type: 'Point',
+              coordinates: [longitude, latitude], // GeoJSON: [lng, lat]
+            },
+            distanceField: 'distance',
+            maxDistance: searchRadius,
+            spherical: true,
+            key: 'ida.trazado',
+            query: { activa: true },
           },
-          distanceField: 'distance', // Distancia en metros
-          maxDistance: searchRadius,
-          spherical: true,
         },
-      },
-      // Ordenar por distancia ascendente (más cercana primero)
-      { $sort: { distance: 1 } },
-      // Limitar resultados
-      { $limit: maxResults },
-      // Proyectar campos relevantes (optimización de payload)
-      {
-        $project: {
-          name: 1,
-          company: 1,
-          type: 1,
-          geometry: 1,
-          stops: 1,
-          color: 1,
-          verified: 1,
-          distance: { $round: ['$distance', 0] }, // Redondear metros
+        { $limit: maxResults },
+        { $project: projectFields },
+      ]),
+      Route.aggregate([
+        {
+          $geoNear: {
+            near: {
+              type: 'Point',
+              coordinates: [longitude, latitude],
+            },
+            distanceField: 'distance',
+            maxDistance: searchRadius,
+            spherical: true,
+            key: 'regreso.trazado',
+            query: { activa: true },
+          },
         },
-      },
+        { $limit: maxResults },
+        { $project: projectFields },
+      ]),
     ]);
+
+    const byId = new Map();
+    for (const r of [...nearIda, ...nearRegreso]) {
+      const id = String(r._id);
+      const existing = byId.get(id);
+      if (!existing || r.distance < existing.distance) {
+        byId.set(id, r);
+      }
+    }
+
+    const routes = [...byId.values()]
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, maxResults);
 
     res.json({
       success: true,
@@ -281,22 +311,45 @@ async function getNearbyRoutes(req, res) {
  * 
  * Query params:
  * - type: 'official' | 'community'
- * - company: 'Sobrusa' | 'Coolitoral' | etc.
- * - verified: 'true' | 'false'
+ * - operador | company: 'Sobrusa' | 'Coolitoral' | etc.
+ * - includeInactive: 'true' para incluir inactivas
  */
 async function getAllRoutes(req, res) {
   try {
-    const { type, company, verified } = req.query;
+    const { type, operador, company, includeInactive, sistema, intermunicipal, includeGeometry } = req.query;
 
-    // Construir filtro dinámico
+    // Construir filtro dinámico (esquema v5 + dataset 2026)
     const filter = {};
-    if (type) filter.type = type;
-    if (company) filter.company = company;
-    if (verified !== undefined) filter.verified = verified === 'true';
+    if (includeInactive !== 'true') {
+      filter.activa = true;
+    }
+    if (typeof type === 'string' && ['official', 'community'].includes(type)) {
+      filter.type = type;
+    }
+    if (typeof sistema === 'string' && ['urbano', 'masivo'].includes(sistema)) {
+      filter.sistema = sistema;
+    }
+    if (intermunicipal === 'true') {
+      filter.esIntermunicipal = true;
+    } else if (intermunicipal === 'false') {
+      filter.esIntermunicipal = false;
+    }
+    const operatorFilter = typeof operador === 'string' ? operador : (typeof company === 'string' ? company : null);
+    if (operatorFilter) {
+      filter.operador = operatorFilter;
+    }
+
+    const baseFields =
+      'externalId nombre codigo descripcion operador sistema tipoVehiculo tipoRecorrido esIntermunicipal ' +
+      'distanciaKm tieneRegreso tieneParadas origen destino barriosCubiertos recorridoTextual ' +
+      'horarios metodosPago color geometriaOSM activa trazadoIncompleto type fare createdAt ' +
+      'actualizadoFuente resolucionPdf codigoAMBQ';
+
+    const selectFields = includeGeometry === 'true' ? `${baseFields} ida regreso paradas` : baseFields;
 
     const routes = await Route.find(filter)
-      .select('nombre codigo operador origen destino barriosCubiertos recorridoTextual color tieneParadas geometriaOSM ida regreso activa trazadoIncompleto type fare createdAt resolucionPdf codigoAMBQ')
-      .sort({ operador: 1, nombre: 1 }) 
+      .select(selectFields)
+      .sort({ operador: 1, codigo: 1, nombre: 1 })
       .lean();
 
     res.json({
@@ -358,8 +411,7 @@ async function getRouteAudit(req, res) {
  */
 async function getRouteById(req, res) {
   try {
-    const route = await Route.findById(req.params.id)
-      .populate('contributorId', 'name contributions');
+    const route = await Route.findById(req.params.id).lean();
 
     if (!route) {
       return res.status(404).json({
@@ -404,24 +456,25 @@ async function getRouteById(req, res) {
  */
 async function navigateRoute(req, res) {
   try {
-    const { origin, destination } = req.body;
+    const { origin, destination } = req.body || {};
 
-    if (!origin?.lat || !origin?.lng || !destination?.lat || !destination?.lng) {
+    const originLat = parseFloat(origin?.lat);
+    const originLng = parseFloat(origin?.lng);
+    const destLat = parseFloat(destination?.lat);
+    const destLng = parseFloat(destination?.lng);
+
+    if (!isValidCoord(originLat, originLng) || !isValidCoord(destLat, destLng)) {
       return res.status(400).json({
         success: false,
-        message: 'Se requieren origin { lat, lng } y destination { lat, lng }',
+        message: 'Se requieren coordenadas válidas en origin { lat, lng } y destination { lat, lng }',
       });
     }
 
-    const originLat = parseFloat(origin.lat);
-    const originLng = parseFloat(origin.lng);
-    const destLat = parseFloat(destination.lat);
-    const destLng = parseFloat(destination.lng);
-
     // Max walking distance to consider a route reachable (1.5 km)
     const MAX_WALK = 1500;
+    const defaultFare = getDefaultFare();
 
-    // 1) Find all routes whose LineString passes near the origin (check both ida and regreso)
+    // 1) Find all active routes whose LineString passes near the origin (check both ida and regreso)
     const nearOriginIda = await Route.aggregate([
       {
         $geoNear: {
@@ -430,9 +483,10 @@ async function navigateRoute(req, res) {
           maxDistance: MAX_WALK,
           spherical: true,
           key: 'ida.trazado',
+          query: { activa: true },
         },
       },
-      { $limit: 30 },
+      { $limit: 60 },
       { $addFields: { matchDirection: 'ida' } }
     ]);
 
@@ -444,9 +498,10 @@ async function navigateRoute(req, res) {
           maxDistance: MAX_WALK,
           spherical: true,
           key: 'regreso.trazado',
+          query: { activa: true },
         },
       },
-      { $limit: 30 },
+      { $limit: 60 },
       { $addFields: { matchDirection: 'regreso' } }
     ]);
 
@@ -493,10 +548,16 @@ async function navigateRoute(req, res) {
         route: {
           _id: route._id,
           name: route.nombre,
+          codigo: route.codigo || '',
+          descripcion: route.descripcion || '',
           company: route.operador,
           color: route.color,
           type: route.type,
-          fare: route.fare || 2600,
+          sistema: route.sistema || 'urbano',
+          esIntermunicipal: Boolean(route.esIntermunicipal),
+          horarios: route.horarios || null,
+          metodosPago: route.metodosPago || [],
+          fare: route.fare || defaultFare,
         },
         direction: dir,
         boardPoint: {
@@ -533,17 +594,197 @@ async function navigateRoute(req, res) {
       }
     }
 
+    // 3) If fewer than 3 direct routes, search 1-transfer combinations
+    let finalOptions = [...uniqueOptions];
+    if (uniqueOptions.length < 3) {
+      const [nearDestIda, nearDestVuelta] = await Promise.all([
+        Route.aggregate([
+          {
+            $geoNear: {
+              near: { type: 'Point', coordinates: [destLng, destLat] },
+              distanceField: 'distToDest',
+              maxDistance: MAX_WALK,
+              spherical: true,
+              key: 'ida.trazado',
+              query: { activa: true },
+            },
+          },
+          { $limit: 45 },
+          { $addFields: { matchDirection: 'ida' } },
+        ]),
+        Route.aggregate([
+          {
+            $geoNear: {
+              near: { type: 'Point', coordinates: [destLng, destLat] },
+              distanceField: 'distToDest',
+              maxDistance: MAX_WALK,
+              spherical: true,
+              key: 'regreso.trazado',
+              query: { activa: true },
+            },
+          },
+          { $limit: 45 },
+          { $addFields: { matchDirection: 'regreso' } },
+        ]),
+      ]);
+
+      const nearDest = [...nearDestIda, ...nearDestVuelta];
+
+      const originLegs = [];
+      for (const routeA of nearOrigin.slice(0, 30)) {
+        const dirA = routeA.matchDirection;
+        const coordsA = routeA[dirA]?.trazado?.coordinates;
+        if (!coordsA || coordsA.length < 2) continue;
+        const boardProj = closestPointOnLine([originLng, originLat], coordsA);
+        if (boardProj.distance > MAX_WALK) continue;
+        originLegs.push({ routeA, dirA, coordsA, boardProj });
+      }
+
+      const destLegs = [];
+      for (const routeB of nearDest.slice(0, 30)) {
+        const dirB = routeB.matchDirection;
+        const coordsB = routeB[dirB]?.trazado?.coordinates;
+        if (!coordsB || coordsB.length < 2) continue;
+        const alightProj = closestPointOnLine([destLng, destLat], coordsB);
+        if (alightProj.distance > MAX_WALK) continue;
+        destLegs.push({ routeB, dirB, coordsB, alightProj });
+      }
+
+      const transferCandidates = [];
+      for (const legA of originLegs) {
+        for (const legB of destLegs) {
+          if (String(legA.routeA._id) === String(legB.routeB._id)) continue;
+
+          const transfer = findBestTransfer(
+            legA.coordsA,
+            legA.boardProj.segmentIndex,
+            legB.coordsB,
+            legB.alightProj.segmentIndex
+          );
+
+          if (!transfer || transfer.distance > 450) continue;
+          if (transfer.idxA <= legA.boardProj.segmentIndex || transfer.idxB >= legB.alightProj.segmentIndex) {
+            continue;
+          }
+
+          const busSeg1 = sliceLineString(legA.coordsA, legA.boardProj, {
+            point: transfer.pointA,
+            segmentIndex: transfer.idxA,
+            fraction: 0,
+          });
+          const busSeg2 = sliceLineString(
+            legB.coordsB,
+            { point: transfer.pointB, segmentIndex: transfer.idxB, fraction: 0 },
+            legB.alightProj
+          );
+
+          const boardDist = legA.boardProj.distance;
+          const transferWalk = transfer.distance;
+          const alightDist = legB.alightProj.distance;
+          const totalWalk = boardDist + transferWalk + alightDist;
+          const walkMinutes = Math.ceil(totalWalk / 80);
+
+          const bus1Dist = lineStringLength(busSeg1);
+          const bus2Dist = lineStringLength(busSeg2);
+          const totalBusDist = bus1Dist + bus2Dist;
+          const bus1Min = Math.ceil(bus1Dist / 250);
+          const bus2Min = Math.ceil(bus2Dist / 250);
+          const totalBusMinutes = bus1Min + bus2Min;
+          const fareA = legA.routeA.fare || defaultFare;
+          const fareB = legB.routeB.fare || defaultFare;
+          const combinedFare = fareA + fareB;
+          const sistemasNoIntegrados = (legA.routeA.sistema || 'urbano') !== (legB.routeB.sistema || 'urbano');
+
+          transferCandidates.push({
+            isTransfer: true,
+            route: {
+              _id: legA.routeA._id,
+              name: legA.routeA.nombre,
+              codigo: legA.routeA.codigo || '',
+              descripcion: legA.routeA.descripcion || '',
+              company: legA.routeA.operador,
+              color: legA.routeA.color,
+              type: legA.routeA.type,
+              sistema: legA.routeA.sistema || 'urbano',
+              esIntermunicipal: Boolean(legA.routeA.esIntermunicipal),
+              horarios: legA.routeA.horarios || null,
+              metodosPago: legA.routeA.metodosPago || [],
+              fare: combinedFare,
+            },
+            direction: legA.dirA,
+            boardPoint: {
+              coordinates: legA.boardProj.point,
+              walkDistance: Math.round(boardDist),
+              walkMinutes: Math.ceil(boardDist / 80),
+            },
+            alightPoint: {
+              coordinates: legB.alightProj.point,
+              walkDistance: Math.round(alightDist),
+              walkMinutes: Math.ceil(alightDist / 80),
+            },
+            busSegment: busSeg1,
+            totalWalkDistance: Math.round(totalWalk),
+            totalWalkMinutes: walkMinutes,
+            busDistance: Math.round(totalBusDist),
+            busMinutes: totalBusMinutes,
+            totalMinutes: walkMinutes + totalBusMinutes + 4,
+            score: totalWalk * 1.5 + totalBusDist * 0.3 + 900,
+            transfer: {
+              transferPoint: transfer.pointA,
+              secondBoardPoint: transfer.pointB,
+              walkDistance: Math.round(transferWalk),
+              walkMinutes: Math.ceil(transferWalk / 80),
+              sistemasNoIntegrados,
+              secondRoute: {
+                _id: legB.routeB._id,
+                name: legB.routeB.nombre,
+                codigo: legB.routeB.codigo || '',
+                descripcion: legB.routeB.descripcion || '',
+                company: legB.routeB.operador,
+                color: legB.routeB.color,
+                type: legB.routeB.type,
+                sistema: legB.routeB.sistema || 'urbano',
+                esIntermunicipal: Boolean(legB.routeB.esIntermunicipal),
+                horarios: legB.routeB.horarios || null,
+                metodosPago: legB.routeB.metodosPago || [],
+                fare: fareB,
+              },
+              secondDirection: legB.dirB,
+              secondBusSegment: busSeg2,
+              secondBusDistance: Math.round(bus2Dist),
+              secondBusMinutes: bus2Min,
+            },
+          });
+        }
+      }
+
+      transferCandidates.sort((a, b) => a.score - b.score);
+      const uniqueTransfers = [];
+      const seenTransfers = new Set();
+      for (const tc of transferCandidates) {
+        const key = `${tc.route._id}-${tc.direction}->${tc.transfer.secondRoute._id}-${tc.transfer.secondDirection}`;
+        if (!seenTransfers.has(key)) {
+          seenTransfers.add(key);
+          uniqueTransfers.push(tc);
+        }
+      }
+
+      finalOptions = [...uniqueOptions, ...uniqueTransfers];
+      finalOptions.sort((a, b) => a.score - b.score);
+    }
+
     // Mark the best option
-    if (uniqueOptions.length > 0) {
-      uniqueOptions[0].isOptimal = true;
+    if (finalOptions.length > 0) {
+      finalOptions.forEach((o) => { delete o.isOptimal; });
+      finalOptions[0].isOptimal = true;
     }
 
     res.json({
       success: true,
-      count: uniqueOptions.length,
+      count: finalOptions.length,
       origin: { lat: originLat, lng: originLng },
       destination: { lat: destLat, lng: destLng },
-      options: uniqueOptions.slice(0, 5), // Max 5 options
+      options: finalOptions.slice(0, 5), // Max 5 options
     });
   } catch (error) {
     console.error('Error en navegación:', error);
@@ -570,6 +811,34 @@ function haversineM(lat1, lon1, lat2, lon2) {
       Math.cos((lat2 * Math.PI) / 180) *
       Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/**
+ * Find the closest transfer pair between route A (from startSegA+1 onward)
+ * and route B (from index 0 up to endSegB-1).
+ */
+function findBestTransfer(coordsA, startSegA, coordsB, endSegB) {
+  if (!Array.isArray(coordsA) || !Array.isArray(coordsB)) return null;
+  const startA = startSegA + 1;
+  const endA = coordsA.length - 1;
+  const endB = Math.min(endSegB - 1, coordsB.length - 2);
+  if (startA > endA || endB < 0) return null;
+
+  const strideA = Math.max(1, Math.floor((endA - startA + 1) / 45));
+  const strideB = Math.max(1, Math.floor((endB + 1) / 45));
+
+  let best = null;
+  for (let i = startA; i <= endA; i += strideA) {
+    const pA = coordsA[i];
+    for (let j = 0; j <= endB; j += strideB) {
+      const pB = coordsB[j];
+      const dist = haversineM(pA[1], pA[0], pB[1], pB[0]);
+      if (!best || dist < best.distance) {
+        best = { idxA: i, idxB: j, distance: dist, pointA: pA, pointB: pB };
+      }
+    }
+  }
+  return best;
 }
 
 /**
@@ -703,7 +972,7 @@ async function createRoute(req, res) {
       operador,
       color: color || getCompanyColor(operador),
       type: 'official',
-      fare: fare || 2600,
+      fare: fare || getDefaultFare(),
       fuente: 'manual',
       activa: true,
       trazadoIncompleto: false,

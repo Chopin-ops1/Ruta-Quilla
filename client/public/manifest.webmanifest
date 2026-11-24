@@ -1,0 +1,18 @@
+{
+  "name": "RutaQuilla — Rutas de Buses Barranquilla",
+  "short_name": "RutaQuilla",
+  "description": "Encuentra rutas de buses del transporte público colectivo en Barranquilla y su área metropolitana.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070C17",
+  "theme_color": "#F59E0B",
+  "lang": "es-CO",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -9,8 +9,10 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { X, Mail, Lock, User, Eye, EyeOff, Bus, Shield, ArrowRight, Loader2, MapPin, CheckSquare, Square } from 'lucide-react';
+import { X, Mail, Lock, User, Eye, EyeOff, Bus, Shield, ArrowRight, ArrowLeft, KeyRound, Loader2, CheckSquare, Square } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { usersAPI } from '../services/api';
 
 function FloatingInput({ id, label, type = 'text', value, onChange, icon: Icon, rightElement, autoFocus }) {
   const [focused, setFocused] = useState(false);
@@ -23,14 +25,14 @@ function FloatingInput({ id, label, type = 'text', value, onChange, icon: Icon, 
         className="relative flex items-center rounded-2xl transition-all duration-300"
         style={{
           background: focused
-            ? 'rgba(6, 182, 212, 0.06)'
-            : 'rgba(255,255,255,0.03)',
-          border: `1.5px solid ${focused ? 'rgba(6,182,212,0.6)' : 'rgba(255,255,255,0.1)'}`,
+            ? 'rgba(6, 182, 212, 0.08)'
+            : 'var(--subtle-bg)',
+          border: `1.5px solid ${focused ? 'var(--accent-cyan)' : 'var(--subtle-border-strong)'}`,
           boxShadow: focused ? '0 0 0 4px rgba(6,182,212,0.08)' : 'none',
         }}
       >
         {Icon && (
-          <div className="absolute left-4" style={{ color: focused ? '#06B6D4' : '#64748B', transition: 'color 0.2s' }}>
+          <div className="absolute left-4" style={{ color: focused ? 'var(--accent-cyan)' : 'var(--text-muted)', transition: 'color 0.2s' }}>
             <Icon size={16} />
           </div>
         )}
@@ -47,7 +49,7 @@ function FloatingInput({ id, label, type = 'text', value, onChange, icon: Icon, 
             padding: '20px 16px 8px 44px',
             paddingRight: rightElement ? '48px' : '16px',
             fontSize: '14px',
-            color: '#F1F5F9',
+            color: 'var(--text-primary)',
             fontFamily: 'Inter, sans-serif',
           }}
           placeholder=" "
@@ -61,7 +63,7 @@ function FloatingInput({ id, label, type = 'text', value, onChange, icon: Icon, 
             top: isActive ? '8px' : '50%',
             transform: isActive ? 'none' : 'translateY(-50%)',
             fontSize: isActive ? '10px' : '14px',
-            color: isActive ? (focused ? '#06B6D4' : '#94A3B8') : '#64748B',
+            color: isActive ? (focused ? 'var(--accent-cyan)' : 'var(--text-secondary)') : 'var(--text-muted)',
             transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
             pointerEvents: 'none',
             fontWeight: isActive ? '600' : '400',
@@ -110,7 +112,17 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
   const [resendCooldown, setResendCooldown] = useState(0);
   const codeRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
 
+  // Password reset steps
+  const [forgotStep, setForgotStep] = useState(false);
+  const [resetStep, setResetStep] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+
   const { login, register, verifyEmail: verifyEmailFn, resendCode: resendCodeFn, error: authError } = useAuth();
+  const toast = useToast();
 
   useEffect(() => {
     if (!isOpen) {
@@ -119,6 +131,9 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
       setAcceptedTerms(false);
       setVerifyStep(false); setVerifyEmailAddr('');
       setVerifyCode(['', '', '', '', '', '']);
+      setForgotStep(false); setResetStep(false);
+      setResetEmail(''); setResetCode(''); setNewPassword('');
+      setShowNewPassword(false);
     }
     if (isOpen && reason === 'limit') {
       setMode('register');
@@ -140,9 +155,19 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
     e.preventDefault();
     setLocalError('');
 
-    if (mode === 'register' && !acceptedTerms) {
-      setLocalError('Debes aceptar la Política de Privacidad y los Términos');
-      return;
+    if (mode === 'register') {
+      if (!name.trim()) {
+        setLocalError('El nombre es requerido');
+        return;
+      }
+      if (password.length < 8) {
+        setLocalError('La contraseña debe tener al menos 8 caracteres');
+        return;
+      }
+      if (!acceptedTerms) {
+        setLocalError('Debes aceptar la Política de Privacidad y los Términos');
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -159,7 +184,6 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
         }
         onClose();
       } else {
-        if (!name.trim()) { setLocalError('El nombre es requerido'); setIsSubmitting(false); return; }
         const result = await register(name, email, password);
         // If requires verification, show verify step
         if (result?.data?.requiresVerification) {
@@ -175,6 +199,57 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
       setLocalError(err.message || 'Error de autenticación');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault();
+    setLocalError('');
+    const targetEmail = (resetEmail || email).trim();
+    if (!targetEmail) {
+      setLocalError('Ingresa tu correo electrónico');
+      return;
+    }
+    setResetLoading(true);
+    try {
+      await usersAPI.forgotPassword(targetEmail);
+      setResetEmail(targetEmail);
+      setForgotStep(false);
+      setResetStep(true);
+      toast.info('Si el correo está registrado, enviamos un código de recuperación');
+    } catch (err) {
+      setLocalError(err.message || 'No se pudo enviar el código de recuperación');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleResetSubmit = async (e) => {
+    e.preventDefault();
+    setLocalError('');
+    const cleanCode = resetCode.trim();
+    if (cleanCode.length !== 6) {
+      setLocalError('Ingresa el código de 6 dígitos enviado a tu correo');
+      return;
+    }
+    if (newPassword.length < 8) {
+      setLocalError('La nueva contraseña debe tener al menos 8 caracteres');
+      return;
+    }
+    setResetLoading(true);
+    try {
+      await usersAPI.resetPassword(resetEmail, cleanCode, newPassword);
+      toast.success('Contraseña actualizada. Ya puedes iniciar sesión.');
+      setResetStep(false);
+      setForgotStep(false);
+      setResetCode('');
+      setNewPassword('');
+      setEmail(resetEmail);
+      setMode('login');
+    } catch (err) {
+      setLocalError(err.message || 'No se pudo restablecer la contraseña');
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -270,9 +345,11 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
         style={{
           maxWidth: 440,
           borderRadius: 28,
-          background: 'linear-gradient(145deg, rgba(17,24,39,0.97) 0%, rgba(11,17,32,0.99) 100%)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: '0 40px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05) inset',
+          background: 'var(--panel-bg)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: '1px solid var(--subtle-border-strong)',
+          boxShadow: '0 40px 80px var(--shadow-color), 0 0 0 1px var(--subtle-border) inset',
           overflow: 'hidden',
         }}
       >
@@ -290,25 +367,25 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
             style={{
               position: 'absolute', top: 16, right: 16, zIndex: 10,
               width: 32, height: 32, borderRadius: 10,
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              background: 'var(--subtle-bg)',
+              border: '1px solid var(--subtle-border)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: '#94A3B8',
+              cursor: 'pointer', color: 'var(--text-secondary)',
               transition: 'all 0.2s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#F1F5F9'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#94A3B8'; }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--subtle-bg-hover)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--subtle-bg)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
           >
             <X size={15} />
           </button>
         )}
 
         {/* Reason banner (when limit reached) */}
-        {reasonData.title && (
+        {reasonData.title && !forgotStep && !resetStep && !verifyStep && (
           <div style={{
             padding: '16px 36px',
             background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(6,182,212,0.08))',
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            borderBottom: '1px solid var(--subtle-border)',
             textAlign: 'center',
           }}>
             <div style={{ fontSize: 28, marginBottom: 6 }}>{reasonData.icon}</div>
@@ -318,39 +395,53 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
             }}>
               {reasonData.title}
             </p>
-            <p style={{ fontSize: 12, color: '#94A3B8', margin: 0 }}>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0 }}>
               {reasonData.subtitle}
             </p>
           </div>
         )}
 
         {/* Hero section */}
-        <div style={{ padding: reasonData.title ? '20px 36px 16px' : '36px 36px 24px', textAlign: 'center' }}>
+        <div style={{ padding: reasonData.title && !forgotStep && !resetStep && !verifyStep ? '20px 36px 16px' : '36px 36px 24px', textAlign: 'center' }}>
           {/* Logo */}
-          {!reasonData.title && (
+          {(!reasonData.title || forgotStep || resetStep || verifyStep) && (
             <div style={{
               width: 68, height: 68, borderRadius: 20, margin: '0 auto 20px',
               background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #92400E 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 12px 32px rgba(245,158,11,0.35), 0 0 0 1px rgba(245,158,11,0.2) inset',
             }}>
-              <Bus size={32} color="#000" strokeWidth={2.5} />
+              {forgotStep || resetStep ? (
+                <KeyRound size={30} color="#000" strokeWidth={2.4} />
+              ) : (
+                <Bus size={32} color="#000" strokeWidth={2.5} />
+              )}
             </div>
           )}
 
           <h2 style={{
             fontFamily: 'Outfit, sans-serif',
             fontSize: reasonData.title ? 22 : 26, fontWeight: 700,
-            color: '#F1F5F9', marginBottom: 6, lineHeight: 1.2,
+            color: 'var(--text-primary)', marginBottom: 6, lineHeight: 1.2,
           }}>
-            {verifyStep ? 'Verifica tu email' : (mode === 'login' ? 'Bienvenido de vuelta' : 'Crea tu cuenta')}
-          </h2>
-          <p style={{ fontSize: 13, color: '#64748B', lineHeight: 1.5 }}>
             {verifyStep
-              ? <span>Enviamos un código a <strong style={{ color: '#06B6D4' }}>{verifyEmail}</strong></span>
-              : (mode === 'login'
-                ? 'Conecta con el transporte de Barranquilla'
-                : 'Únete a la comunidad de transporte colectivo')
+              ? 'Verifica tu email'
+              : forgotStep
+                ? 'Recupera tu contraseña'
+                : resetStep
+                  ? 'Nueva contraseña'
+                  : (mode === 'login' ? 'Bienvenido de vuelta' : 'Crea tu cuenta')}
+          </h2>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+            {verifyStep
+              ? <span>Enviamos un código a <strong style={{ color: 'var(--accent-cyan)' }}>{verifyEmail}</strong></span>
+              : forgotStep
+                ? 'Te enviaremos un código de 6 dígitos para restablecer tu acceso'
+                : resetStep
+                  ? <span>Ingresa el código enviado a <strong style={{ color: 'var(--accent-cyan)' }}>{resetEmail}</strong></span>
+                  : (mode === 'login'
+                    ? 'Conecta con el transporte de Barranquilla'
+                    : 'Únete a la comunidad de transporte colectivo')
             }
           </p>
         </div>
@@ -377,16 +468,16 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
                   autoFocus={i === 0}
                   style={{
                     width: 48, height: 56, borderRadius: 14,
-                    background: digit ? 'rgba(245,158,11,0.08)' : 'rgba(255,255,255,0.04)',
-                    border: `2px solid ${digit ? 'rgba(245,158,11,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                    background: digit ? 'rgba(245,158,11,0.1)' : 'var(--subtle-bg)',
+                    border: `2px solid ${digit ? 'rgba(245,158,11,0.5)' : 'var(--subtle-border-strong)'}`,
                     color: '#F59E0B', fontSize: 24, fontWeight: 800,
                     textAlign: 'center', outline: 'none',
                     fontFamily: "'Courier New', monospace",
                     transition: 'all 0.2s',
                     caretColor: '#F59E0B',
                   }}
-                  onFocus={e => { e.target.style.borderColor = 'rgba(6,182,212,0.7)'; e.target.style.boxShadow = '0 0 0 4px rgba(6,182,212,0.1)'; }}
-                  onBlur={e => { e.target.style.borderColor = digit ? 'rgba(245,158,11,0.5)' : 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
+                  onFocus={e => { e.target.style.borderColor = 'var(--accent-cyan)'; e.target.style.boxShadow = '0 0 0 4px rgba(6,182,212,0.1)'; }}
+                  onBlur={e => { e.target.style.borderColor = digit ? 'rgba(245,158,11,0.5)' : 'var(--subtle-border-strong)'; e.target.style.boxShadow = 'none'; }}
                 />
               ))}
             </div>
@@ -399,8 +490,8 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
                 border: '1px solid rgba(239,68,68,0.2)',
                 display: 'flex', alignItems: 'center', gap: 8,
               }}>
-                <Shield size={14} style={{ color: '#F87171', flexShrink: 0 }} />
-                <span style={{ fontSize: 12, color: '#F87171' }}>{errorMsg}</span>
+                <Shield size={14} style={{ color: '#EF4444', flexShrink: 0 }} />
+                <span style={{ fontSize: 12, color: '#EF4444' }}>{errorMsg}</span>
               </div>
             )}
 
@@ -412,8 +503,8 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
                 width: '100%', padding: '14px', borderRadius: 14,
                 background: verifyCode.join('').length === 6
                   ? 'linear-gradient(135deg, #F59E0B, #D97706)'
-                  : 'rgba(255,255,255,0.06)',
-                color: verifyCode.join('').length === 6 ? '#000' : '#475569',
+                  : 'var(--subtle-bg)',
+                color: verifyCode.join('').length === 6 ? '#000' : 'var(--text-muted)',
                 fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 boxShadow: verifyCode.join('').length === 6 ? '0 6px 20px rgba(245,158,11,0.35)' : 'none',
@@ -426,7 +517,7 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
 
             {/* Resend code */}
             <div style={{ textAlign: 'center', marginTop: 16 }}>
-              <p style={{ fontSize: 12, color: '#475569', margin: '0 0 8px' }}>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 8px' }}>
                 ¿No recibiste el código?
               </p>
               <button
@@ -434,7 +525,7 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
                 disabled={resendCooldown > 0}
                 style={{
                   background: 'none', border: 'none', cursor: resendCooldown > 0 ? 'default' : 'pointer',
-                  color: resendCooldown > 0 ? '#334155' : '#06B6D4',
+                  color: resendCooldown > 0 ? 'var(--text-muted)' : 'var(--accent-cyan)',
                   fontSize: 13, fontWeight: 600,
                   transition: 'color 0.2s',
                 }}
@@ -443,15 +534,155 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
               </button>
             </div>
           </div>
+        ) : forgotStep ? (
+          /* === FORGOT PASSWORD STEP 1: EMAIL === */
+          <form onSubmit={handleForgotSubmit} style={{ padding: '0 36px 32px' }}>
+            <FloatingInput
+              id="forgot-email-input"
+              label="Correo electrónico"
+              type="email"
+              value={resetEmail}
+              onChange={e => setResetEmail(e.target.value)}
+              icon={Mail}
+              autoFocus
+            />
+
+            {errorMsg && (
+              <div className="animate-fade-in" style={{
+                marginTop: 12, padding: '10px 14px',
+                background: 'rgba(239,68,68,0.08)',
+                border: '1px solid rgba(239,68,68,0.25)',
+                borderRadius: 12, fontSize: 12, color: '#EF4444',
+                display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                <span>⚠️</span> {errorMsg}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={resetLoading}
+              style={{
+                width: '100%', marginTop: 18, padding: '14px 0',
+                borderRadius: 14, border: 'none',
+                cursor: resetLoading ? 'not-allowed' : 'pointer',
+                background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+                color: '#000', fontSize: 14, fontWeight: 700,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                boxShadow: '0 8px 24px rgba(245,158,11,0.35)',
+              }}
+            >
+              {resetLoading ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
+              {resetLoading ? 'Enviando...' : 'Enviar código de recuperación'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setForgotStep(false); setLocalError(''); }}
+              style={{
+                width: '100%', marginTop: 12, padding: '10px',
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              }}
+            >
+              <ArrowLeft size={14} /> Volver a iniciar sesión
+            </button>
+          </form>
+        ) : resetStep ? (
+          /* === FORGOT PASSWORD STEP 2: CODE + NEW PASSWORD === */
+          <form onSubmit={handleResetSubmit} style={{ padding: '0 36px 32px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <FloatingInput
+                id="reset-code-input"
+                label="Código de 6 dígitos"
+                type="text"
+                value={resetCode}
+                onChange={e => setResetCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                icon={Shield}
+                autoFocus
+              />
+
+              <FloatingInput
+                id="reset-password-input"
+                label="Nueva contraseña (mín. 8 caracteres)"
+                type={showNewPassword ? 'text' : 'password'}
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                icon={Lock}
+                rightElement={
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 4 }}
+                  >
+                    {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                }
+              />
+            </div>
+
+            {errorMsg && (
+              <div className="animate-fade-in" style={{
+                marginTop: 12, padding: '10px 14px',
+                background: 'rgba(239,68,68,0.08)',
+                border: '1px solid rgba(239,68,68,0.25)',
+                borderRadius: 12, fontSize: 12, color: '#EF4444',
+                display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                <span>⚠️</span> {errorMsg}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={resetLoading}
+              style={{
+                width: '100%', marginTop: 18, padding: '14px 0',
+                borderRadius: 14, border: 'none',
+                cursor: resetLoading ? 'not-allowed' : 'pointer',
+                background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+                color: '#000', fontSize: 14, fontWeight: 700,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                boxShadow: '0 8px 24px rgba(245,158,11,0.35)',
+              }}
+            >
+              {resetLoading ? <Loader2 size={16} className="animate-spin" /> : <KeyRound size={16} />}
+              {resetLoading ? 'Actualizando...' : 'Guardar nueva contraseña'}
+            </button>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12 }}>
+              <button
+                type="button"
+                onClick={() => { setResetStep(false); setForgotStep(true); setLocalError(''); }}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600,
+                }}
+              >
+                Cambiar correo
+              </button>
+              <button
+                type="button"
+                onClick={() => { setResetStep(false); setForgotStep(false); setLocalError(''); }}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: 'var(--accent-cyan)', fontSize: 12, fontWeight: 600,
+                }}
+              >
+                Iniciar sesión
+              </button>
+            </div>
+          </form>
         ) : (
         <>
         {/* Mode toggle pills */}
         <div style={{ padding: '0 36px 24px' }}>
           <div style={{
             display: 'flex',
-            background: 'rgba(255,255,255,0.04)',
+            background: 'var(--subtle-bg)',
             borderRadius: 14, padding: 4,
-            border: '1px solid rgba(255,255,255,0.07)',
+            border: '1px solid var(--subtle-border)',
           }}>
             {[
               { id: 'login', label: 'Iniciar sesión' },
@@ -465,7 +696,7 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
                   fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer',
                   transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)',
                   background: mode === m.id ? 'linear-gradient(135deg, #F59E0B, #D97706)' : 'transparent',
-                  color: mode === m.id ? '#000' : '#64748B',
+                  color: mode === m.id ? '#000' : 'var(--text-muted)',
                   boxShadow: mode === m.id ? '0 4px 12px rgba(245,158,11,0.3)' : 'none',
                 }}
               >
@@ -510,7 +741,7 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  style={{ color: '#64748B', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 4 }}
+                  style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 4 }}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -518,11 +749,37 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
             />
           </div>
 
+          {/* Password hint / Forgot password link */}
+          {mode === 'register' ? (
+            <p style={{
+              margin: '4px 0 0',
+              fontSize: 11,
+              color: password.length >= 8 ? '#10B981' : 'var(--text-muted)',
+              transition: 'color 0.2s',
+            }}>
+              {password.length >= 8 ? '✓ Contraseña válida (mínimo 8 caracteres)' : 'Mínimo 8 caracteres'}
+            </p>
+          ) : (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+              <button
+                type="button"
+                onClick={() => { setResetEmail(email); setLocalError(''); setForgotStep(true); }}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: 11.5, color: 'var(--accent-cyan)', fontWeight: 600,
+                  padding: '2px 0',
+                }}
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
+          )}
+
           {/* Legal checkbox (only for register) */}
           {mode === 'register' && (
             <div
               style={{
-                marginTop: 16, display: 'flex', alignItems: 'flex-start', gap: 10,
+                marginTop: 14, display: 'flex', alignItems: 'flex-start', gap: 10,
                 cursor: 'pointer',
               }}
               onClick={() => setAcceptedTerms(!acceptedTerms)}
@@ -531,20 +788,20 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
                 {acceptedTerms ? (
                   <CheckSquare size={18} color="#F59E0B" />
                 ) : (
-                  <Square size={18} color="#475569" />
+                  <Square size={18} color="var(--text-muted)" />
                 )}
               </div>
-              <p style={{ fontSize: 11.5, color: '#94A3B8', lineHeight: 1.5, margin: 0 }}>
+              <p style={{ fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
                 Acepto la{' '}
                 <span
-                  style={{ color: '#06B6D4', cursor: 'pointer', textDecoration: 'underline' }}
+                  style={{ color: 'var(--accent-cyan)', cursor: 'pointer', textDecoration: 'underline' }}
                   onClick={(e) => { e.stopPropagation(); onShowLegal?.('privacy'); }}
                 >
                   Política de Privacidad
                 </span>{' '}
                 y los{' '}
                 <span
-                  style={{ color: '#06B6D4', cursor: 'pointer', textDecoration: 'underline' }}
+                  style={{ color: 'var(--accent-cyan)', cursor: 'pointer', textDecoration: 'underline' }}
                   onClick={(e) => { e.stopPropagation(); onShowLegal?.('terms'); }}
                 >
                   Términos y Condiciones
@@ -560,7 +817,7 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
               marginTop: 14, padding: '10px 14px',
               background: 'rgba(239,68,68,0.08)',
               border: '1px solid rgba(239,68,68,0.25)',
-              borderRadius: 12, fontSize: 12, color: '#FCA5A5',
+              borderRadius: 12, fontSize: 12, color: '#EF4444',
               display: 'flex', alignItems: 'center', gap: 8,
             }}>
               <span>⚠️</span> {errorMsg}
@@ -579,7 +836,7 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
               background: (isSubmitting || (mode === 'register' && !acceptedTerms))
                 ? 'rgba(245,158,11,0.25)'
                 : 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-              color: (isSubmitting || (mode === 'register' && !acceptedTerms)) ? '#666' : '#000',
+              color: (isSubmitting || (mode === 'register' && !acceptedTerms)) ? 'var(--text-muted)' : '#000',
               fontSize: 14, fontWeight: 700,
               fontFamily: 'Inter, sans-serif',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -598,19 +855,19 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
           </button>
 
           {/* Footer with legal links */}
-          <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
+          <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--subtle-border)', textAlign: 'center' }}>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
               <button
                 type="button"
                 onClick={() => onShowLegal?.('privacy')}
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer',
-                  fontSize: 11, color: '#475569', fontWeight: 500,
+                  fontSize: 11, color: 'var(--text-muted)', fontWeight: 500,
                   display: 'flex', alignItems: 'center', gap: 4,
                   transition: 'color 0.2s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.color = '#06B6D4'; }}
-                onMouseLeave={e => { e.currentTarget.style.color = '#475569'; }}
+                onMouseEnter={e => { e.currentTarget.style.color = 'var(--accent-cyan)'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; }}
               >
                 <Shield size={11} /> Privacidad
               </button>
@@ -619,11 +876,11 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
                 onClick={() => onShowLegal?.('terms')}
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer',
-                  fontSize: 11, color: '#475569', fontWeight: 500,
+                  fontSize: 11, color: 'var(--text-muted)', fontWeight: 500,
                   transition: 'color 0.2s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.color = '#06B6D4'; }}
-                onMouseLeave={e => { e.currentTarget.style.color = '#475569'; }}
+                onMouseEnter={e => { e.currentTarget.style.color = 'var(--accent-cyan)'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; }}
               >
                 Términos
               </button>

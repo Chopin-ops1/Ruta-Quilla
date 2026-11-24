@@ -8,7 +8,350 @@
  * - Datos de comercios patrocinados (publicidad)
  */
 
+const axios = require('axios');
 const Route = require('../models/RouteModel');
+const { isValidCoord } = require('../middleware/security');
+
+const BQ_CENTER = { lat: 10.9685, lng: -74.7813 };
+const BQ_BBOX = { west: -75.15, south: 10.78, east: -74.68, north: 11.12 };
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const POI_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+const MAX_CACHE_ENTRIES = 500;
+const MAX_POI_CACHE_ENTRIES = 200;
+
+const OVERPASS_MIRRORS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+];
+
+const geocodeCache = new Map();
+const reverseCache = new Map();
+const poiCache = new Map();
+
+function getCachedValue(cache, key, ttlMs = CACHE_TTL_MS) {
+  const entry = cache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > ttlMs) {
+    cache.delete(key);
+    return null;
+  }
+  // Refresh LRU recency
+  cache.delete(key);
+  cache.set(key, entry);
+  return entry.data;
+}
+
+function setCachedValue(cache, key, data, maxEntries = MAX_CACHE_ENTRIES) {
+  if (cache.size >= maxEntries) {
+    const oldestKey = cache.keys().next().value;
+    cache.delete(oldestKey);
+  }
+  cache.set(key, { data, timestamp: Date.now() });
+}
+
+/**
+ * Normaliza consultas con nomenclatura colombiana para mejorar coincidencias en OSM/Photon.
+ */
+function normalizeBarranquillaQuery(raw) {
+  if (typeof raw !== 'string') return '';
+  return raw
+    .trim()
+    .replace(/\b(?:cra|kr|k)\.?(?=\s|$|\d)/gi, 'Carrera')
+    .replace(/\b(?:cll|cl)\.?(?=\s|$|\d)/gi, 'Calle')
+    .replace(/\bav\.?(?=\s|$)/gi, 'Avenida')
+    .replace(/\b(?:diag|dg)\.?(?=\s|$|\d)/gi, 'Diagonal')
+    .replace(/\b(?:transv|tv)\.?(?=\s|$|\d)/gi, 'Transversal')
+    .replace(/[#-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function formatPhotonFeature(feature) {
+  const props = feature?.properties || {};
+  const coords = feature?.geometry?.coordinates || [];
+  const lng = Number(coords[0]);
+  const lat = Number(coords[1]);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+  const streetLine = props.street
+    ? `${props.street}${props.housenumber ? ` #${props.housenumber}` : ''}`
+    : '';
+  const primary = props.name || streetLine || props.district || props.city || 'Barranquilla';
+  const secondaryParts = [];
+  if (streetLine && props.name && props.name !== props.street) {
+    secondaryParts.push(streetLine);
+  }
+  const area = props.locality || props.district;
+  if (area && area !== primary) secondaryParts.push(area);
+  const city = props.city || props.county;
+  if (city && city !== primary && !secondaryParts.includes(city)) secondaryParts.push(city);
+
+  return {
+    displayName: primary,
+    subtitle: secondaryParts.join(', ') || 'Barranquilla, Atlántico',
+    lat,
+    lng,
+    type: props.osm_value || props.type || 'place',
+    category: props.osm_key || 'place',
+    source: 'photon',
+  };
+}
+
+function formatNominatimItem(item) {
+  const lat = parseFloat(item?.lat);
+  const lng = parseFloat(item?.lon);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+  const addr = item.address || {};
+  const road = addr.road
+    ? `${addr.road}${addr.house_number ? ` #${addr.house_number}` : ''}`
+    : '';
+  const primary = (item.name && item.name !== addr.road ? item.name : road) ||
+    item.display_name?.split(',')[0]?.trim() ||
+    'Barranquilla';
+  const secondaryParts = [];
+  if (road && primary !== road) secondaryParts.push(road);
+  const area = addr.neighbourhood || addr.suburb;
+  if (area && area !== primary) secondaryParts.push(area);
+  const city = addr.city || addr.town || 'Barranquilla';
+  if (city && city !== primary && !secondaryParts.includes(city)) secondaryParts.push(city);
+
+  return {
+    displayName: primary,
+    subtitle: secondaryParts.join(', ') || 'Barranquilla, Atlántico',
+    lat,
+    lng,
+    type: item.type || 'place',
+    category: item.class || 'place',
+    source: 'nominatim',
+  };
+}
+
+function dedupeResults(items) {
+  const deduped = [];
+  const seen = new Set();
+  for (const item of items) {
+    if (!item || !isValidCoord(item.lat, item.lng, true)) continue;
+    const key = `${item.displayName.toLowerCase()}|${item.lat.toFixed(3)},${item.lng.toFixed(3)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(item);
+    if (deduped.length >= 6) break;
+  }
+  return deduped;
+}
+
+/**
+ * GET /api/maps/geocode?q=...
+ * Autocompletado geocodificado con caché LRU y cascada gratuita (Geoapify opcional -> Photon -> Nominatim).
+ */
+async function geocodePlaces(req, res) {
+  try {
+    const rawQ = req.query.q;
+    if (typeof rawQ !== 'string') {
+      return res.status(400).json({ success: false, message: 'Parámetro q requerido' });
+    }
+
+    const trimmed = rawQ.trim();
+    if (trimmed.length < 2 || trimmed.length > 120) {
+      return res.status(400).json({
+        success: false,
+        message: 'La búsqueda debe tener entre 2 y 120 caracteres',
+      });
+    }
+
+    const normalized = normalizeBarranquillaQuery(trimmed);
+    const cacheKey = normalized.toLowerCase();
+    const cached = getCachedValue(geocodeCache, cacheKey);
+    if (cached) {
+      return res.json({ success: true, cached: true, data: cached });
+    }
+
+    let results = [];
+    const headers = { 'User-Agent': 'RutaQuilla/2.0 (https://rutaquilla.me)' };
+
+    // 1. Geoapify (opcional si hay API key configurada)
+    if (process.env.GEOAPIFY_API_KEY) {
+      try {
+        const resp = await axios.get('https://api.geoapify.com/v1/geocode/autocomplete', {
+          params: {
+            text: normalized,
+            apiKey: process.env.GEOAPIFY_API_KEY,
+            lang: 'es',
+            limit: 6,
+            filter: `rect:${BQ_BBOX.west},${BQ_BBOX.south},${BQ_BBOX.east},${BQ_BBOX.north}`,
+            bias: `proximity:${BQ_CENTER.lng},${BQ_CENTER.lat}`,
+          },
+          timeout: 5000,
+          headers,
+        });
+        const features = resp.data?.features || [];
+        results = dedupeResults(features.map((f) => {
+          const p = f.properties || {};
+          const [lng, lat] = f.geometry?.coordinates || [];
+          return {
+            displayName: p.name || p.address_line1 || p.formatted || normalized,
+            subtitle: p.address_line2 || p.suburb || p.city || 'Barranquilla, Atlántico',
+            lat: Number(lat),
+            lng: Number(lng),
+            type: p.result_type || 'place',
+            category: p.category || 'place',
+            source: 'geoapify',
+          };
+        }));
+      } catch (err) {
+        console.warn('Geoapify geocode fallback:', err.message);
+      }
+    }
+
+    // 2. Photon (OSM gratis sin API key)
+    if (results.length === 0) {
+      try {
+        const resp = await axios.get('https://photon.komoot.io/api/', {
+          params: {
+            q: normalized,
+            lat: BQ_CENTER.lat,
+            lon: BQ_CENTER.lng,
+            bbox: `${BQ_BBOX.west},${BQ_BBOX.south},${BQ_BBOX.east},${BQ_BBOX.north}`,
+            limit: 6,
+          },
+          timeout: 5000,
+          headers,
+        });
+        const features = resp.data?.features || [];
+        results = dedupeResults(features.map(formatPhotonFeature));
+      } catch (err) {
+        console.warn('Photon geocode fallback:', err.message);
+      }
+    }
+
+    // 3. Nominatim fallback
+    if (results.length === 0) {
+      try {
+        const resp = await axios.get('https://nominatim.openstreetmap.org/search', {
+          params: {
+            q: `${normalized}, Barranquilla, Colombia`,
+            format: 'json',
+            addressdetails: 1,
+            limit: 6,
+            viewbox: `${BQ_BBOX.west},${BQ_BBOX.south},${BQ_BBOX.east},${BQ_BBOX.north}`,
+            bounded: 1,
+          },
+          timeout: 5000,
+          headers: { ...headers, 'Accept-Language': 'es' },
+        });
+        const items = Array.isArray(resp.data) ? resp.data : [];
+        results = dedupeResults(items.map(formatNominatimItem));
+      } catch (err) {
+        console.warn('Nominatim geocode fallback failed:', err.message);
+      }
+    }
+
+    if (results.length > 0) {
+      setCachedValue(geocodeCache, cacheKey, results);
+    }
+
+    res.json({ success: true, cached: false, data: results });
+  } catch (error) {
+    console.error('Error en geocodePlaces:', error);
+    res.status(500).json({ success: false, message: 'Error al buscar direcciones' });
+  }
+}
+
+/**
+ * GET /api/maps/reverse?lat=...&lng=...
+ * Geocodificación inversa con caché LRU (Geoapify opcional -> Photon -> Nominatim).
+ */
+async function reverseGeocodePoint(req, res) {
+  try {
+    const lat = parseFloat(req.query.lat);
+    const lng = parseFloat(req.query.lng);
+
+    if (!isValidCoord(lat, lng)) {
+      return res.status(400).json({ success: false, message: 'Coordenadas inválidas' });
+    }
+
+    const cacheKey = `${lat.toFixed(5)},${lng.toFixed(5)}`;
+    const cached = getCachedValue(reverseCache, cacheKey);
+    if (cached) {
+      return res.json({ success: true, cached: true, data: { displayName: cached, lat, lng } });
+    }
+
+    let displayName = null;
+    const headers = { 'User-Agent': 'RutaQuilla/2.0 (https://rutaquilla.me)' };
+
+    // 1. Geoapify opcional
+    if (process.env.GEOAPIFY_API_KEY) {
+      try {
+        const resp = await axios.get('https://api.geoapify.com/v1/geocode/reverse', {
+          params: { lat, lon: lng, apiKey: process.env.GEOAPIFY_API_KEY, lang: 'es' },
+          timeout: 5000,
+          headers,
+        });
+        const p = resp.data?.features?.[0]?.properties;
+        if (p) {
+          displayName = p.address_line1 || p.street || p.name || p.suburb || null;
+        }
+      } catch (err) {
+        console.warn('Geoapify reverse fallback:', err.message);
+      }
+    }
+
+    // 2. Photon reverse
+    if (!displayName) {
+      try {
+        const resp = await axios.get('https://photon.komoot.io/reverse', {
+          params: { lat, lon: lng },
+          timeout: 5000,
+          headers,
+        });
+        const formatted = formatPhotonFeature(resp.data?.features?.[0]);
+        if (formatted?.displayName) {
+          displayName = formatted.subtitle && !formatted.subtitle.startsWith('Barranquilla')
+            ? `${formatted.displayName}, ${formatted.subtitle.split(',')[0]}`
+            : formatted.displayName;
+        }
+      } catch (err) {
+        console.warn('Photon reverse fallback:', err.message);
+      }
+    }
+
+    // 3. Nominatim reverse
+    if (!displayName) {
+      try {
+        const resp = await axios.get('https://nominatim.openstreetmap.org/reverse', {
+          params: { lat, lon: lng, format: 'json', addressdetails: 1 },
+          timeout: 5000,
+          headers: { ...headers, 'Accept-Language': 'es' },
+        });
+        const formatted = formatNominatimItem(resp.data);
+        if (formatted?.displayName) {
+          displayName = formatted.displayName;
+        }
+      } catch (err) {
+        console.warn('Nominatim reverse fallback:', err.message);
+      }
+    }
+
+    if (displayName) {
+      setCachedValue(reverseCache, cacheKey, displayName);
+    }
+
+    res.json({
+      success: true,
+      cached: false,
+      data: {
+        displayName: displayName || `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+        lat,
+        lng,
+      },
+    });
+  } catch (error) {
+    console.error('Error en reverseGeocodePoint:', error);
+    res.status(500).json({ success: false, message: 'Error en geocodificación inversa' });
+  }
+}
 
 /**
  * GET /api/maps/download
@@ -25,34 +368,57 @@ const Route = require('../models/RouteModel');
  */
 async function downloadOfflineMap(req, res) {
   try {
-    // Obtener todas las rutas oficiales para el paquete offline
-    const routes = await Route.find({ type: 'official' })
-      .select('name company geometry stops color')
+    // Obtener todas las rutas activas para el paquete offline (esquema v5)
+    const routes = await Route.find({ activa: true })
+      .select('nombre codigo operador origen destino color type fare ida regreso')
       .lean();
 
-    // Construir paquete GeoJSON para uso offline
+    const features = [];
+    for (const route of routes) {
+      const baseProps = {
+        routeId: route._id,
+        name: route.nombre,
+        codigo: route.codigo || '',
+        company: route.operador,
+        origen: route.origen || '',
+        destino: route.destino || '',
+        color: route.color,
+        type: route.type,
+        fare: route.fare || 3700,
+      };
+
+      if (route.ida?.trazado?.coordinates?.length >= 2) {
+        features.push({
+          type: 'Feature',
+          properties: { ...baseProps, direction: 'ida' },
+          geometry: route.ida.trazado,
+        });
+      }
+
+      if (route.regreso?.trazado?.coordinates?.length >= 2) {
+        features.push({
+          type: 'Feature',
+          properties: { ...baseProps, direction: 'regreso' },
+          geometry: route.regreso.trazado,
+        });
+      }
+    }
+
+    // Construir paquete GeoJSON válido para uso offline
     const offlinePackage = {
       type: 'FeatureCollection',
       metadata: {
         generatedAt: new Date().toISOString(),
         city: 'Barranquilla',
-        version: '1.0.0',
+        version: '2.0.0',
         routeCount: routes.length,
+        featureCount: features.length,
       },
-      features: routes.map(route => ({
-        type: 'Feature',
-        properties: {
-          name: route.name,
-          company: route.company,
-          color: route.color,
-          stops: route.stops,
-        },
-        geometry: route.geometry,
-      })),
+      features,
     };
 
     // Enviar como archivo descargable JSON
-    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Type', 'application/geo+json');
     res.setHeader('Content-Disposition', 'attachment; filename="rutaquilla-offline.geojson"');
     res.json(offlinePackage);
   } catch (error) {
@@ -147,7 +513,161 @@ async function getSponsoredLocations(req, res) {
   }
 }
 
+function normalizePoiName(str) {
+  return String(str || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function mapOsmPoiCategory(tags = {}) {
+  const { amenity, shop, leisure, tourism, public_transport: pt } = tags;
+  if (shop === 'mall' || shop === 'department_store') return 'mall';
+  if (shop === 'supermarket') return 'supermarket';
+  if (amenity === 'university' || amenity === 'college') return 'university';
+  if (amenity === 'hospital' || amenity === 'clinic') return 'hospital';
+  if (amenity === 'pharmacy') return 'pharmacy';
+  if (amenity === 'bank') return 'bank';
+  if (amenity === 'bus_station' || pt === 'station') return 'transit';
+  if (leisure === 'park') return 'park';
+  if (leisure === 'stadium' || leisure === 'sports_centre' || tourism === 'attraction' || tourism === 'museum' || tourism === 'hotel' || amenity === 'theatre' || amenity === 'cinema' || amenity === 'library') {
+    return 'landmark';
+  }
+  if (amenity === 'restaurant' || amenity === 'cafe' || amenity === 'fast_food') return 'food';
+  if (amenity === 'marketplace' || amenity === 'fuel' || amenity === 'police') return 'landmark';
+  return 'landmark';
+}
+
+function formatOsmPoiElement(el) {
+  const tags = el?.tags || {};
+  const name = tags.name ? String(tags.name).trim() : '';
+  const lat = Number(el?.lat ?? el?.center?.lat);
+  const lng = Number(el?.lon ?? el?.center?.lon);
+  if (!name || !isValidCoord(lat, lng, true)) return null;
+
+  const street = tags['addr:street']
+    ? `${tags['addr:street']}${tags['addr:housenumber'] ? ` #${tags['addr:housenumber']}` : ''}`
+    : '';
+  const area = tags['addr:suburb'] || tags['addr:neighbourhood'] || '';
+  const subtitle = [street, area, tags.operator].filter(Boolean).join(', ') || 'Barranquilla, Atlántico';
+
+  return {
+    id: `osm-${el.type}-${el.id}`,
+    name,
+    category: mapOsmPoiCategory(tags),
+    subtitle,
+    lat,
+    lng,
+    source: 'OSM en vivo',
+  };
+}
+
+/**
+ * GET /api/maps/pois?south=...&west=...&north=...&east=...
+ * Obtiene POIs actualizados desde OpenStreetMap (Overpass) con failover entre mirrors y caché LRU.
+ */
+async function getMapPOIs(req, res) {
+  try {
+    const south = parseFloat(req.query.south);
+    const west = parseFloat(req.query.west);
+    const north = parseFloat(req.query.north);
+    const east = parseFloat(req.query.east);
+
+    if (
+      !isValidCoord(south, west, true) ||
+      !isValidCoord(north, east, true) ||
+      south >= north ||
+      west >= east ||
+      north - south > 0.08 ||
+      east - west > 0.08
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Bounding box inválido o demasiado amplio',
+      });
+    }
+
+    const cacheKey = `${south.toFixed(2)},${west.toFixed(2)},${north.toFixed(2)},${east.toFixed(2)}`;
+    const cached = getCachedValue(poiCache, cacheKey, POI_CACHE_TTL_MS);
+    if (cached) {
+      return res.json({ success: true, cached: true, data: cached });
+    }
+
+    const bbox = `${south.toFixed(5)},${west.toFixed(5)},${north.toFixed(5)},${east.toFixed(5)}`;
+    const query = `
+      [out:json][timeout:8];
+      (
+        node["name"]["amenity"~"^(hospital|clinic|pharmacy|university|college|bank|bus_station|marketplace|fuel|theatre|cinema|library|police|restaurant|cafe|fast_food)$"](${bbox});
+        way["name"]["amenity"~"^(hospital|clinic|pharmacy|university|college|bank|bus_station|marketplace|fuel|theatre|cinema|library|police|restaurant|cafe|fast_food)$"](${bbox});
+        node["name"]["shop"~"^(mall|supermarket|department_store)$"](${bbox});
+        way["name"]["shop"~"^(mall|supermarket|department_store)$"](${bbox});
+        node["name"]["leisure"~"^(park|stadium|sports_centre)$"](${bbox});
+        way["name"]["leisure"~"^(park|stadium|sports_centre)$"](${bbox});
+        node["name"]["tourism"~"^(attraction|museum|hotel)$"](${bbox});
+        way["name"]["tourism"~"^(attraction|museum|hotel)$"](${bbox});
+        node["name"]["public_transport"="station"](${bbox});
+      );
+      out center tags 150;
+    `.trim();
+
+    let elements = null;
+    for (const mirror of OVERPASS_MIRRORS) {
+      try {
+        const resp = await axios.post(mirror, `data=${encodeURIComponent(query)}`, {
+          timeout: 6000,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'RutaQuilla/2.0 (https://rutaquilla.me)',
+            Accept: 'application/json',
+          },
+        });
+        if (Array.isArray(resp.data?.elements)) {
+          elements = resp.data.elements;
+          break;
+        }
+      } catch (err) {
+        console.warn(`Overpass POI mirror failed (${mirror}):`, err.message);
+      }
+    }
+
+    if (!elements) {
+      return res.json({ success: true, cached: false, fallback: true, data: [] });
+    }
+
+    const deduped = [];
+    for (const el of elements) {
+      const poi = formatOsmPoiElement(el);
+      if (!poi) continue;
+      const norm = normalizePoiName(poi.name);
+      const isDup = deduped.some(
+        (existing) =>
+          normalizePoiName(existing.name) === norm &&
+          Math.abs(existing.lat - poi.lat) < 0.0005 &&
+          Math.abs(existing.lng - poi.lng) < 0.0005
+      );
+      if (!isDup) {
+        deduped.push(poi);
+        if (deduped.length >= 120) break;
+      }
+    }
+
+    if (deduped.length > 0) {
+      setCachedValue(poiCache, cacheKey, deduped, MAX_POI_CACHE_ENTRIES);
+    }
+
+    res.json({ success: true, cached: false, data: deduped });
+  } catch (error) {
+    console.error('Error en getMapPOIs:', error);
+    res.json({ success: true, cached: false, fallback: true, data: [] });
+  }
+}
+
 module.exports = {
   downloadOfflineMap,
   getSponsoredLocations,
+  geocodePlaces,
+  reverseGeocodePoint,
+  getMapPOIs,
+  normalizeBarranquillaQuery,
 };

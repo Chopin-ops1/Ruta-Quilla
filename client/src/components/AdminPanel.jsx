@@ -96,7 +96,7 @@ function RouteEditorTab({ user }) {
   const [nombre, setNombre] = useState('');
   const [operador, setOperador] = useState('Coolitoral');
   const [color, setColor] = useState('#06B6D4');
-  const [fare, setFare] = useState(2600);
+  const [fare, setFare] = useState(3700);
   const [codigo, setCodigo] = useState('');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
@@ -105,7 +105,7 @@ function RouteEditorTab({ user }) {
   const [shouldFitMap, setShouldFitMap] = useState(false);
 
   const loadRoutes = useCallback(async () => {
-    try { setLoadingRoutes(true); const res = await routesAPI.getAll(); setRoutes(res.data || []); }
+    try { setLoadingRoutes(true); const res = await routesAPI.getAll({ includeGeometry: 'true' }); setRoutes(res.data || []); }
     catch (err) { console.error(err); } finally { setLoadingRoutes(false); }
   }, []);
 
@@ -172,7 +172,7 @@ function RouteEditorTab({ user }) {
 
   const handleEdit = useCallback((route) => {
     setEditingRouteId(route._id); setNombre(route.nombre || ''); setOperador(route.operador || 'Coolitoral');
-    setColor(route.color || '#06B6D4'); setFare(route.fare || 2600); setCodigo(route.codigo || '');
+    setColor(route.color || '#06B6D4'); setFare(route.fare || 3700); setCodigo(route.codigo || '');
     setIdaPoints((route.ida?.trazado?.coordinates || []).map(c => ({ lat: c[1], lng: c[0] }))); setSnappedIda([]);
     setRegresoPoints((route.regreso?.trazado?.coordinates || []).map(c => ({ lat: c[1], lng: c[0] }))); setSnappedRegreso([]);
     setEditMode('ida'); setShouldFitMap(true); setTimeout(() => setShouldFitMap(false), 500);
@@ -181,7 +181,7 @@ function RouteEditorTab({ user }) {
   const resetEditor = useCallback(() => {
     setEditMode('idle'); setEditingRouteId(null); setIdaPoints([]); setRegresoPoints([]);
     setSnappedIda([]); setSnappedRegreso([]); setNombre(''); setOperador('Coolitoral');
-    setColor('#06B6D4'); setFare(2600); setCodigo('');
+    setColor('#06B6D4'); setFare(3700); setCodigo('');
   }, []);
 
   const showMsg = (text, type) => { setMessage({ text, type }); setTimeout(() => setMessage(null), 4000); };

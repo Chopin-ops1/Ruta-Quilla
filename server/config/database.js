@@ -40,8 +40,11 @@ async function connectDatabase() {
       });
 
       console.log('✅ Conectado a MongoDB Atlas (datos persistentes)');
+    } else if (process.env.NODE_ENV === 'production') {
+      console.error('❌ FATAL: MONGO_URI no está definido en producción. No se permite fallback en memoria.');
+      process.exit(1);
     } else {
-      // ---- Fallback: MongoDB en memoria (solo si no hay URI) ----
+      // ---- Fallback: MongoDB en memoria (solo desarrollo si no hay URI) ----
       console.log('⚠️  MONGO_URI no definido. Usando MongoDB en memoria (datos NO persisten)');
       console.log('   → Configura MONGO_URI en .env para persistencia');
 

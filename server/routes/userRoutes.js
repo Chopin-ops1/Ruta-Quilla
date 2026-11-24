@@ -3,7 +3,7 @@
  */
 const express = require('express');
 const router = express.Router();
-const { register, verifyEmail, resendCode, login, getProfile, upgradeToPremium } = require('../controllers/userController');
+const { register, verifyEmail, resendCode, login, getProfile, upgradeToPremium, forgotPassword, resetPassword } = require('../controllers/userController');
 const { verifyToken, requireAdmin } = require('../middleware/authMiddleware');
 
 // POST /api/users/register - Registro de nuevo usuario (público)
@@ -14,6 +14,12 @@ router.post('/verify', verifyEmail);
 
 // POST /api/users/resend-code - Reenviar código de verificación (público)
 router.post('/resend-code', resendCode);
+
+// POST /api/users/forgot-password - Solicitar código de recuperación (público)
+router.post('/forgot-password', forgotPassword);
+
+// POST /api/users/reset-password - Restablecer contraseña con código OTP (público)
+router.post('/reset-password', resetPassword);
 
 // POST /api/users/login - Inicio de sesión (público)
 router.post('/login', login);
