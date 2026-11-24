@@ -113,7 +113,7 @@ export default function App() {
   const hasNavBottomBar = Boolean(
     navigationResult || previewOrigin || previewDestination || originFromMap || destFromMap
   );
-  const fabBottom = hasNavBottomBar ? 204 : selectedRoute ? 148 : 28;
+  const fabBottom = hasNavBottomBar ? 204 : selectedRoute ? 160 : 28;
 
   /**
    * Full state reset on logout.
@@ -446,7 +446,7 @@ export default function App() {
         routeCount={routes.length}
       />
 
-      <div className="flex-1 flex relative" style={{ marginTop: 56 }}>
+      <div className="flex-1 flex relative overflow-hidden" style={{ marginTop: 56 }}>
         <Sidebar
           routes={routes}
           isOpen={menuOpen}
@@ -492,25 +492,43 @@ export default function App() {
           />
         )}
 
-        <main className="flex-1 relative" style={{ marginLeft: menuOpen && isDesktop ? '22.5rem' : 0, transition: 'margin-left 0.3s ease-out' }}>
+        <main className="flex-1 min-w-0 overflow-hidden relative" style={{ marginLeft: menuOpen && isDesktop ? '22.5rem' : 0, transition: 'margin-left 0.3s ease-out' }}>
           {loading ? (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="text-center animate-fade-in">
-                <div className="w-12 h-12 mx-auto rounded-xl flex items-center justify-center mb-3"
+            <div className="w-full h-full flex items-center justify-center p-6">
+              <div className="rq-card animate-fade-in" style={{ width: '100%', maxWidth: 320, padding: '24px 22px', textAlign: 'center' }}>
+                <div
+                  className="font-display mx-auto mb-3 flex items-center justify-center"
                   style={{
-                    background: 'linear-gradient(135deg, #F59E0B, #D97706)',
-                    animation: 'spin-slow 2s linear infinite',
-                  }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2">
-                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                  </svg>
+                    width: 48,
+                    height: 48,
+                    borderRadius: 10,
+                    background: 'var(--plate-bg)',
+                    color: 'var(--plate-fg)',
+                    border: '1px solid rgba(255, 194, 26, 0.3)',
+                    borderLeft: '4px solid var(--brand)',
+                    fontSize: 18,
+                    fontWeight: 800,
+                  }}
+                >
+                  RQ
                 </div>
-                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                  Cargando RutaQuilla...
+                <p className="font-display text-base font-bold m-0" style={{ color: 'var(--text-primary)' }}>
+                  Cargando red de rutas
                 </p>
-                <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                  Conectando con el servidor
+                <p className="text-xs mt-1 mb-4" style={{ color: 'var(--text-muted)' }}>
+                  Sincronizando Barranquilla y área metropolitana
                 </p>
+                <div style={{ height: 3, borderRadius: 999, background: 'var(--bg-surface)', overflow: 'hidden' }}>
+                  <div
+                    style={{
+                      width: '55%',
+                      height: '100%',
+                      borderRadius: 999,
+                      background: 'var(--brand)',
+                      animation: 'rqProgress 1.2s ease-in-out infinite',
+                    }}
+                  />
+                </div>
               </div>
             </div>
           ) : (
@@ -631,26 +649,34 @@ export default function App() {
         onClick={() => setShowCommunity(true)}
         style={{
           position: 'fixed',
-          bottom: fabBottom + 60,
+          bottom: fabBottom + 54,
           right: 16,
           zIndex: 1100,
-          width: 50,
-          height: 50,
-          borderRadius: '50%',
-          border: 'none',
-          background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)',
-          boxShadow: '0 4px 20px rgba(139,92,246,0.4)',
+          width: 44,
+          height: 44,
+          borderRadius: 12,
+          border: '1px solid var(--border-color)',
+          background: 'var(--bg-card)',
+          color: 'var(--brand)',
+          boxShadow: 'var(--shadow-md)',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          transition: 'bottom 0.3s ease, transform 0.2s',
+          transition: 'bottom 0.25s ease, transform 0.15s ease, border-color 0.15s ease',
         }}
-        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.borderColor = 'var(--brand)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.borderColor = 'var(--border-color)';
+        }}
         title="Comunidad Quilla"
+        aria-label="Abrir Comunidad Quilla"
       >
-        <Trophy size={20} color="#fff" />
+        <Trophy size={19} />
       </button>
       )}
 

@@ -203,75 +203,75 @@ export default function LiveNavigation({
       case PHASE.WALKING_TO_BOARD:
         return {
           icon: <Footprints size={18} />,
-          color: '#60A5FA',
-          bgColor: 'rgba(96, 165, 250, 0.12)',
-          borderColor: 'rgba(96, 165, 250, 0.3)',
-          title: 'Caminando al punto de subida',
-          subtitle: distToBoard !== null ? `${distToBoard}m restantes · ~${Math.ceil(distToBoard / 80)} min` : 'Calculando...',
+          color: 'var(--caribe)',
+          bgColor: 'var(--caribe-soft)',
+          borderColor: 'color-mix(in srgb, var(--caribe) 40%, var(--border-color))',
+          title: 'Camina al punto de subida',
+          subtitle: distToBoard !== null ? `${distToBoard} m restantes · ~${Math.ceil(distToBoard / 80)} min` : 'Calculando...',
           instruction: `Dirígete hacia la ruta ${routeName}`,
         };
       case PHASE.WAITING_FOR_BUS:
         return {
           icon: <Bus size={18} />,
           color: routeColor,
-          bgColor: `${routeColor}18`,
-          borderColor: `${routeColor}40`,
-          title: `Espera la ruta ${routeName}`,
-          subtitle: '¡Ya estás en el punto! Espera el bus',
-          instruction: 'Cuando suba al bus, confirma abajo',
-          action: { label: '🚌 Ya subí al bus', onClick: handleConfirmBoarded },
+          bgColor: 'var(--brand-soft)',
+          borderColor: routeColor,
+          title: `Espera el bus ${routeName}`,
+          subtitle: 'Ya estás en el punto de abordaje',
+          instruction: 'Confirma abajo cuando subas al vehículo',
+          action: { label: 'Ya subí al bus', onClick: handleConfirmBoarded },
         };
       case PHASE.RIDING_BUS:
         return {
           icon: <Bus size={18} />,
           color: routeColor,
-          bgColor: `${routeColor}18`,
-          borderColor: `${routeColor}40`,
+          bgColor: 'var(--mangle-soft)',
+          borderColor: 'color-mix(in srgb, var(--mangle) 45%, var(--border-color))',
           title: `En ruta ${routeName}`,
           subtitle: distToAlight !== null
             ? distToAlight > 500
-              ? `Bájate en ~${Math.ceil(distToAlight / 250)} min (~${distToAlight}m)`
-              : `¡Casi llegas! ${distToAlight}m al punto de bajada`
+              ? `Baja en ~${Math.ceil(distToAlight / 250)} min (${distToAlight} m)`
+              : `Casi llegas · ${distToAlight} m al descenso`
             : 'Viajando...',
           instruction: distToAlight !== null && distToAlight < 500
-            ? '⚡ Prepárate para bajarte'
-            : 'Relájate, te avisaremos cuando bajarte',
+            ? 'Prepárate para solicitar la parada'
+            : 'Te avisaremos antes de llegar al punto de bajada',
         };
       case PHASE.ALERT_ALIGHT:
         return {
           icon: <BellRing size={18} />,
-          color: '#EF4444',
-          bgColor: 'rgba(239, 68, 68, 0.15)',
-          borderColor: 'rgba(239, 68, 68, 0.5)',
-          title: '🛑 ¡BÁJATE AHORA!',
-          subtitle: `Estás a ${distToAlight || '?'}m del punto de bajada`,
-          instruction: 'Solicita la parada al conductor',
-          action: { label: '✅ Ya me bajé', onClick: handleConfirmAlighted },
+          color: 'var(--carnaval)',
+          bgColor: 'var(--carnaval-soft)',
+          borderColor: 'var(--carnaval)',
+          title: '¡Solicita la parada ahora!',
+          subtitle: `Estás a ${distToAlight || '?'} m del punto de descenso`,
+          instruction: 'Toca el timbre o avisa al conductor para bajar',
+          action: { label: 'Ya me bajé', onClick: handleConfirmAlighted },
           pulse: true,
         };
       case PHASE.WALKING_TO_DEST:
         return {
           icon: <MapPin size={18} />,
-          color: '#F87171',
-          bgColor: 'rgba(248, 113, 113, 0.12)',
-          borderColor: 'rgba(248, 113, 113, 0.3)',
-          title: 'Caminando al destino',
-          subtitle: distToDest !== null ? `${distToDest}m restantes · ~${Math.ceil(distToDest / 80)} min` : 'Calculando...',
-          instruction: 'Sigue caminando a tu destino',
+          color: 'var(--carnaval)',
+          bgColor: 'var(--carnaval-soft)',
+          borderColor: 'color-mix(in srgb, var(--carnaval) 40%, var(--border-color))',
+          title: 'Camina hacia tu destino',
+          subtitle: distToDest !== null ? `${distToDest} m restantes · ~${Math.ceil(distToDest / 80)} min` : 'Calculando...',
+          instruction: 'Último tramo a pie hasta tu llegada',
         };
       case PHASE.ARRIVED:
         return {
           icon: <CheckCircle2 size={18} />,
-          color: '#10B981',
-          bgColor: 'rgba(16, 185, 129, 0.15)',
-          borderColor: 'rgba(16, 185, 129, 0.4)',
-          title: '🎉 ¡Llegaste a tu destino!',
+          color: 'var(--mangle)',
+          bgColor: 'var(--mangle-soft)',
+          borderColor: 'var(--mangle)',
+          title: 'Llegaste a tu destino',
           subtitle: `Tiempo total: ${formatTime(elapsedSeconds)}`,
-          instruction: '¡Buen viaje!',
-          action: { label: '✕ Cerrar navegación', onClick: onCancel },
+          instruction: 'Recorrido finalizado',
+          action: { label: 'Finalizar navegación', onClick: onCancel },
         };
       default:
-        return { icon: null, color: '#94A3B8', bgColor: 'transparent', borderColor: 'transparent', title: '', subtitle: '', instruction: '' };
+        return { icon: null, color: 'var(--text-muted)', bgColor: 'transparent', borderColor: 'var(--border-color)', title: '', subtitle: '', instruction: '' };
     }
   };
 
@@ -285,251 +285,258 @@ export default function LiveNavigation({
         left: 0,
         right: 0,
         zIndex: 1300,
-        fontFamily: 'Inter, sans-serif',
         pointerEvents: 'none',
       }}
     >
-      {/* Top instruction banner */}
+      {/* Banner superior Modo GO */}
       <div
         style={{
           position: 'fixed',
-          top: 56,
+          top: 66,
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 1300,
           width: 'calc(100% - 24px)',
-          maxWidth: 420,
+          maxWidth: 440,
           pointerEvents: 'auto',
         }}
       >
         <div
-          className={config.pulse ? 'animate-pulse-border' : ''}
+          className={`rq-sheet ${config.pulse ? 'animate-pulse-border' : ''}`}
           style={{
-            borderRadius: 18,
-            background: 'var(--panel-bg)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
+            borderRadius: 14,
             border: `1.5px solid ${config.borderColor}`,
-            boxShadow: '0 10px 32px var(--shadow-color)',
+            borderLeft: `5px solid ${config.color}`,
             overflow: 'hidden',
           }}
         >
-          {/* Color accent bar */}
-          <div style={{
-            height: 3,
-            background: `linear-gradient(90deg, ${config.color}, ${config.color}60)`,
-          }} />
-
-          <div style={{ padding: '10px 14px' }}>
-            {/* Main row */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: 11, flexShrink: 0,
-                background: config.bgColor,
-                border: `1px solid ${config.borderColor}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: config.color,
-              }}>
+          <div style={{ padding: '12px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+              <div
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 9,
+                  flexShrink: 0,
+                  background: config.bgColor,
+                  border: '1px solid var(--border-color)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: config.color,
+                }}
+              >
                 {config.icon}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{
-                  fontSize: 14, fontWeight: 700, color: config.color, margin: 0,
-                  lineHeight: 1.3,
-                }}>
+                <p
+                  className="font-display"
+                  style={{
+                    fontSize: 15.5,
+                    fontWeight: 700,
+                    color: 'var(--text-primary)',
+                    margin: 0,
+                    lineHeight: 1.2,
+                  }}
+                >
                   {config.title}
                 </p>
-                <p className="tabular-nums" style={{ fontSize: 11, color: 'var(--text-secondary)', margin: '2px 0 0' }}>
+                <p className="tabular-nums" style={{ fontSize: 12, fontWeight: 600, color: config.color, margin: '3px 0 0' }}>
                   {config.subtitle}
                 </p>
               </div>
 
-              {/* Sound toggle */}
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
                 aria-label={soundEnabled ? 'Silenciar alertas' : 'Activar alertas'}
+                className="rq-icon-btn"
                 style={{
-                  width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-                  background: 'var(--subtle-bg)',
-                  border: '1px solid var(--subtle-border-strong)',
-                  color: soundEnabled ? '#F59E0B' : 'var(--text-muted)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer',
+                  width: 32,
+                  height: 32,
+                  color: soundEnabled ? 'var(--brand)' : 'var(--text-muted)',
                 }}
               >
-                {soundEnabled ? <Volume2 size={12} /> : <VolumeX size={12} />}
+                {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
               </button>
             </div>
 
-            {/* Instruction text */}
-            <p style={{
-              fontSize: 11, color: 'var(--text-muted)', margin: '8px 0 0',
-              paddingLeft: 46,
-            }}>
+            <p style={{ fontSize: 11.5, color: 'var(--text-secondary)', margin: '7px 0 0', paddingLeft: 49 }}>
               {config.instruction}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Bottom action bar */}
+      {/* Hoja inferior Modo GO */}
       <div
         style={{
           width: '100%',
+          maxWidth: 480,
+          margin: '0 auto',
           pointerEvents: 'auto',
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         }}
       >
         <div
+          className="rq-sheet"
           style={{
-            borderRadius: '20px 20px 0 0',
-            background: 'var(--panel-bg)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            border: '1px solid var(--subtle-border-strong)',
+            borderRadius: '16px 16px 0 0',
             borderBottom: 'none',
-            boxShadow: '0 -8px 32px var(--shadow-color)',
             padding: '8px 16px 14px',
           }}
         >
           <div className="sheet-handle" style={{ marginBottom: 8 }} />
 
-          {/* Route info pill */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            marginBottom: 10,
-          }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 5,
-              padding: '4px 10px', borderRadius: 8,
-              background: `${routeColor}18`, border: `1px solid ${routeColor}35`,
-            }}>
-              <Bus size={11} style={{ color: routeColor }} />
-              <span style={{ fontSize: 11, fontWeight: 600, color: routeColor }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <span className="transit-code" style={{ '--route-color': routeColor }}>
+              {navigationOption?.route?.codigo || routeName}
+            </span>
+            {navigationOption?.route?.codigo && (
+              <span className="font-display text-xs font-bold truncate" style={{ color: 'var(--text-primary)' }}>
                 {routeName}
               </span>
-            </div>
+            )}
 
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 4,
-              padding: '4px 8px', borderRadius: 8,
-              background: 'var(--subtle-bg)',
-            }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '3px 8px',
+                borderRadius: 6,
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                marginLeft: 'auto',
+              }}
+            >
               <Clock size={10} style={{ color: 'var(--text-muted)' }} />
-              <span className="tabular-nums" style={{ fontSize: 10, color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
+              <span className="tabular-nums" style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)' }}>
                 {formatTime(elapsedSeconds)}
               </span>
             </div>
 
-            <div style={{ flex: 1 }} />
-
-            {/* Progress dots */}
-            <div style={{ display: 'flex', gap: 4 }}>
-              {[PHASE.WALKING_TO_BOARD, PHASE.WAITING_FOR_BUS, PHASE.RIDING_BUS, PHASE.ALERT_ALIGHT, PHASE.WALKING_TO_DEST, PHASE.ARRIVED].map((p, i) => (
-                <div key={i} style={{
-                  width: 6, height: 6, borderRadius: '50%',
-                  background: phase === p ? config.color
-                    : Object.values(PHASE).indexOf(phase) > i ? '#10B981'
-                    : 'var(--subtle-border-strong)',
-                  transition: 'all 0.3s',
-                }} />
+            {/* Segmentos de progreso */}
+            <div style={{ display: 'flex', gap: 3 }}>
+              {[
+                PHASE.WALKING_TO_BOARD,
+                PHASE.WAITING_FOR_BUS,
+                PHASE.RIDING_BUS,
+                PHASE.ALERT_ALIGHT,
+                PHASE.WALKING_TO_DEST,
+                PHASE.ARRIVED,
+              ].map((p, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: 10,
+                    height: 4,
+                    borderRadius: 2,
+                    background:
+                      phase === p
+                        ? config.color
+                        : Object.values(PHASE).indexOf(phase) > i
+                        ? 'var(--mangle)'
+                        : 'var(--border-color)',
+                    transition: 'background 0.25s',
+                  }}
+                />
               ))}
             </div>
           </div>
 
-          {/* Phase steps visual */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 4,
-            padding: '6px 8px', borderRadius: 10,
-            background: 'var(--subtle-bg)',
-            marginBottom: config.action ? 10 : 0,
-          }}>
-            {/* Walk → Board */}
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 3,
-              opacity: phase === PHASE.WALKING_TO_BOARD ? 1 : 0.45,
-            }}>
-              <Footprints size={10} color="#60A5FA" />
-              <span className="tabular-nums" style={{ fontSize: 9, color: '#60A5FA', fontWeight: 600 }}>
-                {navigationOption?.boardPoint?.walkDistance || '?'}m
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '7px 10px',
+              borderRadius: 8,
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              marginBottom: config.action ? 10 : 0,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 3, opacity: phase === PHASE.WALKING_TO_BOARD ? 1 : 0.45 }}>
+              <Footprints size={11} color="var(--caribe)" />
+              <span className="tabular-nums" style={{ fontSize: 10.5, color: 'var(--caribe)', fontWeight: 600 }}>
+                {navigationOption?.boardPoint?.walkDistance || '?'} m
               </span>
             </div>
-            <CornerDownRight size={8} style={{ color: 'var(--text-muted)' }} />
+            <CornerDownRight size={9} style={{ color: 'var(--text-muted)' }} />
 
-            {/* Bus ride */}
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 3,
-              opacity: [PHASE.WAITING_FOR_BUS, PHASE.RIDING_BUS, PHASE.ALERT_ALIGHT].includes(phase) ? 1 : 0.45,
-            }}>
-              <Bus size={10} color={routeColor} />
-              <span className="tabular-nums" style={{ fontSize: 9, color: routeColor, fontWeight: 600 }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 3,
+                opacity: [PHASE.WAITING_FOR_BUS, PHASE.RIDING_BUS, PHASE.ALERT_ALIGHT].includes(phase) ? 1 : 0.45,
+              }}
+            >
+              <Bus size={11} color={routeColor} />
+              <span className="tabular-nums" style={{ fontSize: 10.5, color: 'var(--text-primary)', fontWeight: 600 }}>
                 ~{navigationOption?.busMinutes || '?'} min
               </span>
             </div>
-            <CornerDownRight size={8} style={{ color: 'var(--text-muted)' }} />
+            <CornerDownRight size={9} style={{ color: 'var(--text-muted)' }} />
 
-            {/* Walk → Dest */}
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 3,
-              opacity: phase === PHASE.WALKING_TO_DEST ? 1 : 0.45,
-            }}>
-              <MapPin size={10} color="#EF4444" />
-              <span className="tabular-nums" style={{ fontSize: 9, color: '#EF4444', fontWeight: 600 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 3, opacity: phase === PHASE.WALKING_TO_DEST ? 1 : 0.45 }}>
+              <MapPin size={11} color="var(--carnaval)" />
+              <span className="tabular-nums" style={{ fontSize: 10.5, color: 'var(--carnaval)', fontWeight: 600 }}>
                 {navigationOption?.alightPoint?.walkDistance < 50
-                  ? 'Directo 🎯'
-                  : `${navigationOption?.alightPoint?.walkDistance || '?'}m`}
+                  ? 'Directo'
+                  : `${navigationOption?.alightPoint?.walkDistance || '?'} m`}
               </span>
             </div>
 
             <div style={{ flex: 1 }} />
-            <span className="tabular-nums" style={{ fontSize: 10, fontWeight: 700, color: '#F59E0B' }}>
-              ${navigationOption?.route?.fare?.toLocaleString() || '2,600'}
+            <span className="tabular-nums" style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--brand)' }}>
+              ${navigationOption?.route?.fare?.toLocaleString() || '3,700'}
             </span>
           </div>
 
-          {/* Action button (phase-specific) */}
           {config.action && (
             <button
               onClick={config.action.onClick}
               style={{
-                width: '100%', padding: '12px 0',
-                borderRadius: 13, border: 'none',
-                background: phase === PHASE.ALERT_ALIGHT
-                  ? 'linear-gradient(135deg, #EF4444, #DC2626)'
-                  : phase === PHASE.ARRIVED
-                    ? 'var(--subtle-bg)'
-                    : `linear-gradient(135deg, ${routeColor}, ${routeColor}CC)`,
-                color: phase === PHASE.ARRIVED ? 'var(--text-secondary)' : '#fff',
-                fontSize: 14, fontWeight: 700,
+                width: '100%',
+                padding: '11px 14px',
+                borderRadius: 9,
+                border: '1px solid rgba(255,255,255,0.1)',
+                background:
+                  phase === PHASE.ALERT_ALIGHT
+                    ? 'var(--carnaval)'
+                    : phase === PHASE.ARRIVED
+                    ? 'var(--mangle)'
+                    : 'var(--brand)',
+                color: phase === PHASE.WAITING_FOR_BUS ? 'var(--brand-ink)' : '#FFFFFF',
+                fontSize: 13.5,
+                fontWeight: 700,
                 cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                boxShadow: phase === PHASE.ALERT_ALIGHT
-                  ? '0 4px 20px rgba(239,68,68,0.4)'
-                  : phase === PHASE.ARRIVED ? 'none' : `0 4px 20px ${routeColor}40`,
-                animation: phase === PHASE.ALERT_ALIGHT ? 'pulse 1.5s ease-in-out infinite' : 'none',
-                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                boxShadow: 'var(--shadow-sm)',
               }}
             >
               {config.action.label}
             </button>
           )}
 
-          {/* Cancel button (always visible except ARRIVED) */}
           {phase !== PHASE.ARRIVED && (
             <button
               onClick={onCancel}
+              className="rq-btn-ghost"
               style={{
-                width: '100%', marginTop: 8, padding: '8px 0',
-                borderRadius: 10, border: 'none',
-                background: 'rgba(239,68,68,0.08)',
-                color: 'var(--text-secondary)',
-                fontSize: 11, fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                transition: 'all 0.2s',
+                width: '100%',
+                marginTop: 7,
+                padding: '8px 12px',
+                fontSize: 11.5,
+                color: 'var(--carnaval)',
+                borderColor: 'color-mix(in srgb, var(--carnaval) 30%, var(--border-color))',
               }}
             >
-              <X size={11} /> Cancelar navegación
+              <X size={12} /> Cancelar navegación
             </button>
           )}
         </div>

@@ -8,27 +8,28 @@
  * de 2012 (Habeas Data) de Colombia.
  */
 
-import { X, Shield, FileText, ChevronLeft } from 'lucide-react';
+import { X, Shield, FileText } from 'lucide-react';
 
 function PrivacyContent() {
   return (
-    <div style={{ lineHeight: 1.8, color: '#CBD5E1' }}>
+    <div className="rq-legal-prose" style={{ lineHeight: 1.75, color: 'var(--text-secondary)' }}>
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24,
+        display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24,
       }}>
         <div style={{
-          width: 44, height: 44, borderRadius: 14,
-          background: 'linear-gradient(135deg, rgba(6,182,212,0.2), rgba(6,182,212,0.05))',
-          border: '1px solid rgba(6,182,212,0.2)',
+          width: 42, height: 42, borderRadius: 12,
+          background: 'rgba(59, 139, 240, 0.12)',
+          border: '1px solid rgba(59, 139, 240, 0.28)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: 'var(--caribe)',
         }}>
-          <Shield size={22} color="#06B6D4" />
+          <Shield size={20} />
         </div>
         <div>
-          <h2 style={{ fontSize: 22, fontWeight: 700, color: '#F1F5F9', margin: 0, fontFamily: 'Outfit, sans-serif' }}>
+          <h2 className="font-display" style={{ fontSize: 21, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
             Política de Privacidad
           </h2>
-          <p style={{ fontSize: 12, color: '#64748B', margin: 0 }}>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '2px 0 0' }}>
             Última actualización: Abril 2026
           </p>
         </div>
@@ -42,7 +43,7 @@ function PrivacyContent() {
         </p>
         <p>
           Correo de contacto para asuntos de privacidad:{' '}
-          <span style={{ color: '#06B6D4' }}>privacidad@rutaquilla.me</span>
+          <span style={{ color: 'var(--caribe)', fontWeight: 500 }}>privacidad@rutaquilla.me</span>
         </p>
       </Section>
 
@@ -88,7 +89,7 @@ function PrivacyContent() {
         </ul>
         <p>
           Para ejercer estos derechos, envíe un correo a{' '}
-          <span style={{ color: '#06B6D4' }}>privacidad@rutaquilla.me</span>{' '}
+          <span style={{ color: 'var(--caribe)', fontWeight: 500 }}>privacidad@rutaquilla.me</span>{' '}
           con el asunto "Solicitud de Datos Personales" indicando su nombre
           completo y el derecho que desea ejercer.
         </p>
@@ -145,23 +146,24 @@ function PrivacyContent() {
 
 function TermsContent() {
   return (
-    <div style={{ lineHeight: 1.8, color: '#CBD5E1' }}>
+    <div className="rq-legal-prose" style={{ lineHeight: 1.75, color: 'var(--text-secondary)' }}>
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24,
+        display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24,
       }}>
         <div style={{
-          width: 44, height: 44, borderRadius: 14,
-          background: 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.05))',
-          border: '1px solid rgba(245,158,11,0.2)',
+          width: 42, height: 42, borderRadius: 12,
+          background: 'rgba(255, 194, 26, 0.14)',
+          border: '1px solid rgba(255, 194, 26, 0.3)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: 'var(--brand)',
         }}>
-          <FileText size={22} color="#F59E0B" />
+          <FileText size={20} />
         </div>
         <div>
-          <h2 style={{ fontSize: 22, fontWeight: 700, color: '#F1F5F9', margin: 0, fontFamily: 'Outfit, sans-serif' }}>
+          <h2 className="font-display" style={{ fontSize: 21, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
             Términos y Condiciones
           </h2>
-          <p style={{ fontSize: 12, color: '#64748B', margin: 0 }}>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '2px 0 0' }}>
             Última actualización: Abril 2026
           </p>
         </div>
@@ -264,11 +266,11 @@ function TermsContent() {
 
 function Section({ title, children }) {
   return (
-    <div style={{ marginBottom: 24 }}>
-      <h3 style={{
-        fontSize: 15, fontWeight: 700, color: '#F1F5F9',
-        marginBottom: 8, fontFamily: 'Outfit, sans-serif',
-        paddingBottom: 6, borderBottom: '1px solid rgba(255,255,255,0.06)',
+    <div style={{ marginBottom: 22 }}>
+      <h3 className="font-display" style={{
+        fontSize: 15, fontWeight: 700, color: 'var(--text-primary)',
+        marginBottom: 8,
+        paddingBottom: 6, borderBottom: '1px solid var(--border-color)',
       }}>
         {title}
       </h3>
@@ -276,25 +278,28 @@ function Section({ title, children }) {
         {children}
       </div>
       <style>{`
-        div ul { padding-left: 20px; margin: 8px 0; }
-        div li { margin-bottom: 4px; }
-        div p { margin: 8px 0; }
+        .rq-legal-prose ul { padding-left: 20px; margin: 8px 0; }
+        .rq-legal-prose li { margin-bottom: 4px; }
+        .rq-legal-prose p { margin: 8px 0; }
+        .rq-legal-prose strong { color: var(--text-primary); }
       `}</style>
     </div>
   );
 }
 
 export default function LegalPages({ page, onClose, onNavigate }) {
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+
   return (
-    <div className="fixed inset-0 z-[3000] flex items-center justify-center">
+    <div className="fixed inset-0 z-[3000] flex items-center justify-center md:p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0"
         onClick={onClose}
         style={{
-          background: 'rgba(0,0,0,0.85)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          background: 'rgba(13, 16, 20, 0.72)',
+          backdropFilter: 'blur(6px)',
+          WebkitBackdropFilter: 'blur(6px)',
         }}
       />
 
@@ -303,58 +308,53 @@ export default function LegalPages({ page, onClose, onNavigate }) {
         className="relative w-full h-full md:h-auto md:max-h-[85vh] animate-slide-up"
         style={{
           maxWidth: 680,
-          borderRadius: window.innerWidth >= 768 ? 24 : 0,
-          background: 'linear-gradient(145deg, rgba(17,24,39,0.99) 0%, rgba(11,17,32,1) 100%)',
-          border: window.innerWidth >= 768 ? '1px solid rgba(255,255,255,0.08)' : 'none',
-          boxShadow: '0 40px 80px rgba(0,0,0,0.7)',
+          borderRadius: isDesktop ? 18 : 0,
+          background: 'var(--bg-card)',
+          border: isDesktop ? '1px solid var(--border-color)' : 'none',
+          boxShadow: 'var(--shadow-lg)',
           display: 'flex', flexDirection: 'column',
           overflow: 'hidden',
         }}
       >
-        {/* Top gradient bar */}
-        <div style={{
-          height: 3, flexShrink: 0,
-          background: page === 'privacy'
-            ? 'linear-gradient(90deg, #06B6D4, #3B82F6, #8B5CF6)'
-            : 'linear-gradient(90deg, #F59E0B, #D97706, #92400E)',
-        }} />
-
         {/* Header */}
         <div style={{
-          padding: '16px 24px',
+          padding: '14px 20px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          borderBottom: '1px solid var(--border-color)',
+          background: 'var(--bg-surface)',
           flexShrink: 0,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {/* Toggle between privacy and terms */}
             <div style={{
               display: 'flex',
-              background: 'rgba(255,255,255,0.04)',
+              background: 'var(--bg-card)',
               borderRadius: 10, padding: 3,
-              border: '1px solid rgba(255,255,255,0.07)',
+              border: '1px solid var(--border-color)',
             }}>
               <button
+                type="button"
                 onClick={() => onNavigate('privacy')}
                 style={{
-                  padding: '6px 14px', borderRadius: 8,
+                  padding: '6px 12px', borderRadius: 7,
                   fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer',
-                  background: page === 'privacy' ? 'rgba(6,182,212,0.15)' : 'transparent',
-                  color: page === 'privacy' ? '#06B6D4' : '#64748B',
-                  transition: 'all 0.2s',
+                  background: page === 'privacy' ? 'var(--plate-bg)' : 'transparent',
+                  color: page === 'privacy' ? 'var(--plate-fg)' : 'var(--text-muted)',
+                  transition: 'all 0.15s',
                   display: 'flex', alignItems: 'center', gap: 5,
                 }}
               >
                 <Shield size={12} /> Privacidad
               </button>
               <button
+                type="button"
                 onClick={() => onNavigate('terms')}
                 style={{
-                  padding: '6px 14px', borderRadius: 8,
+                  padding: '6px 12px', borderRadius: 7,
                   fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer',
-                  background: page === 'terms' ? 'rgba(245,158,11,0.15)' : 'transparent',
-                  color: page === 'terms' ? '#F59E0B' : '#64748B',
-                  transition: 'all 0.2s',
+                  background: page === 'terms' ? 'var(--plate-bg)' : 'transparent',
+                  color: page === 'terms' ? 'var(--plate-fg)' : 'var(--text-muted)',
+                  transition: 'all 0.15s',
                   display: 'flex', alignItems: 'center', gap: 5,
                 }}
               >
@@ -364,17 +364,11 @@ export default function LegalPages({ page, onClose, onNavigate }) {
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            style={{
-              width: 32, height: 32, borderRadius: 10,
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: '#94A3B8',
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#F1F5F9'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#94A3B8'; }}
+            className="rq-icon-btn"
+            style={{ width: 32, height: 32 }}
+            aria-label="Cerrar"
           >
             <X size={15} />
           </button>
@@ -382,9 +376,9 @@ export default function LegalPages({ page, onClose, onNavigate }) {
 
         {/* Content */}
         <div style={{
-          flex: 1, overflowY: 'auto', padding: '24px 28px',
+          flex: 1, overflowY: 'auto', padding: '24px 26px',
           scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(255,255,255,0.1) transparent',
+          scrollbarColor: 'var(--border-color) transparent',
         }}>
           {page === 'privacy' ? <PrivacyContent /> : <TermsContent />}
         </div>

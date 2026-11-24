@@ -4,10 +4,10 @@ import { CheckCircle2, AlertTriangle, XCircle, Info, X } from 'lucide-react';
 const ToastContext = createContext(null);
 
 const TOAST_META = {
-  success: { color: '#10B981', icon: CheckCircle2 },
-  error: { color: '#EF4444', icon: XCircle },
-  warning: { color: '#F59E0B', icon: AlertTriangle },
-  info: { color: '#06B6D4', icon: Info },
+  success: { color: '#1F9D6B', icon: CheckCircle2 },
+  error: { color: '#E5484D', icon: XCircle },
+  warning: { color: '#D99B00', icon: AlertTriangle },
+  info: { color: '#3B8BF0', icon: Info },
 };
 
 export function ToastProvider({ children }) {
@@ -67,20 +67,18 @@ export function ToastProvider({ children }) {
             return (
               <div
                 key={t.id}
-                className="animate-fade-in"
+                className="animate-fade-in rq-card"
                 style={{
                   pointerEvents: 'auto',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 10,
                   padding: '11px 12px',
-                  borderRadius: 14,
+                  borderRadius: 12,
                   background: 'var(--panel-bg)',
-                  backdropFilter: 'blur(24px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-                  border: '1px solid var(--subtle-border-strong)',
-                  borderLeft: `4px solid ${meta.color}`,
-                  boxShadow: '0 12px 32px var(--shadow-color)',
+                  border: '1px solid var(--border-color)',
+                  borderLeft: `3px solid ${meta.color}`,
+                  boxShadow: 'var(--shadow-lg)',
                   color: 'var(--text-primary)',
                   fontSize: 12.5,
                   fontWeight: 500,

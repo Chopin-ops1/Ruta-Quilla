@@ -13,12 +13,12 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Trophy, X, Star, Users, Zap, Clock, ChevronRight, Award } from 'lucide-react';
+import { Trophy, X, Star, Users, Zap, Award, Activity, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { communityAPI } from '../services/api';
 
 export default function CommunityHub({ isOpen, onClose }) {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [tab, setTab] = useState('ranking'); // 'ranking' | 'feed' | 'profile'
   const [leaderboard, setLeaderboard] = useState([]);
   const [feed, setFeed] = useState([]);
@@ -52,9 +52,9 @@ export default function CommunityHub({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const TABS = [
-    { id: 'ranking', label: '🏆 Ranking', icon: Trophy },
-    { id: 'feed', label: '📡 Feed', icon: Zap },
-    ...(isAuthenticated ? [{ id: 'profile', label: '👤 Perfil', icon: Star }] : []),
+    { id: 'ranking', label: 'Ranking', icon: Trophy },
+    { id: 'feed', label: 'Actividad', icon: Activity },
+    ...(isAuthenticated ? [{ id: 'profile', label: 'Perfil', icon: User }] : []),
   ];
 
   return (
@@ -62,7 +62,7 @@ export default function CommunityHub({ isOpen, onClose }) {
       onClick={onClose}
       style={{
         position: 'fixed', inset: 0, zIndex: 1200,
-        background: 'rgba(0,0,0,0.5)',
+        background: 'rgba(13, 16, 20, 0.58)',
         backdropFilter: 'blur(4px)',
         WebkitBackdropFilter: 'blur(4px)',
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
@@ -70,20 +70,14 @@ export default function CommunityHub({ isOpen, onClose }) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
+        className="rq-sheet animate-slide-up"
         style={{
           width: '100%', maxWidth: 440,
           maxHeight: '80vh',
-          background: 'var(--panel-bg)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderTop: '1px solid var(--subtle-border-strong)',
-          borderLeft: '1px solid var(--subtle-border)',
-          borderRight: '1px solid var(--subtle-border)',
-          borderRadius: '22px 22px 0 0',
+          borderBottomLeftRadius: 0, borderBottomRightRadius: 0,
+          borderBottom: 'none',
           overflow: 'hidden',
           display: 'flex', flexDirection: 'column',
-          boxShadow: '0 -10px 40px var(--shadow-color)',
-          fontFamily: 'Inter, sans-serif',
         }}
       >
         <div className="sheet-handle" style={{ marginTop: 10, marginBottom: 4 }} />
@@ -92,38 +86,55 @@ export default function CommunityHub({ isOpen, onClose }) {
           padding: '6px 16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Users size={15} color="#F59E0B" />
-            <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'Outfit, sans-serif' }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: 8,
+              background: 'rgba(255, 194, 26, 0.14)',
+              border: '1px solid rgba(255, 194, 26, 0.3)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--brand)',
+            }}>
+              <Users size={14} />
+            </div>
+            <span className="font-display" style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
               Comunidad Quilla
             </span>
           </div>
-          <button onClick={onClose} style={{
-            background: 'var(--subtle-bg)', border: '1px solid var(--subtle-border)', borderRadius: '50%',
-            width: 30, height: 30, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <X size={14} color="var(--text-secondary)" />
+          <button
+            type="button"
+            onClick={onClose}
+            className="rq-icon-btn"
+            style={{ width: 30, height: 30 }}
+            aria-label="Cerrar"
+          >
+            <X size={14} />
           </button>
         </div>
 
         {/* Tabs */}
         <div style={{
-          display: 'flex', gap: 4, padding: '10px 16px 0', overflowX: 'auto',
+          display: 'flex', gap: 6, padding: '10px 16px 8px',
+          borderBottom: '1px solid var(--border-color)',
+          overflowX: 'auto',
         }}>
-          {TABS.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              style={{
-                padding: '7px 14px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap',
-                background: tab === t.id ? 'rgba(245,158,11,0.15)' : 'var(--subtle-bg)',
-                color: tab === t.id ? '#F59E0B' : 'var(--text-muted)',
-                transition: 'all 0.15s',
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
+          {TABS.map(t => {
+            const TabIcon = t.icon;
+            const active = tab === t.id;
+            return (
+              <button
+                type="button"
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`rq-chip ${active ? 'rq-chip-active' : ''}`}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  padding: '6px 12px', fontSize: 11.5, fontWeight: 600, whiteSpace: 'nowrap',
+                }}
+              >
+                <TabIcon size={12} />
+                {t.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* Content */}
@@ -159,24 +170,35 @@ function RankingTab({ data }) {
     );
   }
 
-  const rankIcons = ['🥇', '🥈', '🥉'];
+  const podiumColors = ['#FFC21A', '#9CA3AF', '#D97706'];
 
   return data.map((u, i) => {
     const initials = u.name?.charAt(0)?.toUpperCase() || '?';
     const xpMax = data[0]?.xp || 1;
     const barW = Math.max(4, Math.round((u.xp / xpMax) * 100));
+    const topColor = i < 3 ? podiumColors[i] : null;
     return (
       <div key={u._id} style={{
         display: 'flex', alignItems: 'center', gap: 10,
         padding: '10px 0',
-        borderBottom: i < data.length - 1 ? '1px solid var(--subtle-border)' : 'none',
+        borderBottom: i < data.length - 1 ? '1px solid var(--border-color)' : 'none',
       }}>
-        <span className="tabular-nums" style={{ fontSize: 14, width: 24, textAlign: 'center', flexShrink: 0, color: 'var(--text-secondary)' }}>
-          {i < 3 ? rankIcons[i] : `${i + 1}°`}
+        <span
+          className="tabular-nums font-mono"
+          style={{
+            width: 24, height: 24, borderRadius: 6, flexShrink: 0,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 11, fontWeight: 700,
+            background: topColor ? `${topColor}1C` : 'var(--bg-surface)',
+            border: `1px solid ${topColor ? `${topColor}45` : 'var(--border-color)'}`,
+            color: topColor || 'var(--text-muted)',
+          }}
+        >
+          {i + 1}
         </span>
         <div style={{
-          width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-          background: `${u.levelColor}22`, border: `1.5px solid ${u.levelColor}55`,
+          width: 32, height: 32, borderRadius: 10, flexShrink: 0,
+          background: `${u.levelColor}1E`, border: `1.5px solid ${u.levelColor}55`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 13, fontWeight: 800, color: u.levelColor,
         }}>{initials}</div>
@@ -185,16 +207,16 @@ function RankingTab({ data }) {
             <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {u.name}
             </span>
-            <span className="tabular-nums" style={{ fontSize: 11, fontWeight: 700, color: u.levelColor, flexShrink: 0 }}>
+            <span className="tabular-nums font-mono" style={{ fontSize: 11, fontWeight: 700, color: u.levelColor, flexShrink: 0 }}>
               {u.xp} XP
             </span>
           </div>
-          <div style={{ height: 4, borderRadius: 2, background: 'var(--subtle-bg)', overflow: 'hidden' }}>
-            <div style={{ width: `${barW}%`, height: '100%', borderRadius: 2, background: `linear-gradient(90deg, ${u.levelColor}88, ${u.levelColor})`, transition: 'width 0.5s' }} />
+          <div style={{ height: 4, borderRadius: 2, background: 'var(--bg-surface)', overflow: 'hidden' }}>
+            <div style={{ width: `${barW}%`, height: '100%', borderRadius: 2, background: u.levelColor, transition: 'width 0.4s ease' }} />
           </div>
         </div>
         <div style={{
-          fontSize: 9, fontWeight: 700, color: u.levelColor,
+          fontSize: 9.5, fontWeight: 700, color: u.levelColor,
           background: `${u.levelColor}15`, border: `1px solid ${u.levelColor}30`,
           borderRadius: 6, padding: '3px 8px', flexShrink: 0, whiteSpace: 'nowrap',
         }}>
@@ -232,7 +254,7 @@ function FeedTab({ data }) {
       <div key={i} style={{
         display: 'flex', alignItems: 'flex-start', gap: 10,
         padding: '10px 0',
-        borderBottom: i < data.length - 1 ? '1px solid var(--subtle-border)' : 'none',
+        borderBottom: i < data.length - 1 ? '1px solid var(--border-color)' : 'none',
       }}>
         <span style={{ fontSize: 18, flexShrink: 0, lineHeight: 1.3 }}>{item.icon}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -257,62 +279,63 @@ function ProfileTab({ data }) {
   return (
     <div>
       {/* Profile Card */}
-      <div style={{
-        padding: 20, borderRadius: 16,
-        background: `linear-gradient(135deg, ${data.levelColor}12, var(--subtle-bg))`,
-        border: `1px solid ${data.levelColor}30`,
+      <div className="rq-card" style={{
+        padding: 18,
+        background: 'var(--bg-surface)',
+        borderColor: 'var(--border-color)',
+        borderTop: `3px solid ${data.levelColor}`,
         marginBottom: 16, textAlign: 'center',
       }}>
         <div style={{
-          width: 56, height: 56, borderRadius: '50%', margin: '0 auto 10px',
-          background: `${data.levelColor}22`, border: `2px solid ${data.levelColor}`,
+          width: 52, height: 52, borderRadius: 14, margin: '0 auto 10px',
+          background: `${data.levelColor}1E`, border: `1.5px solid ${data.levelColor}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 22, fontWeight: 800, color: data.levelColor,
+          fontSize: 20, fontWeight: 800, color: data.levelColor,
         }}>
           {data.name?.charAt(0)?.toUpperCase() || '?'}
         </div>
 
-        <h3 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'Outfit, sans-serif' }}>
+        <h3 className="font-display" style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
           {data.name}
         </h3>
         <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          padding: '4px 12px', borderRadius: 8,
-          background: `${data.levelColor}20`, color: data.levelColor,
-          fontSize: 12, fontWeight: 700,
+          display: 'inline-flex', alignItems: 'center', gap: 5,
+          padding: '4px 10px', borderRadius: 6,
+          background: `${data.levelColor}1C`, color: data.levelColor,
+          fontSize: 11.5, fontWeight: 700,
         }}>
-          <Star size={12} />
+          <Star size={11} />
           {data.levelName}
         </div>
 
         {/* XP Bar */}
         <div style={{ marginTop: 16 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span className="tabular-nums" style={{ fontSize: 20, fontWeight: 800, color: data.levelColor }}>{data.xp} XP</span>
-            <span className="tabular-nums" style={{ fontSize: 11, color: 'var(--text-muted)' }}>Rango #{data.rank}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+            <span className="tabular-nums font-mono" style={{ fontSize: 19, fontWeight: 700, color: data.levelColor }}>{data.xp} XP</span>
+            <span className="tabular-nums font-mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>Rango #{data.rank}</span>
           </div>
-          <div style={{ height: 6, borderRadius: 3, background: 'var(--subtle-bg)', overflow: 'hidden' }}>
+          <div style={{ height: 6, borderRadius: 3, background: 'var(--bg-card)', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
             <div style={{
               width: `${levelProgress}%`, height: '100%', borderRadius: 3,
-              background: `linear-gradient(90deg, ${data.levelColor}88, ${data.levelColor})`,
-              transition: 'width 0.8s ease-out',
+              background: data.levelColor,
+              transition: 'width 0.6s ease-out',
             }} />
           </div>
           {data.nextLevelName && (
-            <p style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 6 }}>
+            <p style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 6 }}>
               {nextXP} XP para <strong style={{ color: data.levelColor }}>{data.nextLevelName}</strong>
             </p>
           )}
         </div>
 
         {/* Stats row */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginTop: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 28, marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--border-color)' }}>
           {[
             { label: 'Capturas', value: data.contributions },
             { label: 'Miembro desde', value: new Date(data.memberSince).toLocaleDateString('es-CO', { month: 'short', year: 'numeric' }) },
           ].map(s => (
             <div key={s.label}>
-              <p className="tabular-nums" style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{s.value}</p>
+              <p className="tabular-nums font-mono" style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>{s.value}</p>
               <p style={{ margin: '2px 0 0', fontSize: 10, color: 'var(--text-muted)' }}>{s.label}</p>
             </div>
           ))}
@@ -322,17 +345,17 @@ function ProfileTab({ data }) {
       {/* Badges */}
       {data.badges?.length > 0 && (
         <div>
-          <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8 }}>
-            <Award size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+          <p className="rq-section-label" style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <Award size={12} />
             Insignias ({data.badges.length})
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {data.badges.map(b => (
               <div key={b.id} title={b.desc} style={{
-                padding: '6px 12px', borderRadius: 10,
-                background: 'var(--subtle-bg)',
-                border: '1px solid var(--subtle-border)',
-                fontSize: 12, color: 'var(--text-primary)',
+                padding: '6px 10px', borderRadius: 8,
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-color)',
+                fontSize: 11.5, color: 'var(--text-primary)',
               }}>
                 {b.label}
               </div>

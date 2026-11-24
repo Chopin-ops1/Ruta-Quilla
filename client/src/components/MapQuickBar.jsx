@@ -102,114 +102,121 @@ export default function MapQuickBar({
     onClear?.();
   };
 
-  const truncate = (s, n = 30) => s && s.length > n ? s.slice(0, n - 1) + '…' : s;
-
   return (
     <div
-      className="animate-slide-up"
+      className="animate-slide-up rq-sheet"
       style={{
         position: 'fixed',
-        bottom: 'calc(24px + env(safe-area-inset-bottom, 0px))',
-        left: '50%', translate: '-50% 0',
+        bottom: 'calc(20px + env(safe-area-inset-bottom, 0px))',
+        left: '50%',
+        translate: '-50% 0',
         zIndex: 1200,
-        width: 'calc(100% - 32px)', maxWidth: 420,
-        borderRadius: 20,
-        background: 'var(--panel-bg)',
-        backdropFilter: 'blur(24px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        border: '1px solid var(--subtle-border-strong)',
-        boxShadow: '0 12px 40px var(--shadow-color)',
+        width: 'calc(100% - 28px)',
+        maxWidth: 420,
         overflow: 'hidden',
       }}
     >
-      {/* Gradient top accent */}
-      <div style={{
-        height: 3,
-        background: effectiveOrigin && effectiveDest
-          ? 'linear-gradient(90deg, #10B981, #F59E0B, #EF4444)'
-          : effectiveOrigin
-            ? 'linear-gradient(90deg, #10B981, #10B98160)'
-            : 'linear-gradient(90deg, #EF444460, #EF4444)',
-      }} />
-
       <div className="sheet-handle" />
 
-      <div style={{ padding: '6px 14px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {/* Points row */}
+      <div style={{ padding: '6px 14px 13px', display: 'flex', flexDirection: 'column', gap: 9 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Origin chip */}
           {effectiveOrigin && (
-            <div style={{
-              flex: 1, display: 'flex', alignItems: 'center', gap: 6,
-              padding: '6px 10px', borderRadius: 10,
-              background: 'rgba(16,185,129,0.1)',
-              border: '1px solid rgba(16,185,129,0.24)',
-              minWidth: 0,
-            }}>
-              <div style={{
-                width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
-                background: '#10B981', boxShadow: '0 0 6px rgba(16,185,129,0.6)',
-              }} />
-              <span style={{
-                fontSize: 11, color: '#10B981', fontWeight: 600,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
-                {originName || 'Cargando...'}
+            <div
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 7,
+                padding: '7px 10px',
+                borderRadius: 8,
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderLeft: '3px solid var(--mangle)',
+                minWidth: 0,
+              }}
+            >
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  flexShrink: 0,
+                  background: 'var(--mangle)',
+                }}
+              />
+              <span
+                style={{
+                  fontSize: 11.5,
+                  color: 'var(--text-primary)',
+                  fontWeight: 600,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {originName || 'Cargando origen...'}
               </span>
             </div>
           )}
 
-          {/* Arrow */}
           {effectiveOrigin && effectiveDest && (
             <Navigation size={12} style={{ color: 'var(--text-muted)', flexShrink: 0, transform: 'rotate(90deg)' }} />
           )}
 
-          {/* Destination chip */}
           {effectiveDest && (
-            <div style={{
-              flex: 1, display: 'flex', alignItems: 'center', gap: 6,
-              padding: '6px 10px', borderRadius: 10,
-              background: 'rgba(239,68,68,0.1)',
-              border: '1px solid rgba(239,68,68,0.24)',
-              minWidth: 0,
-            }}>
-              <div style={{
-                width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
-                background: '#EF4444', boxShadow: '0 0 6px rgba(239,68,68,0.6)',
-              }} />
-              <span style={{
-                fontSize: 11, color: '#EF4444', fontWeight: 600,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
-                {destName || 'Cargando...'}
+            <div
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 7,
+                padding: '7px 10px',
+                borderRadius: 8,
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderLeft: '3px solid var(--carnaval)',
+                minWidth: 0,
+              }}
+            >
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: 2,
+                  flexShrink: 0,
+                  background: 'var(--carnaval)',
+                }}
+              />
+              <span
+                style={{
+                  fontSize: 11.5,
+                  color: 'var(--text-primary)',
+                  fontWeight: 600,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {destName || 'Cargando destino...'}
               </span>
             </div>
           )}
 
-          {/* Close button */}
           <button
             onClick={handleClose}
             aria-label="Limpiar puntos"
-            style={{
-              width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-              background: 'var(--subtle-bg)',
-              border: '1px solid var(--subtle-border-strong)',
-              color: 'var(--text-muted)', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'all 0.2s',
-            }}
+            className="rq-icon-btn"
+            style={{ width: 30, height: 30, flexShrink: 0 }}
           >
             <X size={13} />
           </button>
         </div>
 
-        {/* Hint or search button */}
         {!canSearch && (
-          <p style={{
-            fontSize: 10, color: 'var(--text-muted)', textAlign: 'center',
-            margin: 0, padding: '2px 0',
-          }}>
-            {!effectiveOrigin ? '🖱️ Click derecho → Origen' : '🖱️ Ahora selecciona el destino'}
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', margin: 0 }}>
+            {!effectiveOrigin
+              ? 'Selecciona el punto de origen en el mapa para continuar'
+              : 'Ahora toca o haz clic derecho en el mapa para fijar el destino'}
           </p>
         )}
 
@@ -217,20 +224,18 @@ export default function MapQuickBar({
           <button
             onClick={handleSearch}
             disabled={isNavigating}
-            style={{
-              width: '100%', padding: '10px 0', borderRadius: 12,
-              border: 'none', cursor: 'pointer',
-              background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-              color: '#000', fontSize: 13, fontWeight: 700,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              boxShadow: '0 4px 16px rgba(245,158,11,0.3)',
-              transition: 'all 0.2s',
-            }}
+            className="rq-btn-primary"
+            style={{ width: '100%', padding: '10px 14px', fontSize: 13 }}
           >
-            {isNavigating
-              ? <><Loader2 size={14} className="animate-spin" /> Buscando...</>
-              : <><Search size={14} /> Buscar ruta</>
-            }
+            {isNavigating ? (
+              <>
+                <Loader2 size={14} className="animate-spin" /> Buscando rutas...
+              </>
+            ) : (
+              <>
+                <Search size={14} /> Buscar ruta
+              </>
+            )}
           </button>
         )}
       </div>

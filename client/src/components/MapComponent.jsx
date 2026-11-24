@@ -166,51 +166,48 @@ function createArrowImageData() {
 
 function createOriginElement() {
   const el = document.createElement('div');
-  el.innerHTML = `<div style="position:relative;animation:marker-drop 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;">
-    <div style="position:absolute;top:-10px;left:-10px;width:40px;height:40px;border:2px solid rgba(16,185,129,0.4);border-radius:50%;animation:origin-pulse-1 2s ease-out infinite;"></div>
-    <div style="position:absolute;top:-10px;left:-10px;width:40px;height:40px;border:1.5px solid rgba(16,185,129,0.25);border-radius:50%;animation:origin-pulse-2 2s ease-out 0.8s infinite;"></div>
-    <div style="width:20px;height:20px;background:radial-gradient(circle at 35% 35%,#34D399,#10B981,#059669);border:3px solid white;border-radius:50%;box-shadow:0 0 16px rgba(16,185,129,0.6),0 2px 8px rgba(0,0,0,0.3);"></div>
-    <div style="position:absolute;top:24px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:Inter,sans-serif;font-size:10px;font-weight:700;color:#10B981;text-shadow:0 1px 3px rgba(0,0,0,0.8);letter-spacing:0.03em;">ORIGEN</div>
+  el.innerHTML = `<div style="position:relative;animation:marker-drop 0.25s cubic-bezier(0.2,0,0,1) forwards;">
+    <div style="position:absolute;top:-7px;left:-7px;width:32px;height:32px;border:1.5px solid rgba(31,157,107,0.45);border-radius:50%;animation:origin-pulse-1 2.2s ease-out infinite;"></div>
+    <div style="width:18px;height:18px;background:#1F9D6B;border:2.5px solid #FFFFFF;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.4);"></div>
+    <div style="position:absolute;top:22px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:var(--font-mono);font-size:9px;font-weight:700;background:#14171C;color:#1F9D6B;padding:1px 5px;border-radius:4px;border:1px solid rgba(31,157,107,0.4);letter-spacing:0.04em;">ORIGEN</div>
   </div>`;
   return el;
 }
 
 function createDestinationElement() {
   const el = document.createElement('div');
-  el.innerHTML = `<div style="position:relative;animation:marker-drop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.1s forwards;opacity:0;">
-    <div style="position:absolute;top:-6px;left:-6px;width:36px;height:36px;border-radius:8px;background:rgba(239,68,68,0.15);animation:dest-glow 2s ease-in-out infinite;transform:rotate(45deg);"></div>
-    <div style="width:24px;height:24px;background:linear-gradient(135deg,#F87171,#EF4444,#DC2626);border:3px solid white;border-radius:6px;box-shadow:0 0 16px rgba(239,68,68,0.6),0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;transform:rotate(45deg);">
-      <div style="width:7px;height:7px;background:white;border-radius:50%;transform:rotate(-45deg);"></div>
+  el.innerHTML = `<div style="position:relative;animation:marker-drop 0.25s cubic-bezier(0.2,0,0,1) forwards;">
+    <div style="width:20px;height:20px;background:#E5484D;border:2.5px solid #FFFFFF;border-radius:5px;box-shadow:0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;transform:rotate(45deg);">
+      <div style="width:6px;height:6px;background:#FFFFFF;border-radius:50%;transform:rotate(-45deg);"></div>
     </div>
-    <div style="position:absolute;top:30px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:Inter,sans-serif;font-size:10px;font-weight:700;color:#EF4444;text-shadow:0 1px 3px rgba(0,0,0,0.8);letter-spacing:0.03em;">DESTINO</div>
+    <div style="position:absolute;top:25px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:var(--font-mono);font-size:9px;font-weight:700;background:#14171C;color:#E5484D;padding:1px 5px;border-radius:4px;border:1px solid rgba(229,72,77,0.4);letter-spacing:0.04em;">DESTINO</div>
   </div>`;
   return el;
 }
 
 function createBoardAlightElement(color, label) {
-  const safeBg = safeColor(color, '#06B6D4');
+  const safeBg = safeColor(color, '#FFC21A');
   const safeLabel = escapeHtml(label);
   const el = document.createElement('div');
-  el.innerHTML = `<div style="background:${safeBg};color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:12px;border:2px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.4);white-space:nowrap;font-family:Inter,sans-serif;cursor:pointer;">${safeLabel}</div>`;
+  el.innerHTML = `<div style="display:inline-flex;align-items:center;gap:5px;background:#14171C;color:#F2EFE8;font-family:var(--font-mono);font-size:9.5px;font-weight:700;letter-spacing:0.03em;padding:3px 7px;border-radius:6px;border:1px solid rgba(242,239,232,0.18);border-left:3px solid ${safeBg};box-shadow:0 2px 8px rgba(0,0,0,0.4);white-space:nowrap;cursor:pointer;"><span>${safeLabel}</span></div>`;
   return el;
 }
 
 function createUserElement() {
   const el = document.createElement('div');
   el.innerHTML = `<div style="position:relative;">
-    <div style="position:absolute;top:-6px;left:-6px;width:28px;height:28px;border:2px solid rgba(59,130,246,0.3);border-radius:50%;animation:origin-pulse-1 2.5s ease-out infinite;"></div>
-    <div style="position:absolute;top:-6px;left:-6px;width:28px;height:28px;border:1.5px solid rgba(59,130,246,0.2);border-radius:50%;animation:origin-pulse-2 2.5s ease-out 1s infinite;"></div>
-    <div style="width:16px;height:16px;background:radial-gradient(circle at 35% 35%,#60A5FA,#3B82F6,#2563EB);border:3px solid white;border-radius:50%;box-shadow:0 0 12px rgba(59,130,246,0.6),0 2px 6px rgba(0,0,0,0.3);animation:gps-breathe 3s ease-in-out infinite;"></div>
-    <div style="position:absolute;top:22px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:Inter,sans-serif;font-size:9px;font-weight:700;color:#60A5FA;text-shadow:0 1px 3px rgba(0,0,0,0.8);">TÚ</div>
+    <div style="position:absolute;top:-6px;left:-6px;width:28px;height:28px;border:1.5px solid rgba(59,139,240,0.35);border-radius:50%;animation:origin-pulse-1 2.4s ease-out infinite;"></div>
+    <div style="width:16px;height:16px;background:#3B8BF0;border:2.5px solid #FFFFFF;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.4);"></div>
+    <div style="position:absolute;top:20px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:var(--font-mono);font-size:9px;font-weight:700;background:#14171C;color:#F2EFE8;padding:1px 5px;border-radius:4px;border:1px solid rgba(59,139,240,0.45);">TÚ</div>
   </div>`;
   return el;
 }
 
-function createSponsorElement(color = '#F59E0B') {
-  const safeAccent = safeColor(color, '#F59E0B');
+function createSponsorElement(color = '#FFC21A') {
+  const safeAccent = safeColor(color, '#FFC21A');
   const el = document.createElement('div');
   el.innerHTML = `<div class="sponsor-marker" style="border-color:${safeAccent};cursor:pointer;">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${safeAccent}" stroke-width="2.5">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${safeAccent}" stroke-width="2.5">
       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
     </svg>
   </div>`;
@@ -218,10 +215,10 @@ function createSponsorElement(color = '#F59E0B') {
 }
 
 function createReportElement(report) {
-  const badgeColor = safeColor(report?.color, '#F59E0B');
-  const badgeEmoji = escapeHtml(report?.emoji || '⚠️');
+  const badgeColor = safeColor(report?.color, '#FFC21A');
+  const badgeEmoji = escapeHtml(report?.emoji || '!');
   const el = document.createElement('div');
-  el.innerHTML = `<div style="width:32px;height:32px;border-radius:50%;background:${badgeColor};border:2px solid rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 10px rgba(0,0,0,0.4);animation:pulse 2s ease-in-out infinite;cursor:pointer;">${badgeEmoji}</div>`;
+  el.innerHTML = `<div style="width:30px;height:30px;border-radius:8px;background:#14171C;border:2px solid ${badgeColor};color:#F2EFE8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.45);cursor:pointer;">${badgeEmoji}</div>`;
   return el;
 }
 
@@ -584,14 +581,14 @@ export default function MapComponent({
       }
     }
 
-    // Selected route: VUELTA (#EF4444)
+    // Selected route: VUELTA (#E5484D)
     if (!map.getLayer('selected-route-vuelta-casing')) {
       map.addLayer({
         id: 'selected-route-vuelta-casing',
         type: 'line',
         source: 'selected-route-vuelta',
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': 'rgba(15,23,42,0.45)', 'line-width': 7.5 },
+        paint: { 'line-color': 'rgba(20,23,28,0.55)', 'line-width': 7.5 },
       });
     }
     if (!map.getLayer('selected-route-vuelta-line')) {
@@ -600,7 +597,7 @@ export default function MapComponent({
         type: 'line',
         source: 'selected-route-vuelta',
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': '#EF4444', 'line-width': 4.5, 'line-opacity': 0.88 },
+        paint: { 'line-color': '#E5484D', 'line-width': 4.5, 'line-opacity': 0.9 },
       });
     }
     if (!map.getLayer('selected-route-vuelta-arrows')) {
@@ -620,14 +617,14 @@ export default function MapComponent({
       });
     }
 
-    // Selected route: IDA (#10B981)
+    // Selected route: IDA (#1F9D6B)
     if (!map.getLayer('selected-route-ida-casing')) {
       map.addLayer({
         id: 'selected-route-ida-casing',
         type: 'line',
         source: 'selected-route-ida',
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': 'rgba(15,23,42,0.45)', 'line-width': 8 },
+        paint: { 'line-color': 'rgba(20,23,28,0.55)', 'line-width': 8 },
       });
     }
     if (!map.getLayer('selected-route-ida-line')) {
@@ -636,7 +633,7 @@ export default function MapComponent({
         type: 'line',
         source: 'selected-route-ida',
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': '#10B981', 'line-width': 5, 'line-opacity': 0.92 },
+        paint: { 'line-color': '#1F9D6B', 'line-width': 5, 'line-opacity': 0.94 },
       });
     }
     if (!map.getLayer('selected-route-ida-arrows')) {
@@ -657,14 +654,14 @@ export default function MapComponent({
     }
 
     // Selected route named stops (Transmetro / SIBUS transfer stops)
-    const stopStrokeColor = d.isDark ? '#0B1120' : '#FFFFFF';
+    const stopStrokeColor = d.isDark ? '#0D1014' : '#FFFFFF';
     if (!map.getLayer('selected-route-stops-layer')) {
       map.addLayer({
         id: 'selected-route-stops-layer',
         type: 'circle',
         source: 'selected-route-stops',
         paint: {
-          'circle-color': ['match', ['get', 'sentido'], 'regreso', '#EF4444', '#10B981'],
+          'circle-color': ['match', ['get', 'sentido'], 'regreso', '#E5484D', '#1F9D6B'],
           'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 4.5, 15, 7],
           'circle-stroke-width': 2,
           'circle-stroke-color': stopStrokeColor,
@@ -683,7 +680,7 @@ export default function MapComponent({
         source: 'nav-walk',
         layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: {
-          'line-color': '#60A5FA',
+          'line-color': '#3B8BF0',
           'line-width': 4,
           'line-opacity': 0.95,
           'line-dasharray': [1.4, 1.8],
@@ -805,12 +802,14 @@ export default function MapComponent({
     const originBtn = document.createElement('button');
     originBtn.className = 'ctx-btn';
     originBtn.type = 'button';
-    originBtn.innerHTML = '<span class="ctx-btn-icon">📍</span><span>Origen desde aquí</span>';
+    originBtn.innerHTML =
+      '<span class="ctx-btn-icon"><span style="width:9px;height:9px;border-radius:50%;background:#1F9D6B;display:inline-block"></span></span><span>Origen desde aquí</span>';
 
     const destBtn = document.createElement('button');
     destBtn.className = 'ctx-btn';
     destBtn.type = 'button';
-    destBtn.innerHTML = '<span class="ctx-btn-icon">🏁</span><span>Destino aquí</span>';
+    destBtn.innerHTML =
+      '<span class="ctx-btn-icon"><span style="width:9px;height:9px;border-radius:2px;background:#E5484D;display:inline-block"></span></span><span>Destino aquí</span>';
 
     wrapper.appendChild(originBtn);
     wrapper.appendChild(destBtn);
@@ -889,22 +888,21 @@ export default function MapComponent({
     map.on('click', 'nav-bus-line', (e) => {
       const opt = currentOptionRef.current;
       if (!opt || pinModeRef.current) return;
-      const color = safeColor(opt.route?.color, '#06B6D4');
+      const color = safeColor(opt.route?.color, '#FFC21A');
       const name = escapeHtml(opt.route?.name || opt.route?.nombre || 'Ruta');
       const company = escapeHtml(opt.route?.company || opt.route?.operador || '');
       const dir = opt.direction === 'ida' ? 'Ida' : 'Vuelta';
       const fare = escapeHtml((opt.route?.fare || 3700).toLocaleString());
       showLinePopup(
         e.lngLat,
-        `<div style="min-width:180px">
+        `<div style="min-width:190px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-            <div style="width:12px;height:12px;border-radius:50%;background:${color}"></div>
-            <strong style="font-size:14px">${name}</strong>
+            <div style="width:10px;height:10px;border-radius:3px;background:${color};flex-shrink:0"></div>
+            <strong style="font-family:var(--font-display);font-size:14px">${name}</strong>
           </div>
-          <div style="font-size:12px;color:var(--text-secondary);line-height:1.6">
-            <div>🚌 ${company}</div>
-            <div>📍 Dirección: ${dir}</div>
-            <div>💰 $${fare} COP</div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:1.55">
+            <div>${company} · <strong>${dir}</strong></div>
+            <div style="font-family:var(--font-mono);color:var(--brand);font-weight:700;margin-top:2px">$${fare} COP</div>
           </div>
         </div>`
       );
@@ -915,23 +913,24 @@ export default function MapComponent({
       if (!r || pinModeRef.current) return;
       const name = escapeHtml(r.nombre || 'Ruta');
       const op = escapeHtml(r.operador || '');
-      const code = r.codigo ? `<div>🔢 Código: ${escapeHtml(r.codigo)}</div>` : '';
+      const code = r.codigo
+        ? `<span style="background:#14171C;color:#FFC21A;padding:1px 6px;border-radius:4px;font-family:var(--font-mono);font-size:10px;font-weight:700">${escapeHtml(r.codigo)}</span>`
+        : '';
       const locLine = dirLabel === 'IDA'
-        ? (r.origen ? `<div>📍 Origen: ${escapeHtml(r.origen)}</div>` : '')
-        : (r.destino ? `<div>📍 Destino: ${escapeHtml(r.destino)}</div>` : '');
+        ? (r.origen ? `<div>Origen: ${escapeHtml(r.origen)}</div>` : '')
+        : (r.destino ? `<div>Destino: ${escapeHtml(r.destino)}</div>` : '');
       const fare = escapeHtml((r.fare || 3700).toLocaleString());
       showLinePopup(
         e.lngLat,
         `<div style="min-width:200px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <div style="width:12px;height:12px;border-radius:50%;background:${badgeColor}"></div>
-            <strong style="font-size:14px">${name}</strong>
-          </div>
-          <div style="font-size:12px;color:var(--text-secondary);line-height:1.6">
-            <div>🚌 ${op} — <span style="color:${badgeColor};font-weight:600">${dirLabel}</span></div>
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
             ${code}
+            <strong style="font-family:var(--font-display);font-size:14px">${name}</strong>
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:1.55">
+            <div>${op} — <span style="color:${badgeColor};font-weight:700">${dirLabel}</span></div>
             ${locLine}
-            <div>💰 $${fare} COP</div>
+            <div style="font-family:var(--font-mono);color:var(--brand);font-weight:700;margin-top:2px">$${fare} COP</div>
           </div>
         </div>`
       );
@@ -941,29 +940,28 @@ export default function MapComponent({
       const opt = currentOptionRef.current;
       const sr = opt?.transfer?.secondRoute;
       if (!sr || pinModeRef.current) return;
-      const color = safeColor(sr.color, '#8B5CF6');
+      const color = safeColor(sr.color, '#3B8BF0');
       const name = escapeHtml(sr.name || 'Ruta 2');
       const company = escapeHtml(sr.company || '');
       const dir = opt.transfer.secondDirection === 'ida' ? 'Ida' : 'Vuelta';
       const fare = escapeHtml((sr.fare || 3700).toLocaleString());
       showLinePopup(
         e.lngLat,
-        `<div style="min-width:180px">
+        `<div style="min-width:190px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-            <div style="width:12px;height:12px;border-radius:50%;background:${color}"></div>
-            <strong style="font-size:14px">${name}</strong>
+            <div style="width:10px;height:10px;border-radius:3px;background:${color};flex-shrink:0"></div>
+            <strong style="font-family:var(--font-display);font-size:14px">${name}</strong>
           </div>
-          <div style="font-size:12px;color:var(--text-secondary);line-height:1.6">
-            <div>🚌 ${company} (Transbordo)</div>
-            <div>📍 Dirección: ${dir}</div>
-            <div>💰 $${fare} COP</div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:1.55">
+            <div>${company} (Transbordo) · <strong>${dir}</strong></div>
+            <div style="font-family:var(--font-mono);color:var(--brand);font-weight:700;margin-top:2px">$${fare} COP</div>
           </div>
         </div>`
       );
     });
 
-    map.on('click', 'selected-route-ida-line', handleSelectedLineClick('IDA', '#10B981'));
-    map.on('click', 'selected-route-vuelta-line', handleSelectedLineClick('VUELTA', '#EF4444'));
+    map.on('click', 'selected-route-ida-line', handleSelectedLineClick('IDA', '#1F9D6B'));
+    map.on('click', 'selected-route-vuelta-line', handleSelectedLineClick('VUELTA', '#E5484D'));
 
     const openPointCardPopup = ({ lng, lat, badgeText, badgeColor, titleText, subtitleText, metaText }) => {
       const root = document.createElement('div');
@@ -1288,14 +1286,14 @@ export default function MapComponent({
         addMarker(
           [previewOrigin.lng, previewOrigin.lat],
           createOriginElement(),
-          '<strong>📍 Origen seleccionado</strong>'
+          '<strong>Origen seleccionado</strong>'
         );
       }
       if (previewDestination) {
         addMarker(
           [previewDestination.lng, previewDestination.lat],
           createDestinationElement(),
-          '<strong>🏁 Destino seleccionado</strong>'
+          '<strong>Destino seleccionado</strong>'
         );
       }
       if (selectedRoute) {
@@ -1307,29 +1305,29 @@ export default function MapComponent({
         if (routeDirectionFilter !== 'regreso' && Array.isArray(idaCoords) && idaCoords.length > 1) {
           addMarker(
             idaCoords[0],
-            createBoardAlightElement('#10B981', '🚏 Inicio'),
+            createBoardAlightElement('#1F9D6B', 'INICIO'),
             `<div><strong>${title}</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:3px">Inicio recorrido (Ida)${selectedRoute.origen ? ` · ${escapeHtml(selectedRoute.origen)}` : ''}</div></div>`
           );
           addMarker(
             idaCoords[idaCoords.length - 1],
-            createBoardAlightElement(hasReg ? '#F59E0B' : '#EF4444', hasReg ? '🔄 Retorno' : '🏁 Fin'),
+            createBoardAlightElement(hasReg ? '#FFC21A' : '#E5484D', hasReg ? 'RETORNO' : 'FIN'),
             `<div><strong>${title}</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:3px">${hasReg ? 'Punto de retorno a regreso' : 'Destino final (recorrido lineal)'}${selectedRoute.destino ? ` · ${escapeHtml(selectedRoute.destino)}` : ''}</div></div>`
           );
         } else if (routeDirectionFilter === 'regreso' && hasReg) {
           addMarker(
             regCoords[0],
-            createBoardAlightElement('#EF4444', '🔄 Inicio regreso'),
+            createBoardAlightElement('#E5484D', 'INICIO REG.'),
             `<div><strong>${title}</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:3px">Inicio sentido regreso</div></div>`
           );
           addMarker(
             regCoords[regCoords.length - 1],
-            createBoardAlightElement('#10B981', '🏁 Fin regreso'),
+            createBoardAlightElement('#1F9D6B', 'FIN REG.'),
             `<div><strong>${title}</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:3px">Cierre de recorrido</div></div>`
           );
         }
       }
     } else if (currentOption) {
-      const rColor = safeColor(currentOption.route?.color, '#06B6D4');
+      const rColor = safeColor(currentOption.route?.color, '#FFC21A');
       const rName = escapeHtml(currentOption.route?.name || currentOption.route?.nombre || 'Ruta');
       const dirText = currentOption.direction === 'ida' ? 'Ida' : 'Vuelta';
       const alightText =
@@ -1340,31 +1338,31 @@ export default function MapComponent({
       addMarker(
         [navigationResult.origin.lng, navigationResult.origin.lat],
         createOriginElement(),
-        '<strong>📍 Tu origen</strong>'
+        '<strong>Tu origen</strong>'
       );
       addMarker(
         [navigationResult.destination.lng, navigationResult.destination.lat],
         createDestinationElement(),
-        '<strong>🏁 Tu destino</strong>'
+        '<strong>Tu destino</strong>'
       );
       addMarker(
         currentOption.boardPoint.coordinates,
-        createBoardAlightElement(rColor, '🚌 Sube aquí'),
-        `<div><strong>🚌 Toma el bus aquí</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:4px">${rName} (${dirText})</div></div>`
+        createBoardAlightElement(rColor, 'SUBE AQUÍ'),
+        `<div><strong>Aborda aquí</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:4px">${rName} (${dirText})</div></div>`
       );
       if (currentOption.isTransfer && currentOption.transfer?.transferPoint?.length >= 2) {
         const srName = escapeHtml(currentOption.transfer.secondRoute?.name || 'Siguiente bus');
         const trWalk = escapeHtml(currentOption.transfer.walkDistance ?? 0);
         addMarker(
           currentOption.transfer.transferPoint,
-          createBoardAlightElement('#8B5CF6', '🔄 Transbordo'),
-          `<div><strong>🔄 Cambia a ${srName}</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:4px">Camina ${trWalk}m al siguiente tramo</div></div>`
+          createBoardAlightElement('#3B8BF0', 'TRANSBORDO'),
+          `<div><strong>Cambia a ${srName}</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:4px">Camina ${trWalk}m al siguiente tramo</div></div>`
         );
       }
       addMarker(
         currentOption.alightPoint.coordinates,
-        createBoardAlightElement('#EF4444', '🛑 Baja aquí'),
-        `<div><strong>🛑 Bájate aquí</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:4px">${alightText}</div></div>`
+        createBoardAlightElement('#E5484D', 'BAJA AQUÍ'),
+        `<div><strong>Baja en este punto</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:4px">${alightText}</div></div>`
       );
     }
   }, [navigationResult, currentOption, previewOrigin, previewDestination, selectedRoute, routeDirectionFilter]);
@@ -1623,16 +1621,16 @@ export default function MapComponent({
     <div className="w-full h-full relative" style={{ cursor: pinMode ? 'crosshair' : undefined }}>
       <div ref={containerRef} className="w-full h-full" />
 
-      {/* Google-style floating category chips */}
+      {/* Category filter chips */}
       {showPOIs && !pinMode && (
         <div className="poi-chips" role="toolbar" aria-label="Filtrar lugares de interés">
           <button
             type="button"
             className={`poi-chip${poiCategory === 'all' ? ' active' : ''}`}
-            style={{ '--chip-color': '#F59E0B' }}
+            style={{ '--chip-color': 'var(--brand)' }}
             onClick={() => handleSelectCategory('all')}
           >
-            <Layers size={13} color={poiCategory === 'all' ? '#F59E0B' : undefined} />
+            <Layers size={13} color={poiCategory === 'all' ? 'var(--brand)' : undefined} />
             <span>Todo</span>
           </button>
           {POI_CHIP_ORDER.map((catId) => {
@@ -1647,7 +1645,7 @@ export default function MapComponent({
                 style={{ '--chip-color': meta.color }}
                 onClick={() => handleSelectCategory(active ? 'all' : catId)}
               >
-                <IconComp size={13} color={active ? meta.color : meta.color} />
+                <IconComp size={13} color={meta.color} />
                 <span>{meta.chip}</span>
               </button>
             );
@@ -1658,12 +1656,12 @@ export default function MapComponent({
       {/* Subtle zoom hint when zoomed out */}
       {showPOIs && mapZoom < 13.8 && !pinMode && !navigationResult && !selectedRoute && (
         <div className="map-hint-pill animate-fade-in">
-          <MapPin size={12} color="#F59E0B" />
+          <MapPin size={12} color="var(--brand)" />
           <span>Acércate para ver más lugares en esta zona</span>
         </div>
       )}
 
-      {/* Custom glass map control dock (top-right) */}
+      {/* Custom map control dock (top-right) */}
       <div className="map-dock" role="group" aria-label="Controles del mapa">
         <button
           type="button"
@@ -1695,7 +1693,7 @@ export default function MapComponent({
             style={{
               transform: `rotate(${-Math.round(mapBearing)}deg)`,
               transition: 'transform 0.15s ease-out',
-              color: Math.abs(mapBearing) > 2 || is3D ? 'var(--primary-amber)' : undefined,
+              color: Math.abs(mapBearing) > 2 || is3D ? 'var(--brand)' : undefined,
             }}
           />
         </button>
@@ -1708,7 +1706,7 @@ export default function MapComponent({
           onClick={handleToggle3D}
           title={is3D ? 'Vista 2D' : 'Vista 3D'}
           aria-label={is3D ? 'Cambiar a vista 2D' : 'Cambiar a vista 3D'}
-          style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.02em' }}
+          style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.02em' }}
         >
           {is3D ? '2D' : '3D'}
         </button>
@@ -1735,22 +1733,18 @@ export default function MapComponent({
 
       {/* Floating selected-route legend & quick control bar */}
       {selectedRoute && !navigationResult && !pinMode && (
-        <div className="selected-route-pill animate-slide-up" role="region" aria-label="Ruta seleccionada">
-          <div className="selected-route-pill-accent" style={{ background: safeColor(selectedRoute.color, '#06B6D4') }} />
+        <div
+          className="selected-route-pill animate-slide-up"
+          role="region"
+          aria-label="Ruta seleccionada"
+          style={{ '--route-color': safeColor(selectedRoute.color, '#FFC21A') }}
+        >
+          <div className="selected-route-pill-accent" style={{ background: safeColor(selectedRoute.color, '#FFC21A') }} />
           <div className="selected-route-pill-body">
             <div className="selected-route-pill-top">
               <div className="selected-route-pill-title-group">
                 {selectedRoute.codigo && (
-                  <span
-                    className="transit-code flex-shrink-0"
-                    style={{
-                      background: `${safeColor(selectedRoute.color, '#06B6D4')}22`,
-                      color: safeColor(selectedRoute.color, '#06B6D4'),
-                      border: `1px solid ${safeColor(selectedRoute.color, '#06B6D4')}45`,
-                    }}
-                  >
-                    {selectedRoute.codigo}
-                  </span>
+                  <span className="transit-code flex-shrink-0">{selectedRoute.codigo}</span>
                 )}
                 <div className="min-w-0 flex-1">
                   <div className="selected-route-pill-name">
@@ -1813,7 +1807,7 @@ export default function MapComponent({
                     className={`dir-chip${routeDirectionFilter === 'ida' ? ' active-ida' : ''}`}
                     onClick={() => setRouteDirectionFilter('ida')}
                   >
-                    <span className="dir-dot" style={{ background: '#10B981' }} />
+                    <span className="dir-dot" style={{ background: 'var(--mangle)' }} />
                     Ida
                   </button>
                   <button
@@ -1821,13 +1815,13 @@ export default function MapComponent({
                     className={`dir-chip${routeDirectionFilter === 'regreso' ? ' active-regreso' : ''}`}
                     onClick={() => setRouteDirectionFilter('regreso')}
                   >
-                    <span className="dir-dot" style={{ background: '#EF4444' }} />
+                    <span className="dir-dot" style={{ background: 'var(--carnaval)' }} />
                     Regreso
                   </button>
                 </div>
               ) : (
                 <span className="selected-route-linear-badge">
-                  <span className="dir-dot" style={{ background: '#10B981' }} />
+                  <span className="dir-dot" style={{ background: 'var(--mangle)' }} />
                   Recorrido lineal único
                 </span>
               )}
@@ -1848,17 +1842,22 @@ export default function MapComponent({
         <div
           className="absolute top-4 left-1/2 -translate-x-1/2 z-[1100] animate-slide-up"
           style={{
-            background:
-              pinMode === 'origin' ? 'rgba(16, 185, 129, 0.92)' : 'rgba(239, 68, 68, 0.92)',
-            color: '#fff',
-            padding: '8px 20px',
-            borderRadius: 12,
-            fontSize: 13,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            background: 'var(--plate-bg)',
+            color: '#F2EFE8',
+            padding: '8px 16px',
+            borderRadius: 8,
+            border: '1px solid rgba(242,239,232,0.18)',
+            borderLeft: `4px solid ${pinMode === 'origin' ? '#1F9D6B' : '#E5484D'}`,
+            fontSize: 12.5,
             fontWeight: 600,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+            boxShadow: 'var(--shadow-lg)',
           }}
         >
-          📌 Toca el mapa para marcar {pinMode === 'origin' ? 'el origen' : 'el destino'}
+          <MapPin size={14} color={pinMode === 'origin' ? '#1F9D6B' : '#E5484D'} />
+          <span>Toca el mapa para marcar {pinMode === 'origin' ? 'el origen' : 'el destino'}</span>
         </div>
       )}
     </div>

@@ -1,13 +1,13 @@
 /**
  * ============================================
- * RutaQuilla - Sidebar (Panel Lateral v3)
+ * RutaQuilla - Sidebar v4 (Señalética Editorial)
  * ============================================
  *
  * Panel lateral con 4 tabs:
- * - Navegar: Panel de navegación origen→destino (Google Maps style)
- * - Rutas: Catálogo moderno agrupado por empresa con filtros, búsqueda y ficha técnica
+ * - Navegar: Planificador origen→destino estilo itinerario
+ * - Rutas: Catálogo agrupado por empresa con placas de bus y ficha técnica
  * - Favoritos: Acceso rápido a rutas guardadas
- * - Capturar: Captura GPS para crowdsourcing
+ * - Capturar: Telemetría GPS para crowdsourcing
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -31,6 +31,10 @@ import {
   ArrowLeftRight,
   ArrowRight,
   RotateCcw,
+  Radio,
+  Crosshair,
+  GitMerge,
+  AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { mapsAPI } from '../services/api';
@@ -51,7 +55,7 @@ function ScheduleRow({ label, block }) {
     return (
       <div className="flex items-center justify-between text-[11px] py-1">
         <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</span>
-        <span style={{ color: '#EF4444', fontWeight: 600 }}>No opera</span>
+        <span className="font-mono" style={{ color: 'var(--carnaval)', fontWeight: 600 }}>No opera</span>
       </div>
     );
   }
@@ -61,16 +65,16 @@ function ScheduleRow({ label, block }) {
       : 'Servicio activo';
   const freq = block.frecuencia_minutos;
   const freqParts = [];
-  if (freq?.pico != null) freqParts.push(`pico ${freq.pico} min`);
-  if (freq?.valle != null && freq.valle !== freq?.pico) freqParts.push(`valle ${freq.valle} min`);
+  if (freq?.pico != null) freqParts.push(`pico ${freq.pico}m`);
+  if (freq?.valle != null && freq.valle !== freq?.pico) freqParts.push(`valle ${freq.valle}m`);
   const freqStr = freqParts.length > 0 ? ` · ${freqParts.join(' / ')}` : '';
 
   return (
-    <div className="flex items-center justify-between gap-2 text-[11px] py-1">
+    <div className="flex items-center justify-between flex-wrap gap-x-2 gap-y-0.5 text-[11px] py-1">
       <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</span>
       <span className="tabular-nums text-right" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
         {timeRange}
-        {freqStr && <span style={{ color: 'var(--accent-cyan)', fontWeight: 500 }}>{freqStr}</span>}
+        {freqStr && <span className="text-[10.5px]" style={{ color: 'var(--caribe)', fontWeight: 500 }}>{freqStr}</span>}
       </span>
     </div>
   );
@@ -102,7 +106,7 @@ function RoutePassCard({
   onSelect,
   onToggleFavorite,
 }) {
-  const routeColor = safeColor(route?.color, '#06B6D4');
+  const routeColor = safeColor(route?.color, '#FFC21A');
   const { hasCode, title, showSubtitle, km, peakMin, hasReturn } = getRouteDisplay(route);
 
   return (
@@ -121,21 +125,12 @@ function RoutePassCard({
     >
       <div className="flex items-start gap-2.5">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
             {hasCode && (
-              <span
-                className="transit-code flex-shrink-0"
-                style={{
-                  background: `${routeColor}1F`,
-                  color: routeColor,
-                  border: `1px solid ${routeColor}45`,
-                }}
-              >
-                {route.codigo}
-              </span>
+              <span className="transit-code flex-shrink-0">{route.codigo}</span>
             )}
             <span
-              className="text-[12.5px] font-semibold truncate block"
+              className="font-display text-[13px] font-bold truncate block"
               style={{ color: 'var(--text-primary)' }}
               title={title}
             >
@@ -155,14 +150,14 @@ function RoutePassCard({
             </p>
           )}
 
-          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
             {route.sistema === 'masivo' && (
               <span
-                className="text-[9.5px] px-1.5 py-0.5 rounded-full font-bold"
+                className="font-mono text-[9.5px] px-1.5 py-0.5 rounded font-semibold uppercase"
                 style={{
-                  background: 'rgba(6,182,212,0.12)',
-                  color: '#06B6D4',
-                  border: '1px solid rgba(6,182,212,0.28)',
+                  background: 'var(--caribe-soft)',
+                  color: 'var(--caribe)',
+                  border: '1px solid color-mix(in srgb, var(--caribe) 28%, transparent)',
                 }}
               >
                 Transmetro
@@ -170,11 +165,11 @@ function RoutePassCard({
             )}
             {route.esIntermunicipal && (
               <span
-                className="text-[9.5px] px-1.5 py-0.5 rounded-full font-bold"
+                className="font-mono text-[9.5px] px-1.5 py-0.5 rounded font-semibold uppercase"
                 style={{
-                  background: 'rgba(245,158,11,0.12)',
-                  color: '#F59E0B',
-                  border: '1px solid rgba(245,158,11,0.28)',
+                  background: 'var(--brand-soft)',
+                  color: 'var(--brand)',
+                  border: '1px solid color-mix(in srgb, var(--brand) 34%, transparent)',
                 }}
               >
                 Intermunicipal
@@ -187,22 +182,22 @@ function RoutePassCard({
             )}
             {km > 0 && (
               <span
-                className="inline-flex items-center text-[10px] font-medium tabular-nums px-1.5 py-0.5 rounded-md"
+                className="inline-flex items-center text-[10px] font-semibold tabular-nums px-1.5 py-0.5 rounded"
                 style={{
-                  background: 'var(--bg-card)',
+                  background: 'var(--bg-surface)',
                   color: 'var(--text-secondary)',
-                  border: '1px solid var(--subtle-border)',
+                  border: '1px solid var(--border-color)',
                 }}
               >
                 {km.toFixed(1)} km
               </span>
             )}
             <span
-              className="inline-flex items-center gap-1 text-[9.5px] px-1.5 py-0.5 rounded-md font-medium"
+              className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium"
               style={{
-                background: hasReturn ? 'rgba(139, 92, 246, 0.1)' : 'var(--bg-card)',
-                color: hasReturn ? '#A78BFA' : 'var(--text-muted)',
-                border: `1px solid ${hasReturn ? 'rgba(139, 92, 246, 0.22)' : 'var(--subtle-border)'}`,
+                background: 'var(--bg-surface)',
+                color: 'var(--text-muted)',
+                border: '1px solid var(--border-color)',
               }}
             >
               {hasReturn ? <ArrowLeftRight size={9} /> : <ArrowRight size={9} />}
@@ -210,11 +205,11 @@ function RoutePassCard({
             </span>
             {peakMin != null && (
               <span
-                className="inline-flex items-center gap-0.5 text-[9.5px] px-1.5 py-0.5 rounded-md font-medium tabular-nums"
+                className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded font-semibold tabular-nums"
                 style={{
-                  background: 'rgba(16,185,129,0.1)',
-                  color: '#10B981',
-                  border: '1px solid rgba(16,185,129,0.24)',
+                  background: 'var(--mangle-soft)',
+                  color: 'var(--mangle)',
+                  border: '1px solid color-mix(in srgb, var(--mangle) 28%, transparent)',
                 }}
               >
                 <Zap size={9} />
@@ -223,22 +218,21 @@ function RoutePassCard({
             )}
             {isAffected && (
               <span
-                className="text-[9.5px] px-1.5 py-0.5 rounded-full font-bold"
+                className="inline-flex items-center gap-1 font-mono text-[9.5px] px-1.5 py-0.5 rounded font-bold uppercase"
                 style={{
-                  background: 'rgba(239,68,68,0.15)',
-                  color: '#EF4444',
-                  border: '1px solid rgba(239,68,68,0.3)',
-                  animation: 'pulse 2s infinite',
+                  background: 'var(--carnaval-soft)',
+                  color: 'var(--carnaval)',
+                  border: '1px solid color-mix(in srgb, var(--carnaval) 32%, transparent)',
                 }}
               >
-                ⚠️ Reporte
+                <AlertTriangle size={9} /> Reporte
               </span>
             )}
           </div>
         </div>
 
         <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
-          {isLoading && <Loader2 size={14} className="animate-spin" color="#06B6D4" />}
+          {isLoading && <Loader2 size={14} className="animate-spin" color="var(--brand)" />}
           <button
             type="button"
             onClick={(e) => {
@@ -251,10 +245,10 @@ function RoutePassCard({
               cursor: 'pointer',
               padding: 4,
               display: 'flex',
-              transition: 'transform 0.2s',
+              transition: 'transform 0.15s ease',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.18)';
+              e.currentTarget.style.transform = 'scale(1.15)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'scale(1)';
@@ -264,8 +258,8 @@ function RoutePassCard({
           >
             <Star
               size={14}
-              fill={isFav ? '#F59E0B' : 'none'}
-              color={isFav ? '#F59E0B' : 'var(--text-muted)'}
+              fill={isFav ? 'var(--brand)' : 'none'}
+              color={isFav ? 'var(--brand)' : 'var(--text-muted)'}
             />
           </button>
           <ChevronRight size={13} style={{ color: 'var(--text-muted)' }} />
@@ -287,7 +281,7 @@ function SelectedRouteFicha({
 
   if (!route) return null;
 
-  const routeColor = safeColor(route.color, '#06B6D4');
+  const routeColor = safeColor(route.color, '#FFC21A');
   const { hasCode, title, showSubtitle, km, hasReturn } = getRouteDisplay(route);
   const stops = Array.isArray(route.paradas) ? route.paradas : [];
   const hasIdaStops = stops.some((p) => p.sentido !== 'regreso');
@@ -302,47 +296,36 @@ function SelectedRouteFicha({
 
   return (
     <div
-      className="mx-3 mt-3 rounded-2xl overflow-hidden animate-fade-in"
+      className="mx-3 mt-3 rq-card overflow-hidden animate-fade-in"
       style={{
-        background: 'var(--bg-card)',
-        border: `1px solid ${routeColor}55`,
-        boxShadow: '0 10px 28px var(--shadow-color)',
+        '--route-color': routeColor,
+        borderColor: `color-mix(in srgb, ${routeColor} 55%, var(--border-color))`,
+        boxShadow: 'var(--shadow-md)',
       }}
     >
-      {/* Top accent strip */}
       <div style={{ height: 3, background: routeColor }} />
 
       <div className="p-3.5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 flex-wrap mb-1">
-              {hasCode && (
-                <span
-                  className="transit-code"
-                  style={{
-                    background: `${routeColor}20`,
-                    color: routeColor,
-                    border: `1px solid ${routeColor}45`,
-                  }}
-                >
-                  {route.codigo}
-                </span>
-              )}
+            <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+              {hasCode && <span className="transit-code">{route.codigo}</span>}
               <span
-                className="text-[9.5px] px-2 py-0.5 rounded-full font-bold uppercase"
+                className="font-mono text-[9.5px] px-2 py-0.5 rounded font-semibold uppercase"
                 style={{
                   background:
                     route.sistema === 'masivo'
-                      ? 'rgba(6,182,212,0.14)'
+                      ? 'var(--caribe-soft)'
                       : route.esIntermunicipal
-                      ? 'rgba(245,158,11,0.14)'
-                      : 'var(--subtle-bg)',
+                      ? 'var(--brand-soft)'
+                      : 'var(--bg-surface)',
                   color:
                     route.sistema === 'masivo'
-                      ? '#06B6D4'
+                      ? 'var(--caribe)'
                       : route.esIntermunicipal
-                      ? '#F59E0B'
+                      ? 'var(--brand)'
                       : 'var(--text-secondary)',
+                  border: '1px solid var(--border-color)',
                 }}
               >
                 {route.sistema === 'masivo'
@@ -353,10 +336,7 @@ function SelectedRouteFicha({
               </span>
             </div>
 
-            <h4
-              className="text-[14px] font-bold leading-snug m-0"
-              style={{ color: 'var(--text-primary)', fontFamily: 'Outfit, Inter, sans-serif' }}
-            >
+            <h4 className="font-display text-[15px] font-bold leading-snug m-0" style={{ color: 'var(--text-primary)' }}>
               {title}
             </h4>
 
@@ -367,7 +347,7 @@ function SelectedRouteFicha({
             )}
 
             {route.operador && title !== route.operador && (
-              <p className="text-[11px] mt-0.5 mb-0 font-medium" style={{ color: routeColor }}>
+              <p className="text-[11px] mt-1 mb-0 font-semibold" style={{ color: routeColor }}>
                 {route.operador}
               </p>
             )}
@@ -378,62 +358,43 @@ function SelectedRouteFicha({
             onClick={() => onClose?.()}
             aria-label="Cerrar ficha de ruta"
             title="Cerrar ruta"
-            style={{
-              background: 'var(--subtle-bg)',
-              border: '1px solid var(--subtle-border)',
-              borderRadius: 9,
-              width: 28,
-              height: 28,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--text-muted)',
-              flexShrink: 0,
-            }}
+            className="rq-icon-btn"
+            style={{ width: 28, height: 28 }}
           >
             <X size={14} />
           </button>
         </div>
 
-        {/* 3 quick metrics strip */}
+        {/* Matriz 3 datos clave */}
         <div
-          className="grid grid-cols-3 gap-1.5 mt-3 p-2 rounded-xl"
-          style={{ background: 'var(--subtle-bg)', border: '1px solid var(--subtle-border)' }}
+          className="grid grid-cols-3 gap-1.5 mt-3 p-2 rounded-lg"
+          style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)' }}
         >
           <div className="text-center">
-            <div className="text-[9.5px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
-              Distancia
-            </div>
+            <div className="rq-section-label">Distancia</div>
             <div className="text-[12px] font-bold tabular-nums mt-0.5" style={{ color: 'var(--text-primary)' }}>
               {km > 0 ? `${km.toFixed(1)} km` : '—'}
             </div>
           </div>
-          <div className="text-center" style={{ borderLeft: '1px solid var(--subtle-border)', borderRight: '1px solid var(--subtle-border)' }}>
-            <div className="text-[9.5px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
-              Recorrido
-            </div>
+          <div className="text-center" style={{ borderLeft: '1px solid var(--border-color)', borderRight: '1px solid var(--border-color)' }}>
+            <div className="rq-section-label">Trazado</div>
             <div className="text-[11.5px] font-bold mt-0.5" style={{ color: 'var(--text-primary)' }}>
-              {hasReturn ? 'Ida ⇄ Reg.' : 'Lineal →'}
+              {hasReturn ? 'Ida y reg.' : 'Lineal'}
             </div>
           </div>
           <div className="text-center">
-            <div className="text-[9.5px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
-              Tarifa
-            </div>
-            <div className="text-[11.5px] font-bold tabular-nums mt-0.5" style={{ color: '#F59E0B' }}>
+            <div className="rq-section-label">Tarifa</div>
+            <div className="text-[11.5px] font-bold tabular-nums mt-0.5" style={{ color: 'var(--brand)' }}>
               $3.700 / $3.8k
             </div>
           </div>
         </div>
 
         {/* Horarios */}
-        <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--subtle-border)' }}>
+        <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--border-color)' }}>
           <div className="flex items-center gap-1.5 mb-1">
-            <Clock size={12} color="#F59E0B" />
-            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-              Horarios y frecuencias
-            </span>
+            <Clock size={11} color="var(--brand)" />
+            <span className="rq-section-label">Horarios y frecuencias</span>
           </div>
           {route.horarios ? (
             <div>
@@ -451,19 +412,17 @@ function SelectedRouteFicha({
         {/* Métodos de pago */}
         <div
           className="mt-2.5 pt-2.5 flex items-center justify-between gap-2 flex-wrap"
-          style={{ borderTop: '1px solid var(--subtle-border)' }}
+          style={{ borderTop: '1px solid var(--border-color)' }}
         >
-          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-            Medios de pago
-          </span>
+          <span className="rq-section-label">Medios de pago</span>
           <div className="flex items-center gap-1 flex-wrap">
             {(route.metodosPago?.length ? route.metodosPago : ['Efectivo']).map((m) => (
               <span
                 key={m}
-                className="text-[10px] px-2 py-0.5 rounded-md font-medium"
+                className="text-[10px] px-2 py-0.5 rounded font-medium"
                 style={{
-                  background: 'var(--subtle-bg)',
-                  border: '1px solid var(--subtle-border)',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-color)',
                   color: 'var(--text-secondary)',
                 }}
               >
@@ -475,16 +434,16 @@ function SelectedRouteFicha({
 
         {/* Paradas interactivas */}
         {(stops.length > 0 || (route.tieneParadas && isLoading)) && (
-          <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--subtle-border)' }}>
+          <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--border-color)' }}>
             {stops.length > 0 ? (
               <div>
                 <div className="flex items-center justify-between gap-2">
                   <span
-                    className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold px-2 py-1 rounded-lg"
+                    className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold px-2 py-1 rounded-md"
                     style={{
-                      background: 'rgba(16,185,129,0.1)',
-                      color: '#10B981',
-                      border: '1px solid rgba(16,185,129,0.25)',
+                      background: 'var(--mangle-soft)',
+                      color: 'var(--mangle)',
+                      border: '1px solid color-mix(in srgb, var(--mangle) 28%, transparent)',
                     }}
                   >
                     <MapPin size={11} />
@@ -493,19 +452,14 @@ function SelectedRouteFicha({
                   <button
                     type="button"
                     onClick={() => setShowStopsList((v) => !v)}
-                    className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-2 py-1 rounded-lg cursor-pointer"
-                    style={{
-                      background: 'var(--subtle-bg)',
-                      color: 'var(--text-primary)',
-                      border: '1px solid var(--subtle-border)',
-                    }}
+                    className="rq-chip"
                   >
                     <span>{showStopsList ? 'Ocultar lista' : 'Ver paradas'}</span>
                     <ChevronDown
                       size={12}
                       style={{
                         transform: showStopsList ? 'rotate(180deg)' : 'rotate(0deg)',
-                        transition: 'transform 0.2s ease',
+                        transition: 'transform 0.18s ease',
                       }}
                     />
                   </button>
@@ -524,12 +478,8 @@ function SelectedRouteFicha({
                             key={d.id}
                             type="button"
                             onClick={() => setStopDirFilter(d.id)}
-                            className="text-[10px] font-semibold px-2 py-0.5 rounded-md cursor-pointer"
-                            style={{
-                              background: stopDirFilter === d.id ? `${routeColor}20` : 'var(--subtle-bg)',
-                              color: stopDirFilter === d.id ? routeColor : 'var(--text-muted)',
-                              border: `1px solid ${stopDirFilter === d.id ? `${routeColor}45` : 'var(--subtle-border)'}`,
-                            }}
+                            className={`rq-chip${stopDirFilter === d.id ? ' active' : ''}`}
+                            style={{ padding: '3px 8px', fontSize: 10 }}
                           >
                             {d.label}
                           </button>
@@ -538,8 +488,8 @@ function SelectedRouteFicha({
                     )}
 
                     <div
-                      className="max-h-44 overflow-y-auto space-y-1 pr-1 rounded-xl p-1.5"
-                      style={{ background: 'var(--subtle-bg)', border: '1px solid var(--subtle-border)' }}
+                      className="max-h-44 overflow-y-auto space-y-1 p-1.5 rounded-lg"
+                      style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)' }}
                     >
                       {filteredStops.map((stop, idx) => {
                         const isReg = stop.sentido === 'regreso';
@@ -548,11 +498,8 @@ function SelectedRouteFicha({
                             key={`${stop.sentido}-${stop.orden}-${idx}`}
                             type="button"
                             onClick={() => onFocusStop?.(stop)}
-                            className="w-full flex items-center gap-2 text-left px-2 py-1.5 rounded-lg cursor-pointer transition-colors"
-                            style={{
-                              background: 'transparent',
-                              border: 'none',
-                            }}
+                            className="w-full flex items-center gap-2 text-left px-2 py-1.5 rounded-md cursor-pointer transition-colors"
+                            style={{ background: 'transparent', border: 'none' }}
                             onMouseEnter={(e) => {
                               e.currentTarget.style.background = 'var(--bg-card)';
                             }}
@@ -563,18 +510,15 @@ function SelectedRouteFicha({
                           >
                             <span
                               className="w-2 h-2 rounded-full flex-shrink-0"
-                              style={{ background: isReg ? '#EF4444' : '#10B981' }}
+                              style={{ background: isReg ? 'var(--carnaval)' : 'var(--mangle)' }}
                             />
                             <span
                               className="text-[10px] font-bold tabular-nums flex-shrink-0"
-                              style={{ color: 'var(--text-muted)', minWidth: 20 }}
+                              style={{ color: 'var(--text-muted)', minWidth: 22 }}
                             >
                               #{stop.orden || idx + 1}
                             </span>
-                            <span
-                              className="text-[11px] flex-1 truncate"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
+                            <span className="text-[11.5px] flex-1 truncate" style={{ color: 'var(--text-primary)' }}>
                               {stop.nombre}
                             </span>
                           </button>
@@ -585,8 +529,8 @@ function SelectedRouteFicha({
                 )}
               </div>
             ) : (
-              <div className="inline-flex items-center gap-1.5 text-[10.5px]" style={{ color: 'var(--text-muted)' }}>
-                <Loader2 size={11} className="animate-spin" color="#06B6D4" />
+              <div className="inline-flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                <Loader2 size={11} className="animate-spin" color="var(--brand)" />
                 <span>Cargando paradas en el mapa...</span>
               </div>
             )}
@@ -595,19 +539,17 @@ function SelectedRouteFicha({
 
         {/* Zonas / Barrios */}
         {zones.length > 0 && (
-          <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--subtle-border)' }}>
-            <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-muted)' }}>
-              Zonas cubiertas
-            </div>
+          <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--border-color)' }}>
+            <div className="rq-section-label mb-1.5">Zonas cubiertas</div>
             <div className="flex flex-wrap gap-1">
               {visibleZones.map((zone, i) => (
                 <span
                   key={`${zone}-${i}`}
-                  className="text-[10px] px-2 py-0.5 rounded-full"
+                  className="text-[10.5px] px-2 py-0.5 rounded"
                   style={{
-                    background: 'var(--subtle-bg)',
+                    background: 'var(--bg-surface)',
                     color: 'var(--text-secondary)',
-                    border: '1px solid var(--subtle-border)',
+                    border: '1px solid var(--border-color)',
                   }}
                 >
                   {zone}
@@ -617,12 +559,8 @@ function SelectedRouteFicha({
                 <button
                   type="button"
                   onClick={() => setShowAllZones((v) => !v)}
-                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full cursor-pointer"
-                  style={{
-                    background: `${routeColor}16`,
-                    color: routeColor,
-                    border: `1px solid ${routeColor}35`,
-                  }}
+                  className="rq-chip"
+                  style={{ padding: '2px 8px', fontSize: 10 }}
                 >
                   {showAllZones ? 'Ver menos' : `+${zones.length - 8} más`}
                 </button>
@@ -672,13 +610,11 @@ export default function Sidebar({
   const [downloadingOffline, setDownloadingOffline] = useState(false);
   const [offlineError, setOfflineError] = useState('');
 
-  // Compute affected route IDs from active reports
   const affectedRouteIds = useMemo(
     () => new Set(activeReports.map((r) => r.routeId).filter(Boolean)),
     [activeReports]
   );
 
-  // Favorites system (persisted in localStorage)
   const [favorites, setFavorites] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('rutaquilla_favorites') || '[]');
@@ -699,14 +635,12 @@ export default function Sidebar({
 
   const isFavorite = (routeId) => favorites.includes(routeId);
 
-  // Auto-switch to navigation tab if user clicks map context menu
   useEffect(() => {
     if (onSetOriginFromMap || onSetDestinationFromMap) {
       setActiveTab('navigate');
     }
   }, [onSetOriginFromMap, onSetDestinationFromMap]);
 
-  // Base routes visible according to layer toggles
   const layerVisibleRoutes = useMemo(
     () =>
       routes.filter((route) => {
@@ -730,7 +664,6 @@ export default function Sidebar({
     [layerVisibleRoutes]
   );
 
-  // Filter routes by system/intermunicipal filter, company, and search text
   const filteredRoutes = useMemo(() => {
     const q = searchText.trim().toLowerCase();
     return layerVisibleRoutes.filter((route) => {
@@ -815,104 +748,118 @@ export default function Sidebar({
     <aside
       style={{
         position: 'fixed',
-        top: 58,
+        top: 56,
         left: 0,
         bottom: 0,
         zIndex: 1050,
         width: '88vw',
         maxWidth: '22.5rem',
         overflow: 'hidden',
-        transition: 'transform 0.3s ease-out',
+        transition: 'transform 0.25s cubic-bezier(0.2, 0, 0, 1)',
         transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
-        borderRight: '1px solid var(--glass-border)',
-        background: 'var(--glass-bg)',
-        backdropFilter: 'blur(32px) saturate(200%)',
-        WebkitBackdropFilter: 'blur(32px) saturate(200%)',
+        borderRight: '1px solid var(--border-color)',
+        background: 'var(--bg-surface)',
+        boxShadow: isOpen ? 'var(--shadow-lg)' : 'none',
       }}
     >
       <div className="h-full flex flex-col">
-        {/* Tabs — Mobile-first segmented control */}
+        {/* Tabs — Riel editorial con indicador sólido */}
         <div
           style={{
-            padding: '10px 10px 0',
-            borderBottom: '1px solid var(--subtle-border)',
+            padding: '10px 10px 8px',
+            borderBottom: '1px solid var(--border-color)',
+            background: 'var(--bg-surface)',
           }}
         >
           <div
             style={{
-              display: 'flex',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
               gap: 4,
-              padding: 4,
-              borderRadius: 14,
-              background: 'var(--subtle-bg)',
-              border: '1px solid var(--subtle-border)',
+              padding: 3,
+              borderRadius: 10,
+              background: 'var(--bg-dark)',
+              border: '1px solid var(--border-color)',
             }}
           >
             {[
-              { id: 'navigate', icon: Navigation, label: 'Navegar', color: '#06B6D4' },
-              { id: 'routes', icon: Route, label: 'Rutas', color: '#10B981' },
-              { id: 'favorites', icon: Star, label: 'Favoritos', color: '#F59E0B' },
-              { id: 'capture', icon: Zap, label: 'Capturar', color: '#EC4899' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                style={{
-                  flex: 1,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 3,
-                  padding: '10px 4px 8px',
-                  borderRadius: 11,
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                  position: 'relative',
-                  background:
-                    activeTab === tab.id
-                      ? `linear-gradient(135deg, ${tab.color}18, ${tab.color}08)`
-                      : 'transparent',
-                  boxShadow:
-                    activeTab === tab.id
-                      ? `0 2px 12px ${tab.color}15, inset 0 0 0 1px ${tab.color}25`
-                      : 'none',
-                }}
-                id={`tab-${tab.id}`}
-              >
-                <tab.icon
-                  size={activeTab === tab.id ? 17 : 15}
-                  color={activeTab === tab.id ? tab.color : 'var(--text-secondary)'}
-                  style={{ transition: 'all 0.2s', flexShrink: 0 }}
-                />
-                <span
+              { id: 'navigate', icon: Navigation, label: 'Navegar' },
+              { id: 'routes', icon: Route, label: 'Rutas' },
+              { id: 'favorites', icon: Star, label: 'Favoritos', badge: favorites.length },
+              { id: 'capture', icon: Radio, label: 'Capturar' },
+            ].map((tab) => {
+              const active = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  id={`tab-${tab.id}`}
                   style={{
-                    fontSize: 9.5,
-                    fontWeight: activeTab === tab.id ? 700 : 500,
-                    color: activeTab === tab.id ? tab.color : 'var(--text-secondary)',
-                    letterSpacing: activeTab === tab.id ? '0.02em' : '0',
-                    transition: 'all 0.2s',
-                    lineHeight: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 3,
+                    padding: '8px 4px 7px',
+                    borderRadius: 7,
+                    border: `1px solid ${active ? 'var(--border-color)' : 'transparent'}`,
+                    cursor: 'pointer',
+                    position: 'relative',
+                    background: active ? 'var(--bg-card)' : 'transparent',
+                    color: active ? 'var(--text-primary)' : 'var(--text-muted)',
+                    transition: 'background 0.15s ease, color 0.15s ease',
                   }}
                 >
-                  {tab.label}
-                </span>
-                {activeTab === tab.id && (
-                  <div
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <tab.icon
+                      size={15}
+                      color={active ? 'var(--brand)' : 'var(--text-muted)'}
+                    />
+                    {tab.badge > 0 && (
+                      <span
+                        className="tabular-nums"
+                        style={{
+                          position: 'absolute',
+                          top: -5,
+                          right: -10,
+                          fontSize: 8.5,
+                          fontWeight: 700,
+                          padding: '0 4px',
+                          borderRadius: 999,
+                          background: 'var(--brand)',
+                          color: 'var(--brand-ink)',
+                          lineHeight: '13px',
+                        }}
+                      >
+                        {tab.badge}
+                      </span>
+                    )}
+                  </div>
+                  <span
                     style={{
-                      position: 'absolute',
-                      bottom: 3,
-                      width: 14,
-                      height: 2,
-                      borderRadius: 2,
-                      background: tab.color,
-                      boxShadow: `0 0 8px ${tab.color}80`,
+                      fontSize: 10,
+                      fontWeight: active ? 700 : 500,
+                      color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      lineHeight: 1,
                     }}
-                  />
-                )}
-              </button>
-            ))}
+                  >
+                    {tab.label}
+                  </span>
+                  {active && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        bottom: 1,
+                        width: 18,
+                        height: 2,
+                        borderRadius: 999,
+                        background: 'var(--brand)',
+                      }}
+                    />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -939,15 +886,11 @@ export default function Sidebar({
           {/* ---- Tab: Rutas ---- */}
           {activeTab === 'routes' && (
             <div className="animate-fade-in">
-              {/* Catalog summary + Search + Filters */}
-              <div style={{ padding: '12px 14px 12px', borderBottom: '1px solid var(--subtle-border)' }}>
-                {/* Live summary bar */}
+              <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--border-color)' }}>
+                {/* Live summary */}
                 <div className="flex items-center justify-between gap-2 mb-2.5">
                   <div className="flex items-center gap-1.5">
-                    <span
-                      className="text-[11px] font-bold tabular-nums"
-                      style={{ color: 'var(--text-primary)' }}
-                    >
+                    <span className="text-[11.5px] font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>
                       {filteredRoutes.length} {filteredRoutes.length === 1 ? 'ruta' : 'rutas'}
                     </span>
                     <span className="text-[11px] tabular-nums" style={{ color: 'var(--text-muted)' }}>
@@ -958,11 +901,12 @@ export default function Sidebar({
                     <button
                       type="button"
                       onClick={handleResetFilters}
-                      className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-2 py-0.5 rounded-full cursor-pointer"
+                      className="rq-chip"
                       style={{
-                        background: 'rgba(245,158,11,0.12)',
-                        color: '#F59E0B',
-                        border: '1px solid rgba(245,158,11,0.3)',
+                        padding: '3px 8px',
+                        fontSize: 10.5,
+                        color: 'var(--brand)',
+                        borderColor: 'color-mix(in srgb, var(--brand) 38%, var(--border-color))',
                       }}
                     >
                       <RotateCcw size={10} />
@@ -971,27 +915,27 @@ export default function Sidebar({
                   )}
                 </div>
 
-                {/* Quick search input */}
+                {/* Buscador */}
                 <div
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: 8,
-                    padding: '9px 11px',
-                    borderRadius: 13,
+                    padding: '8px 11px',
+                    borderRadius: 8,
                     marginBottom: 10,
-                    background: 'var(--subtle-bg)',
-                    border: '1px solid var(--subtle-border-strong)',
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border-color)',
                   }}
                 >
-                  <Search size={14} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
+                  <Search size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                   <input
                     type="text"
-                    placeholder="Buscar ruta, código, empresa o zona..."
+                    placeholder="Buscar código, ruta, empresa o zona..."
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                     className="flex-1 bg-transparent outline-none"
-                    style={{ color: 'var(--text-primary)', fontSize: 12, minWidth: 0 }}
+                    style={{ color: 'var(--text-primary)', fontSize: 12.5, minWidth: 0 }}
                   />
                   {searchText && (
                     <button
@@ -999,11 +943,11 @@ export default function Sidebar({
                       onClick={() => setSearchText('')}
                       aria-label="Borrar búsqueda"
                       style={{
-                        background: 'var(--subtle-bg-hover)',
-                        border: 'none',
-                        borderRadius: '50%',
-                        width: 18,
-                        height: 18,
+                        background: 'var(--bg-surface)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: 6,
+                        width: 20,
+                        height: 20,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -1017,13 +961,13 @@ export default function Sidebar({
                   )}
                 </div>
 
-                {/* System / type filter pills with dynamic counts */}
+                {/* Filtros por sistema */}
                 <div style={{ display: 'flex', gap: 5, marginBottom: 10, flexWrap: 'wrap' }}>
                   {[
-                    { value: 'all', label: 'Todas', count: systemCounts.all, accent: '#06B6D4' },
-                    { value: 'masivo', label: 'Transmetro', count: systemCounts.masivo, accent: '#0EA5E9' },
-                    { value: 'urbano', label: 'Urbano', count: systemCounts.urbano, accent: '#10B981' },
-                    { value: 'intermunicipal', label: 'Intermunic.', count: systemCounts.intermunicipal, accent: '#F59E0B' },
+                    { value: 'all', label: 'Todas', count: systemCounts.all },
+                    { value: 'masivo', label: 'Transmetro', count: systemCounts.masivo },
+                    { value: 'urbano', label: 'Urbano', count: systemCounts.urbano },
+                    { value: 'intermunicipal', label: 'Intermunic.', count: systemCounts.intermunicipal },
                   ].map((opt) => {
                     const isActive = filterType === opt.value;
                     return (
@@ -1031,26 +975,11 @@ export default function Sidebar({
                         key={opt.value}
                         type="button"
                         onClick={() => setFilterType(opt.value)}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          padding: '5px 9px',
-                          borderRadius: 999,
-                          fontSize: 10.5,
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          transition: 'all 0.18s',
-                          border: `1px solid ${isActive ? `${opt.accent}55` : 'var(--subtle-border)'}`,
-                          background: isActive ? `${opt.accent}18` : 'var(--subtle-bg)',
-                          color: isActive ? opt.accent : 'var(--text-secondary)',
-                        }}
+                        className={`rq-chip${isActive ? ' active' : ''}`}
+                        style={{ padding: '4px 9px', fontSize: 11 }}
                       >
                         <span>{opt.label}</span>
-                        <span
-                          className="tabular-nums text-[9.5px] opacity-80"
-                          style={{ fontWeight: 700 }}
-                        >
+                        <span className="tabular-nums text-[9.5px] opacity-80" style={{ fontWeight: 700 }}>
                           {opt.count}
                         </span>
                       </button>
@@ -1058,7 +987,7 @@ export default function Sidebar({
                   })}
                 </div>
 
-                {/* Company filter select (theme-aware) */}
+                {/* Selector de empresa */}
                 {companies.length > 1 && (
                   <select
                     value={filterCompany}
@@ -1066,15 +995,15 @@ export default function Sidebar({
                     aria-label="Filtrar por empresa operadora"
                     style={{
                       width: '100%',
-                      padding: '8px 11px',
-                      borderRadius: 11,
-                      fontSize: 11.5,
+                      padding: '8px 10px',
+                      borderRadius: 8,
+                      fontSize: 12,
                       fontWeight: 500,
                       outline: 'none',
                       marginBottom: 9,
                       background: 'var(--bg-card)',
                       color: 'var(--text-primary)',
-                      border: '1px solid var(--subtle-border-strong)',
+                      border: '1px solid var(--border-color)',
                       cursor: 'pointer',
                     }}
                   >
@@ -1093,26 +1022,21 @@ export default function Sidebar({
                   </select>
                 )}
 
-                {/* Layer visibility toggles */}
+                {/* Toggles Oficial / Comunidad */}
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button
                     type="button"
                     onClick={() => onToggleLayer?.('official')}
+                    className="rq-chip"
                     style={{
                       flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
                       justifyContent: 'center',
-                      gap: 6,
-                      padding: '7px 10px',
-                      borderRadius: 10,
-                      fontSize: 10.5,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      background: layerVisibility?.official ? 'rgba(16,185,129,0.1)' : 'var(--subtle-bg)',
-                      color: layerVisibility?.official ? '#10B981' : 'var(--text-secondary)',
-                      border: `1px solid ${layerVisibility?.official ? 'rgba(16,185,129,0.28)' : 'var(--subtle-border)'}`,
+                      padding: '6px 8px',
+                      background: layerVisibility?.official ? 'var(--mangle-soft)' : 'var(--bg-card)',
+                      color: layerVisibility?.official ? 'var(--mangle)' : 'var(--text-muted)',
+                      borderColor: layerVisibility?.official
+                        ? 'color-mix(in srgb, var(--mangle) 35%, transparent)'
+                        : 'var(--border-color)',
                     }}
                   >
                     {layerVisibility?.official ? <Eye size={12} /> : <EyeOff size={12} />}
@@ -1121,21 +1045,16 @@ export default function Sidebar({
                   <button
                     type="button"
                     onClick={() => onToggleLayer?.('community')}
+                    className="rq-chip"
                     style={{
                       flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
                       justifyContent: 'center',
-                      gap: 6,
-                      padding: '7px 10px',
-                      borderRadius: 10,
-                      fontSize: 10.5,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      background: layerVisibility?.community ? 'rgba(139,92,246,0.1)' : 'var(--subtle-bg)',
-                      color: layerVisibility?.community ? '#A78BFA' : 'var(--text-secondary)',
-                      border: `1px solid ${layerVisibility?.community ? 'rgba(139,92,246,0.28)' : 'var(--subtle-border)'}`,
+                      padding: '6px 8px',
+                      background: layerVisibility?.community ? 'var(--caribe-soft)' : 'var(--bg-card)',
+                      color: layerVisibility?.community ? 'var(--caribe)' : 'var(--text-muted)',
+                      borderColor: layerVisibility?.community
+                        ? 'color-mix(in srgb, var(--caribe) 35%, transparent)'
+                        : 'var(--border-color)',
                     }}
                   >
                     {layerVisibility?.community ? <Eye size={12} /> : <EyeOff size={12} />}
@@ -1144,7 +1063,7 @@ export default function Sidebar({
                 </div>
               </div>
 
-              {/* Selected Route Ficha */}
+              {/* Ficha de ruta seleccionada */}
               {selectedRoute && (
                 <SelectedRouteFicha
                   key={selectedRoute._id}
@@ -1155,24 +1074,20 @@ export default function Sidebar({
                 />
               )}
 
-              {/* Route list grouped by company */}
+              {/* Lista agrupada por empresa */}
               <div className="p-2.5 space-y-1.5">
                 {groupedOperators.length === 0 ? (
                   <div className="text-center py-8 px-4">
-                    <Bus size={32} style={{ color: 'var(--text-muted)', margin: '0 auto', opacity: 0.5 }} />
-                    <p className="text-xs font-medium mt-2" style={{ color: 'var(--text-secondary)' }}>
+                    <Bus size={30} style={{ color: 'var(--text-muted)', margin: '0 auto', opacity: 0.55 }} />
+                    <p className="text-xs font-semibold mt-2" style={{ color: 'var(--text-secondary)' }}>
                       No se encontraron rutas con ese filtro
                     </p>
                     {hasActiveFilters && (
                       <button
                         type="button"
                         onClick={handleResetFilters}
-                        className="mt-2.5 text-[11px] font-semibold px-3 py-1.5 rounded-lg cursor-pointer"
-                        style={{
-                          background: 'var(--subtle-bg)',
-                          color: 'var(--accent-cyan)',
-                          border: '1px solid var(--subtle-border-strong)',
-                        }}
+                        className="rq-btn-ghost mt-3"
+                        style={{ padding: '6px 12px', fontSize: 11.5 }}
                       >
                         Restablecer filtros
                       </button>
@@ -1180,13 +1095,12 @@ export default function Sidebar({
                   </div>
                 ) : (
                   groupedOperators.map(([operador, operadorRoutes]) => {
-                    const opColor = safeColor(operadorRoutes[0]?.color, '#06B6D4');
+                    const opColor = safeColor(operadorRoutes[0]?.color, '#FFC21A');
                     const isExpanded = forceExpandAll || expandedCompany === operador;
                     const isTransmetro = operador === 'Transmetro';
 
                     return (
                       <div key={operador}>
-                        {/* Operador header accordion */}
                         <button
                           type="button"
                           onClick={() => {
@@ -1199,27 +1113,26 @@ export default function Sidebar({
                           <div
                             style={{
                               width: 4,
-                              height: 22,
-                              borderRadius: 4,
+                              height: 20,
+                              borderRadius: 2,
                               background: opColor,
-                              boxShadow: `0 0 8px ${opColor}55`,
                               flexShrink: 0,
                             }}
                           />
                           <div className="flex-1 min-w-0 text-left flex items-center gap-1.5">
                             <span
-                              className="text-[12.5px] font-bold truncate"
+                              className="font-display text-[13px] font-bold truncate"
                               style={{ color: 'var(--text-primary)' }}
                             >
                               {operador}
                             </span>
                             {isTransmetro && (
                               <span
-                                className="text-[9px] px-1.5 py-0.5 rounded-md font-extrabold uppercase tracking-wider flex-shrink-0"
+                                className="font-mono text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider flex-shrink-0"
                                 style={{
-                                  background: 'rgba(14,165,233,0.16)',
-                                  color: '#0EA5E9',
-                                  border: '1px solid rgba(14,165,233,0.35)',
+                                  background: 'var(--caribe-soft)',
+                                  color: 'var(--caribe)',
+                                  border: '1px solid color-mix(in srgb, var(--caribe) 32%, transparent)',
                                 }}
                               >
                                 BRT
@@ -1227,11 +1140,11 @@ export default function Sidebar({
                             )}
                           </div>
                           <span
-                            className="text-[10.5px] px-2 py-0.5 rounded-full font-semibold tabular-nums flex-shrink-0"
+                            className="text-[10.5px] px-2 py-0.5 rounded font-semibold tabular-nums flex-shrink-0"
                             style={{
-                              background: isExpanded ? `${opColor}1A` : 'var(--subtle-bg)',
-                              color: isExpanded ? opColor : 'var(--text-secondary)',
-                              border: `1px solid ${isExpanded ? `${opColor}38` : 'var(--subtle-border)'}`,
+                              background: 'var(--bg-surface)',
+                              color: isExpanded ? 'var(--text-primary)' : 'var(--text-muted)',
+                              border: '1px solid var(--border-color)',
                             }}
                           >
                             {operadorRoutes.length}
@@ -1241,15 +1154,14 @@ export default function Sidebar({
                             style={{
                               color: 'var(--text-muted)',
                               transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                              transition: 'transform 0.2s ease',
+                              transition: 'transform 0.16s ease',
                               flexShrink: 0,
                             }}
                           />
                         </button>
 
-                        {/* Operador routes */}
                         {isExpanded && (
-                          <div className="pl-2.5 pr-0.5 space-y-1.5 mt-1.5 mb-2 animate-fade-in">
+                          <div className="pl-2 pr-0.5 space-y-1.5 mt-1.5 mb-2 animate-fade-in">
                             {operadorRoutes.map((route) => (
                               <RoutePassCard
                                 key={route._id}
@@ -1279,29 +1191,36 @@ export default function Sidebar({
                 const favRoutes = routes.filter((r) => isFavorite(r._id));
                 if (favRoutes.length === 0) {
                   return (
-                    <div className="text-center py-12">
-                      <Star size={36} style={{ color: 'var(--text-muted)', margin: '0 auto', opacity: 0.3 }} />
-                      <p className="text-sm mt-3 font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        Sin favoritos aún
+                    <div className="text-center py-10 px-4">
+                      <div
+                        className="mx-auto mb-3 flex items-center justify-center"
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 10,
+                          background: 'var(--bg-card)',
+                          border: '1px solid var(--border-color)',
+                        }}
+                      >
+                        <Star size={20} style={{ color: 'var(--brand)' }} />
+                      </div>
+                      <p className="font-display text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+                        Sin rutas favoritas
                       </p>
                       <p
-                        className="text-xs mt-1"
+                        className="text-xs mt-1 leading-relaxed"
                         style={{ color: 'var(--text-muted)', maxWidth: 230, margin: '4px auto 0' }}
                       >
-                        Toca la ⭐ en cualquier ruta para guardarla aquí y acceder rápido.
+                        Marca con estrella cualquier ruta del catálogo para tenerla aquí a un toque.
                       </p>
                     </div>
                   );
                 }
                 return (
                   <div className="space-y-1.5">
-                    <p
-                      className="text-[10.5px] font-bold uppercase tracking-wider mb-2"
-                      style={{ color: 'var(--text-muted)' }}
-                    >
-                      ⭐ {favRoutes.length} ruta{favRoutes.length > 1 ? 's' : ''} favorita
-                      {favRoutes.length > 1 ? 's' : ''}
-                    </p>
+                    <div className="rq-section-label mb-2">
+                      {favRoutes.length} {favRoutes.length === 1 ? 'ruta guardada' : 'rutas guardadas'}
+                    </div>
                     {favRoutes.map((route) => (
                       <RoutePassCard
                         key={route._id}
@@ -1323,193 +1242,152 @@ export default function Sidebar({
 
           {/* ---- Tab: Captura GPS ---- */}
           {activeTab === 'capture' && (
-            <div className="animate-fade-in" style={{ padding: '16px 14px' }}>
-              {/* Hero section */}
-              <div
-                style={{
-                  textAlign: 'center',
-                  padding: '20px 16px 16px',
-                  borderRadius: 16,
-                  marginBottom: 14,
-                  background: 'linear-gradient(135deg, rgba(236,72,153,0.08), rgba(139,92,246,0.06))',
-                  border: '1px solid rgba(236,72,153,0.12)',
-                }}
-              >
-                <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 14,
-                    margin: '0 auto 10px',
-                    background: 'linear-gradient(135deg, rgba(236,72,153,0.15), rgba(245,158,11,0.15))',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 0 20px rgba(236,72,153,0.15)',
-                  }}
-                >
-                  <Bus size={22} color="#EC4899" />
-                </div>
-                <h3
-                  style={{
-                    fontSize: 15,
-                    fontWeight: 700,
-                    color: 'var(--text-primary)',
-                    margin: '0 0 4px',
-                    fontFamily: 'Outfit, sans-serif',
-                  }}
-                >
-                  Capturar Ruta GPS
-                </h3>
-                <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, lineHeight: 1.4 }}>
-                  Sube a un bus y contribuye la ruta para toda la comunidad 🚌
-                </p>
-              </div>
-
-              {/* GPS status card */}
-              <div
-                style={{
-                  padding: '12px 14px',
-                  borderRadius: 14,
-                  marginBottom: 12,
-                  background: 'var(--subtle-bg)',
-                  border: `1px solid ${isCapturing ? 'rgba(239,68,68,0.2)' : 'var(--subtle-border)'}`,
-                  transition: 'border-color 0.3s',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <div className="animate-fade-in p-3.5 space-y-3">
+              {/* Tarjeta principal modo cartógrafo */}
+              <div className="rq-card p-4">
+                <div className="flex items-start gap-3">
                   <div
-                    className={`gps-dot ${isCapturing ? 'recording' : 'inactive'}`}
-                    style={{ width: 10, height: 10, flexShrink: 0 }}
-                  />
-                  <span
                     style={{
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: isCapturing ? '#F87171' : '#64748B',
+                      width: 40,
+                      height: 40,
+                      borderRadius: 9,
+                      background: 'var(--plate-bg)',
+                      color: 'var(--brand)',
+                      border: '1px solid rgba(255, 194, 26, 0.28)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
                     }}
                   >
-                    {isCapturing ? '● Grabando ruta...' : 'GPS listo para capturar'}
+                    <Radio size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="rq-section-label mb-0.5">Crowdsourcing GPS</div>
+                    <h3 className="font-display text-[15px] font-bold m-0" style={{ color: 'var(--text-primary)' }}>
+                      Registrar recorrido en vivo
+                    </h3>
+                    <p className="text-[11.5px] mt-1 mb-0 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                      Graba el trazado mientras viajas en bus para aportar o actualizar rutas de la ciudad.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Telemetría / Reglas técnicas */}
+              <div className="rq-card p-3.5">
+                <div className="flex items-center justify-between pb-2.5 mb-2.5" style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <div className="flex items-center gap-2">
+                    <div className={`gps-dot ${isCapturing ? 'recording' : 'inactive'}`} />
+                    <span
+                      className="text-xs font-bold"
+                      style={{ color: isCapturing ? 'var(--carnaval)' : 'var(--text-primary)' }}
+                    >
+                      {isCapturing ? 'Grabación en curso' : 'GPS en espera'}
+                    </span>
+                  </div>
+                  <span className="font-mono text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                    5s · ≤ 20m
                   </span>
                 </div>
 
-                {/* Feature list */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div className="space-y-2">
                   {[
-                    { icon: '⏱️', text: 'Captura automática cada 5 segundos' },
-                    { icon: '🎯', text: 'Filtro de precisión: ≤ 20 metros' },
-                    { icon: '🤝', text: 'Se fusiona con capturas de otros usuarios' },
-                  ].map((f, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        fontSize: 11,
-                        color: 'var(--text-secondary)',
-                      }}
-                    >
-                      <span style={{ fontSize: 12, lineHeight: 1 }}>{f.icon}</span>
-                      {f.text}
+                    { icon: Clock, color: 'var(--brand)', text: 'Muestreo automático cada 5 segundos' },
+                    { icon: Crosshair, color: 'var(--mangle)', text: 'Filtro de precisión mínima ≤ 20 metros' },
+                    { icon: GitMerge, color: 'var(--caribe)', text: 'Fusión colaborativa con otros aportes' },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-2.5 text-[11.5px]" style={{ color: 'var(--text-secondary)' }}>
+                      <item.icon size={13} color={item.color} className="flex-shrink-0" />
+                      <span>{item.text}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Capture button — large mobile-friendly */}
               <button
                 onClick={() => onStartCapture?.()}
+                id="capture-btn"
+                className={isCapturing ? 'rq-btn-ghost' : 'rq-btn-primary'}
                 style={{
                   width: '100%',
-                  padding: '14px 16px',
-                  borderRadius: 14,
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 10,
-                  color: '#fff',
-                  transition: 'all 0.3s',
-                  background: isCapturing
-                    ? 'linear-gradient(135deg, #EF4444, #DC2626)'
-                    : 'linear-gradient(135deg, #EC4899, #8B5CF6)',
-                  boxShadow: isCapturing
-                    ? '0 4px 20px rgba(239,68,68,0.3)'
-                    : '0 4px 20px rgba(236,72,153,0.25)',
+                  padding: '12px 16px',
+                  fontSize: 13.5,
+                  ...(isCapturing
+                    ? {
+                        background: 'var(--carnaval)',
+                        color: '#FFFFFF',
+                        borderColor: 'var(--carnaval)',
+                      }
+                    : {}),
                 }}
-                id="capture-btn"
               >
-                {isCapturing ? <Navigation size={18} /> : <Zap size={18} />}
-                {isCapturing ? 'Detener captura' : 'Iniciar captura'}
+                {isCapturing ? <Navigation size={16} /> : <Radio size={16} />}
+                {isCapturing ? 'Detener captura' : 'Iniciar captura GPS'}
               </button>
 
               {!isAuthenticated && (
-                <p
+                <div
+                  className="flex items-center gap-2 p-2.5 rounded-lg text-[11px]"
                   style={{
-                    fontSize: 10,
-                    color: '#F59E0B',
-                    textAlign: 'center',
-                    marginTop: 10,
-                    background: 'rgba(245,158,11,0.06)',
-                    padding: '8px 12px',
-                    borderRadius: 10,
-                    border: '1px solid rgba(245,158,11,0.1)',
+                    background: 'var(--brand-soft)',
+                    border: '1px solid color-mix(in srgb, var(--brand) 32%, transparent)',
+                    color: 'var(--text-primary)',
                   }}
                 >
-                  ⚠️ Debes iniciar sesión para capturar rutas
-                </p>
+                  <AlertTriangle size={13} color="var(--brand)" className="flex-shrink-0" />
+                  <span>Inicia sesión para guardar capturas y ganar XP.</span>
+                </div>
               )}
             </div>
           )}
         </div>
 
-        {/* Footer: Premium upsell */}
+        {/* Footer: Quilla-Pass */}
         {isAuthenticated && !isPremium && (
           <div className="p-3" style={{ borderTop: '1px solid var(--border-color)' }}>
             <button
               onClick={handleUpgrade}
-              className="w-full p-3 rounded-xl flex items-center gap-3 transition-all duration-200"
-              style={{
-                background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1))',
-                border: '1px solid rgba(245, 158, 11, 0.2)',
-                cursor: 'pointer',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.5)';
-                e.currentTarget.style.boxShadow = '0 0 20px rgba(245, 158, 11, 0.15)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.2)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
               id="upgrade-btn"
+              className="rq-card w-full p-2.5 flex items-center gap-2.5 cursor-pointer text-left transition-colors"
             >
-              <Crown size={20} style={{ color: '#FBBF24' }} />
-              <div className="text-left">
-                <p className="text-xs font-semibold" style={{ color: '#FBBF24' }}>
-                  Quilla-Pass Premium
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  background: 'var(--brand)',
+                  color: 'var(--brand-ink)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <Crown size={16} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold m-0" style={{ color: 'var(--text-primary)' }}>
+                  Quilla-Pass
                 </p>
-                <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                  Sin publicidad • Descarga offline
+                <p className="text-[10.5px] m-0" style={{ color: 'var(--text-muted)' }}>
+                  Sin publicidad · Descarga offline
                 </p>
               </div>
+              <ChevronRight size={14} style={{ color: 'var(--text-muted)' }} />
             </button>
             {showPremiumInfo && (
               <div
-                className="animate-fade-in mt-2 p-2.5 rounded-xl text-[11px] leading-relaxed"
+                className="animate-fade-in mt-2 p-2.5 rounded-lg text-[11px] leading-relaxed"
                 style={{
-                  background: 'rgba(245, 158, 11, 0.06)',
-                  border: '1px solid rgba(245, 158, 11, 0.2)',
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border-color)',
                   color: 'var(--text-secondary)',
                 }}
               >
-                Activa Quilla-Pass contactando al equipo en{' '}
-                <strong style={{ color: '#FBBF24' }}>@ruta.quilla</strong>. Si alcanzas{' '}
-                <strong style={{ color: '#FBBF24' }}>500 XP (Quilla Builder)</strong> obtienes 30% de descuento.
+                Activa Quilla-Pass escribiendo a{' '}
+                <strong style={{ color: 'var(--brand)' }}>@ruta.quilla</strong>. Con{' '}
+                <strong style={{ color: 'var(--brand)' }}>500 XP</strong> tienes 30% de descuento.
               </div>
             )}
           </div>
@@ -1520,13 +1398,13 @@ export default function Sidebar({
             <button
               onClick={handleDownloadOffline}
               disabled={downloadingOffline}
-              className="btn-secondary w-full flex items-center justify-center gap-2 text-xs"
+              className="rq-btn-ghost w-full text-xs"
               id="download-offline-btn"
             >
               <Download size={14} /> {downloadingOffline ? 'Descargando...' : 'Descargar mapa offline'}
             </button>
             {offlineError && (
-              <p className="text-[10px] mt-1.5 text-center" style={{ color: '#EF4444' }}>
+              <p className="text-[10.5px] mt-1.5 text-center" style={{ color: 'var(--carnaval)' }}>
                 {offlineError}
               </p>
             )}

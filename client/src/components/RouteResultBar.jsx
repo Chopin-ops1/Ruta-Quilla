@@ -1,25 +1,31 @@
 /**
  * ============================================
- * RutaQuilla - RouteResultBar (Bottom Result Bar)
+ * RutaQuilla - RouteResultBar v4 (Hoja de Resultados)
  * ============================================
  *
- * Floating bar that replaces MapQuickBar when navigation
- * results arrive. Shows the optimal route summary with
- * an expandable list of alternative routes.
- *
- * Works on ALL screen sizes (desktop + mobile).
+ * Tarjeta flotante inferior estilo Citymapper / Transit:
+ * - Tiempo total protagonista en Geist Mono + tarifa
+ * - Placa de bus con color de operador
+ * - CTA sólido Mangle "Iniciar navegación"
+ * - Selector desplegable de rutas alternativas
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
-  Bus, Clock, Footprints, Star, X,
-  ChevronUp, ChevronDown, MapPin,
-  Navigation, CornerDownRight,
+  Bus,
+  Footprints,
+  Star,
+  X,
+  ChevronUp,
+  ChevronDown,
+  MapPin,
+  Navigation,
+  CornerDownRight,
 } from 'lucide-react';
 
-export default function RouteResultBar({
+function RouteResultBarContent({
   navigationResult,
-  selectedOptionIdx = 0,
+  selectedOptionIdx,
   onSelectOptionIdx,
   onClear,
   onStartLiveNav,
@@ -27,19 +33,9 @@ export default function RouteResultBar({
   const [showAll, setShowAll] = useState(false);
   const [expandedStep, setExpandedStep] = useState(null);
 
-  const options = navigationResult?.options || [];
-
-  // Reset when new results come in
-  useEffect(() => {
-    setShowAll(false);
-    setExpandedStep(null);
-  }, [navigationResult]);
-
-  if (!navigationResult || options.length === 0) return null;
-
+  const options = navigationResult.options;
   const selectedOpt = options[selectedOptionIdx] || options[0];
-  const optimalIdx = options.findIndex(o => o.isOptimal);
-  const optimalOpt = optimalIdx >= 0 ? options[optimalIdx] : options[0];
+  const routeCol = selectedOpt.route.color || '#FFC21A';
 
   const handleSelectOption = (idx) => {
     onSelectOptionIdx?.(idx);
@@ -54,182 +50,171 @@ export default function RouteResultBar({
 
   return (
     <div
-      className="animate-slide-up"
+      className="animate-slide-up rq-sheet"
       style={{
+        '--route-color': routeCol,
         position: 'fixed',
-        bottom: 'calc(24px + env(safe-area-inset-bottom, 0px))',
-        left: '50%', translate: '-50% 0',
+        bottom: 'calc(20px + env(safe-area-inset-bottom, 0px))',
+        left: '50%',
+        translate: '-50% 0',
         zIndex: 1200,
-        width: 'calc(100% - 24px)', maxWidth: 440,
-        borderRadius: 22,
-        background: 'var(--panel-bg)',
-        backdropFilter: 'blur(28px) saturate(200%)',
-        WebkitBackdropFilter: 'blur(28px) saturate(200%)',
-        border: '1px solid var(--subtle-border-strong)',
-        boxShadow: '0 16px 48px var(--shadow-color)',
+        width: 'calc(100% - 24px)',
+        maxWidth: 448,
         overflow: 'hidden',
-        maxHeight: showAll ? '70vh' : 'auto',
+        maxHeight: showAll ? '72vh' : 'auto',
         display: 'flex',
         flexDirection: 'column',
       }}
     >
-      {/* Gradient accent */}
-      <div style={{
-        height: 3, flexShrink: 0,
-        background: `linear-gradient(90deg, ${optimalOpt.route.color || '#F59E0B'}, #F59E0B, ${optimalOpt.route.color || '#F59E0B'}60)`,
-      }} />
-
+      <div style={{ height: 3, flexShrink: 0, background: routeCol }} />
       <div className="sheet-handle" />
 
       <div style={{ padding: '6px 14px 12px', flexShrink: 0 }}>
-        {/* Header: optimal route summary */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          {/* Bus icon with route color */}
-          <div style={{
-            width: 36, height: 36, borderRadius: 11, flexShrink: 0,
-            background: `${selectedOpt.route.color || '#F59E0B'}18`,
-            border: `1.5px solid ${selectedOpt.route.color || '#F59E0B'}45`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Bus size={16} style={{ color: selectedOpt.route.color || '#F59E0B' }} />
-          </div>
-
-          {/* Route name + company */}
+        {/* Encabezado: placas + nombre + bloque de tiempo y tarifa */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', marginBottom: 5 }}>
               {selectedOpt.isOptimal && (
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 3,
-                  padding: '1px 6px', borderRadius: 10,
-                  background: 'rgba(251,191,36,0.14)',
-                  border: '1px solid rgba(251,191,36,0.3)',
-                }}>
-                  <Star size={8} style={{ color: '#F59E0B', fill: '#F59E0B' }} />
-                  <span style={{ fontSize: 8, fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Óptima
-                  </span>
-                </div>
-              )}
-              {selectedOpt.isTransfer && (
-                <div style={{
-                  padding: '1px 6px', borderRadius: 6,
-                  background: 'rgba(139,92,246,0.12)',
-                  border: '1px solid rgba(139,92,246,0.3)',
-                }}>
-                  <span style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', color: '#8B5CF6' }}>
-                    1 transbordo
-                  </span>
-                </div>
-              )}
-              {selectedOpt.transfer?.sistemasNoIntegrados && (
-                <div
-                  title="Transmetro y bus urbano cobran pasaje separado"
+                <span
+                  className="font-mono"
                   style={{
-                    padding: '1px 6px', borderRadius: 6,
-                    background: 'rgba(245,158,11,0.12)',
-                    border: '1px solid rgba(245,158,11,0.3)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 3,
+                    padding: '1px 6px',
+                    borderRadius: 4,
+                    background: 'var(--brand)',
+                    color: 'var(--brand-ink)',
+                    fontSize: 9,
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
                   }}
                 >
-                  <span style={{ fontSize: 8, fontWeight: 700, color: '#F59E0B' }}>
-                    Doble pasaje
-                  </span>
-                </div>
-              )}
-              <div style={{
-                padding: '1px 5px', borderRadius: 6,
-                background: selectedOpt.direction === 'ida' ? 'rgba(16,185,129,0.1)' : 'rgba(139,92,246,0.1)',
-                border: `1px solid ${selectedOpt.direction === 'ida' ? 'rgba(16,185,129,0.25)' : 'rgba(139,92,246,0.25)'}`,
-              }}>
-                <span style={{
-                  fontSize: 8, fontWeight: 700, textTransform: 'uppercase',
-                  color: selectedOpt.direction === 'ida' ? '#10B981' : '#8B5CF6',
-                }}>
-                  {selectedOpt.direction === 'ida' ? 'IDA' : 'VUELTA'}
+                  <Star size={8} fill="currentColor" /> Óptima
                 </span>
-              </div>
+              )}
+              {selectedOpt.isTransfer && (
+                <span
+                  className="font-mono"
+                  style={{
+                    padding: '1px 6px',
+                    borderRadius: 4,
+                    background: 'var(--caribe-soft)',
+                    color: 'var(--caribe)',
+                    fontSize: 9,
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  1 transbordo
+                </span>
+              )}
+              {selectedOpt.transfer?.sistemasNoIntegrados && (
+                <span
+                  className="font-mono"
+                  title="Transmetro y bus urbano cobran pasaje separado"
+                  style={{
+                    padding: '1px 6px',
+                    borderRadius: 4,
+                    background: 'var(--brand-soft)',
+                    color: 'var(--brand)',
+                    fontSize: 9,
+                    fontWeight: 700,
+                  }}
+                >
+                  2 pasajes
+                </span>
+              )}
+              <span
+                className="font-mono"
+                style={{
+                  padding: '1px 6px',
+                  borderRadius: 4,
+                  background: selectedOpt.direction === 'ida' ? 'var(--mangle-soft)' : 'var(--carnaval-soft)',
+                  color: selectedOpt.direction === 'ida' ? 'var(--mangle)' : 'var(--carnaval)',
+                  fontSize: 9,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                }}
+              >
+                {selectedOpt.direction === 'ida' ? 'IDA' : 'VUELTA'}
+              </span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2, minWidth: 0 }}>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
               {selectedOpt.route.codigo && (
                 <span className="transit-code flex-shrink-0">{selectedOpt.route.codigo}</span>
               )}
-              <p style={{
-                fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', margin: 0,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
+              <p
+                className="font-display"
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: 'var(--text-primary)',
+                  margin: 0,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 {selectedOpt.isTransfer && selectedOpt.transfer?.secondRoute
-                  ? `${selectedOpt.route.name || selectedOpt.route.nombre} → ${selectedOpt.transfer.secondRoute.codigo ? `[${selectedOpt.transfer.secondRoute.codigo}] ` : ''}${selectedOpt.transfer.secondRoute.name}`
-                  : (selectedOpt.route.name || selectedOpt.route.nombre)}
+                  ? `${selectedOpt.route.name || selectedOpt.route.nombre} → ${
+                      selectedOpt.transfer.secondRoute.codigo ? `[${selectedOpt.transfer.secondRoute.codigo}] ` : ''
+                    }${selectedOpt.transfer.secondRoute.name}`
+                  : selectedOpt.route.name || selectedOpt.route.nombre}
               </p>
             </div>
-            <p style={{ fontSize: 10, color: selectedOpt.route.color || 'var(--text-secondary)', margin: 0, marginTop: 1 }}>
+            <p style={{ fontSize: 11, fontWeight: 600, color: routeCol, margin: '2px 0 0' }}>
               {selectedOpt.isTransfer && selectedOpt.transfer?.secondRoute
                 ? `${selectedOpt.route.company || selectedOpt.route.operador} + ${selectedOpt.transfer.secondRoute.company}`
-                : (selectedOpt.route.company || selectedOpt.route.operador)}
+                : selectedOpt.route.company || selectedOpt.route.operador}
             </p>
           </div>
 
-          {/* Close button */}
-          <button
-            onClick={handleClose}
-            aria-label="Cerrar resultados"
-            style={{
-              width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-              background: 'rgba(239,68,68,0.1)',
-              border: '1px solid rgba(239,68,68,0.2)',
-              color: '#EF4444', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'all 0.2s',
-            }}
-          >
-            <X size={13} />
-          </button>
-        </div>
-
-        {/* Stats row */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: '7px 10px', borderRadius: 12,
-          background: 'var(--subtle-bg)',
-          border: '1px solid var(--subtle-border)',
-        }}>
-          {/* Time */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Clock size={12} color="#F59E0B" />
-            <span className="tabular-nums" style={{ fontSize: 16, fontWeight: 800, color: '#F59E0B' }}>~{selectedOpt.totalMinutes}</span>
-            <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>min</span>
-          </div>
-
-          <div style={{ width: 1, height: 16, background: 'var(--subtle-border)' }} />
-
-          {/* Walk */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Footprints size={12} color="#60A5FA" />
-            <span className="tabular-nums" style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{selectedOpt.totalWalkMinutes} min</span>
-          </div>
-
-          {/* Fare */}
-          <div className="tabular-nums" style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 700, color: '#F59E0B' }}>
-            ${selectedOpt.route.fare?.toLocaleString()}
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, flexShrink: 0 }}>
+            <div style={{ textAlign: 'right' }}>
+              <div className="tabular-nums" style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>
+                ~{selectedOpt.totalMinutes}
+                <span style={{ fontSize: 10.5, fontWeight: 500, color: 'var(--text-muted)', marginLeft: 2 }}>min</span>
+              </div>
+              <div className="tabular-nums" style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--brand)', marginTop: 3 }}>
+                ${selectedOpt.route.fare?.toLocaleString()}
+              </div>
+            </div>
+            <button
+              onClick={handleClose}
+              aria-label="Cerrar resultados"
+              className="rq-icon-btn"
+              style={{ width: 28, height: 28 }}
+            >
+              <X size={13} />
+            </button>
           </div>
         </div>
 
-        {/* Step-by-step (always visible for selected) */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
-          marginTop: 8, padding: '0 2px',
-        }}>
-          {/* Walk to board */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <Footprints size={10} color="#60A5FA" />
-            <span className="tabular-nums" style={{ fontSize: 10, color: '#60A5FA', fontWeight: 600 }}>
-              {selectedOpt.boardPoint.walkDistance}m
+        {/* Tira de tramos */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            flexWrap: 'wrap',
+            padding: '7px 10px',
+            borderRadius: 8,
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-color)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Footprints size={11} color="var(--caribe)" />
+            <span className="tabular-nums" style={{ fontSize: 11, color: 'var(--caribe)', fontWeight: 600 }}>
+              {selectedOpt.boardPoint.walkDistance} m
             </span>
           </div>
-          <CornerDownRight size={9} style={{ color: 'var(--text-muted)' }} />
-          {/* Bus ride 1 */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <Bus size={10} color={selectedOpt.route.color} />
-            <span className="tabular-nums" style={{ fontSize: 10, color: selectedOpt.route.color, fontWeight: 600 }}>
+          <CornerDownRight size={10} style={{ color: 'var(--text-muted)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Bus size={11} color={routeCol} />
+            <span className="tabular-nums" style={{ fontSize: 11, color: 'var(--text-primary)', fontWeight: 600 }}>
               {selectedOpt.isTransfer && selectedOpt.transfer
                 ? `${selectedOpt.route.name} (~${Math.max(1, selectedOpt.busMinutes - selectedOpt.transfer.secondBusMinutes)}m)`
                 : `~${selectedOpt.busMinutes} min`}
@@ -237,183 +222,205 @@ export default function RouteResultBar({
           </div>
           {selectedOpt.isTransfer && selectedOpt.transfer?.secondRoute && (
             <>
-              <CornerDownRight size={9} style={{ color: 'var(--text-muted)' }} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                <Footprints size={10} color="#A78BFA" />
-                <span className="tabular-nums" style={{ fontSize: 10, color: '#A78BFA', fontWeight: 600 }}>
-                  {selectedOpt.transfer.walkDistance}m
+              <CornerDownRight size={10} style={{ color: 'var(--text-muted)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Footprints size={11} color="var(--caribe)" />
+                <span className="tabular-nums" style={{ fontSize: 11, color: 'var(--caribe)', fontWeight: 600 }}>
+                  {selectedOpt.transfer.walkDistance} m
                 </span>
               </div>
-              <CornerDownRight size={9} style={{ color: 'var(--text-muted)' }} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                <Bus size={10} color={selectedOpt.transfer.secondRoute.color || '#8B5CF6'} />
-                <span className="tabular-nums" style={{ fontSize: 10, color: selectedOpt.transfer.secondRoute.color || '#8B5CF6', fontWeight: 600 }}>
+              <CornerDownRight size={10} style={{ color: 'var(--text-muted)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Bus size={11} color={selectedOpt.transfer.secondRoute.color || '#3B8BF0'} />
+                <span className="tabular-nums" style={{ fontSize: 11, color: 'var(--text-primary)', fontWeight: 600 }}>
                   {selectedOpt.transfer.secondRoute.name} (~{selectedOpt.transfer.secondBusMinutes}m)
                 </span>
               </div>
             </>
           )}
-          <CornerDownRight size={9} style={{ color: 'var(--text-muted)' }} />
-          {/* Walk from alight */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <MapPin size={10} color="#EF4444" />
-            <span className="tabular-nums" style={{ fontSize: 10, color: '#EF4444', fontWeight: 600 }}>
-              {selectedOpt.alightPoint.walkDistance < 50 ? '¡Directo! 🎯' : `${selectedOpt.alightPoint.walkDistance}m`}
+          <CornerDownRight size={10} style={{ color: 'var(--text-muted)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <MapPin size={11} color="var(--carnaval)" />
+            <span className="tabular-nums" style={{ fontSize: 11, color: 'var(--carnaval)', fontWeight: 600 }}>
+              {selectedOpt.alightPoint.walkDistance < 50 ? 'Directo' : `${selectedOpt.alightPoint.walkDistance} m`}
             </span>
           </div>
+          <span className="tabular-nums" style={{ marginLeft: 'auto', fontSize: 10.5, color: 'var(--text-muted)' }}>
+            {selectedOpt.totalWalkMinutes}m a pie
+          </span>
         </div>
 
-          {/* Start live navigation button */}
-          {onStartLiveNav && (
-            <button
-              onClick={() => onStartLiveNav(selectedOpt)}
-              style={{
-                width: '100%', marginTop: 8, padding: '11px 0',
-                borderRadius: 12, border: 'none',
-                background: 'linear-gradient(135deg, #10B981, #059669)',
-                color: '#fff',
-                fontSize: 13, fontWeight: 700,
-                cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                boxShadow: '0 4px 16px rgba(16,185,129,0.35)',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 24px rgba(16,185,129,0.5)'; }}
-              onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(16,185,129,0.35)'; }}
-            >
-              <Navigation size={14} /> Iniciar Ruta
-            </button>
-          )}
+        {/* Botón CTA Iniciar navegación */}
+        {onStartLiveNav && (
+          <button
+            onClick={() => onStartLiveNav(selectedOpt)}
+            style={{
+              width: '100%',
+              marginTop: 9,
+              padding: '10px 14px',
+              borderRadius: 8,
+              border: '1px solid rgba(255,255,255,0.12)',
+              background: 'var(--mangle)',
+              color: '#FFFFFF',
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 7,
+              boxShadow: 'var(--shadow-sm)',
+              transition: 'filter 0.15s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.filter = 'brightness(1.06)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.filter = 'none';
+            }}
+          >
+            <Navigation size={14} /> Iniciar navegación en vivo
+          </button>
+        )}
 
-        {/* Button: show more options */}
         {options.length > 1 && (
           <button
             onClick={() => setShowAll(!showAll)}
+            className="rq-btn-ghost"
             style={{
-              width: '100%', marginTop: 8, padding: '8px 0',
-              borderRadius: 10, border: 'none', cursor: 'pointer',
-              background: showAll ? 'var(--subtle-bg)' : 'rgba(245,158,11,0.1)',
-              color: showAll ? 'var(--text-secondary)' : '#F59E0B',
-              fontSize: 11, fontWeight: 600,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              transition: 'all 0.2s',
+              width: '100%',
+              marginTop: 7,
+              padding: '7px 12px',
+              fontSize: 11.5,
             }}
           >
             {showAll ? (
-              <><ChevronUp size={13} /> Ocultar opciones</>
+              <>
+                <ChevronUp size={13} /> Ocultar alternativas
+              </>
             ) : (
-              <><ChevronDown size={13} /> Ver {options.length - 1} ruta{options.length - 1 > 1 ? 's' : ''} más</>
+              <>
+                <ChevronDown size={13} /> Ver {options.length - 1} {options.length - 1 === 1 ? 'opción más' : 'opciones más'}
+              </>
             )}
           </button>
         )}
       </div>
 
-      {/* Expanded list of alternative routes */}
+      {/* Alternativas */}
       {showAll && (
         <div
           className="animate-fade-in"
           style={{
-            flex: 1, overflowY: 'auto',
-            padding: '0 12px 12px',
-            borderTop: '1px solid var(--subtle-border)',
+            flex: 1,
+            overflowY: 'auto',
+            padding: '10px 14px 12px',
+            borderTop: '1px solid var(--border-color)',
             WebkitOverflowScrolling: 'touch',
           }}
         >
-          <p style={{
-            fontSize: 10, fontWeight: 600, color: 'var(--text-muted)',
-            textTransform: 'uppercase', letterSpacing: '0.08em',
-            margin: '10px 4px 8px',
-          }}>
-            Otras rutas sugeridas
-          </p>
+          <div className="rq-section-label mb-2">Otras opciones sugeridas</div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {options.map((opt, idx) => {
-              if (idx === selectedOptionIdx) return null; // skip current
+              if (idx === selectedOptionIdx) return null;
+              const altCol = opt.route.color || '#FFC21A';
               return (
                 <button
                   key={idx}
                   onClick={() => handleSelectOption(idx)}
                   style={{
-                    width: '100%', background: 'none', border: 'none',
-                    padding: 0, cursor: 'pointer', textAlign: 'left',
+                    width: '100%',
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    textAlign: 'left',
                   }}
                 >
-                  <div style={{
-                    borderRadius: 14, overflow: 'hidden',
-                    background: 'var(--subtle-bg)',
-                    border: '1px solid var(--subtle-border)',
-                    transition: 'all 0.2s',
-                  }}>
-                    {/* Color bar */}
-                    <div style={{ height: 2, background: `${opt.route.color || '#555'}50` }} />
-
-                    <div style={{ padding: '9px 11px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{
-                          width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-                          background: `${opt.route.color || '#555'}18`,
-                          border: `1px solid ${opt.route.color || '#555'}38`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                          <Bus size={13} style={{ color: opt.route.color || '#555' }} />
-                        </div>
-
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{
-                            fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', margin: 0,
-                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                          }}>
-                            {opt.isTransfer && opt.transfer?.secondRoute
-                              ? `${opt.route.name || opt.route.nombre} → ${opt.transfer.secondRoute.name}`
-                              : (opt.route.name || opt.route.nombre)}
-                          </p>
-                          <p style={{ fontSize: 9, color: 'var(--text-muted)', margin: 0, marginTop: 1 }}>
-                            {opt.route.company || opt.route.operador} • {opt.direction === 'ida' ? 'Ida' : 'Vuelta'}
-                            {opt.isTransfer ? ' • 1 transbordo' : ''}
-                          </p>
-                        </div>
-
-                        {/* Quick stats */}
-                        <div className="tabular-nums" style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <p style={{ fontSize: 13, fontWeight: 700, color: '#F59E0B', margin: 0 }}>
-                            ~{opt.totalMinutes} min
-                          </p>
-                          <p style={{ fontSize: 9, color: 'var(--text-muted)', margin: 0, marginTop: 1 }}>
-                            {opt.totalWalkMinutes} min a pie
-                          </p>
-                        </div>
+                  <div
+                    className="rq-card"
+                    style={{
+                      '--route-color': altCol,
+                      padding: '9px 11px',
+                      borderLeft: `3px solid ${altCol}`,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {opt.route.codigo && (
+                        <span className="transit-code flex-shrink-0">{opt.route.codigo}</span>
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p
+                          className="font-display"
+                          style={{
+                            fontSize: 12.5,
+                            fontWeight: 700,
+                            color: 'var(--text-primary)',
+                            margin: 0,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {opt.isTransfer && opt.transfer?.secondRoute
+                            ? `${opt.route.name || opt.route.nombre} → ${opt.transfer.secondRoute.name}`
+                            : opt.route.name || opt.route.nombre}
+                        </p>
+                        <p style={{ fontSize: 10.5, color: 'var(--text-secondary)', margin: '1px 0 0' }}>
+                          {opt.route.company || opt.route.operador} · {opt.direction === 'ida' ? 'Ida' : 'Vuelta'}
+                          {opt.isTransfer ? ' · 1 transbordo' : ''}
+                        </p>
                       </div>
 
-                      {/* Step detail (expanded) */}
-                      {expandedStep === idx && (
-                        <div className="animate-fade-in" style={{
-                          marginTop: 8, paddingTop: 8,
-                          borderTop: '1px solid var(--subtle-border)',
-                          display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                            <Footprints size={9} color="#60A5FA" />
-                            <span className="tabular-nums" style={{ fontSize: 9, color: '#60A5FA' }}>{opt.boardPoint.walkDistance}m</span>
-                          </div>
-                          <CornerDownRight size={8} style={{ color: 'var(--text-muted)' }} />
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                            <Bus size={9} color={opt.route.color} />
-                            <span className="tabular-nums" style={{ fontSize: 9, color: opt.route.color }}>~{opt.busMinutes} min</span>
-                          </div>
-                          <CornerDownRight size={8} style={{ color: 'var(--text-muted)' }} />
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                            <MapPin size={9} color="#EF4444" />
-                            <span className="tabular-nums" style={{ fontSize: 9, color: '#EF4444' }}>
-                              {opt.alightPoint.walkDistance < 50 ? 'Directo' : `${opt.alightPoint.walkDistance}m`}
-                            </span>
-                          </div>
-                          <span className="tabular-nums" style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 600, color: '#F59E0B' }}>
-                            ${opt.route.fare?.toLocaleString()}
+                      <div className="tabular-nums" style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <p style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                          ~{opt.totalMinutes} min
+                        </p>
+                        <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: '1px 0 0' }}>
+                          {opt.totalWalkMinutes}m a pie
+                        </p>
+                      </div>
+                    </div>
+
+                    {expandedStep === idx && (
+                      <div
+                        className="animate-fade-in"
+                        style={{
+                          marginTop: 8,
+                          paddingTop: 8,
+                          borderTop: '1px solid var(--border-color)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                          <Footprints size={10} color="var(--caribe)" />
+                          <span className="tabular-nums" style={{ fontSize: 10, color: 'var(--caribe)' }}>
+                            {opt.boardPoint.walkDistance} m
                           </span>
                         </div>
-                      )}
-                    </div>
+                        <CornerDownRight size={9} style={{ color: 'var(--text-muted)' }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                          <Bus size={10} color={altCol} />
+                          <span className="tabular-nums" style={{ fontSize: 10, color: 'var(--text-primary)' }}>
+                            ~{opt.busMinutes} min
+                          </span>
+                        </div>
+                        <CornerDownRight size={9} style={{ color: 'var(--text-muted)' }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                          <MapPin size={10} color="var(--carnaval)" />
+                          <span className="tabular-nums" style={{ fontSize: 10, color: 'var(--carnaval)' }}>
+                            {opt.alightPoint.walkDistance < 50 ? 'Directo' : `${opt.alightPoint.walkDistance} m`}
+                          </span>
+                        </div>
+                        <span className="tabular-nums" style={{ marginLeft: 'auto', fontSize: 11.5, fontWeight: 700, color: 'var(--brand)' }}>
+                          ${opt.route.fare?.toLocaleString()}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </button>
               );
@@ -422,5 +429,29 @@ export default function RouteResultBar({
         </div>
       )}
     </div>
+  );
+}
+
+export default function RouteResultBar({
+  navigationResult,
+  selectedOptionIdx = 0,
+  onSelectOptionIdx,
+  onClear,
+  onStartLiveNav,
+}) {
+  const options = navigationResult?.options || [];
+  if (!navigationResult || options.length === 0) return null;
+
+  const navKey = `${navigationResult?.origin?.lat || ''}-${navigationResult?.destination?.lat || ''}-${options.length}`;
+
+  return (
+    <RouteResultBarContent
+      key={navKey}
+      navigationResult={navigationResult}
+      selectedOptionIdx={selectedOptionIdx}
+      onSelectOptionIdx={onSelectOptionIdx}
+      onClear={onClear}
+      onStartLiveNav={onStartLiveNav}
+    />
   );
 }

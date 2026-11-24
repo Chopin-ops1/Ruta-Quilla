@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Cookie, X } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 
 const CONSENT_KEY = 'rutaquilla_cookies_accepted';
 
@@ -34,7 +34,7 @@ export default function StorageNotice({ onShowPrivacy }) {
 
   return (
     <div
-      className="animate-slide-up"
+      className="animate-slide-up rq-sheet"
       style={{
         position: 'fixed',
         bottom: 16,
@@ -44,27 +44,23 @@ export default function StorageNotice({ onShowPrivacy }) {
         width: 'auto',
         maxWidth: 520,
         margin: '0 auto',
-        borderRadius: 20,
-        background: 'var(--panel-bg)',
-        border: '1px solid var(--subtle-border-strong)',
-        boxShadow: '0 20px 60px var(--shadow-color), 0 0 0 1px var(--subtle-border) inset',
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
-        padding: '16px',
+        borderRadius: 16,
+        padding: '14px 16px',
         display: 'flex',
         alignItems: 'center',
         gap: 12,
         flexWrap: 'wrap',
       }}
     >
-      {/* Cookie icon */}
+      {/* Storage icon */}
       <div style={{
-        width: 40, height: 40, borderRadius: 12, flexShrink: 0,
-        background: 'rgba(245,158,11,0.1)',
-        border: '1px solid rgba(245,158,11,0.2)',
+        width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border-color)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'var(--brand)',
       }}>
-        <span style={{ fontSize: 20 }}>🍪</span>
+        <ShieldCheck size={18} />
       </div>
 
       {/* Text */}
@@ -74,10 +70,11 @@ export default function StorageNotice({ onShowPrivacy }) {
         }}>
           Usamos almacenamiento local para tu sesión y preferencias.{' '}
           <button
+            type="button"
             onClick={onShowPrivacy}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
-              color: 'var(--accent-cyan)', fontSize: 12.5, fontWeight: 600,
+              color: 'var(--caribe)', fontSize: 12.5, fontWeight: 600,
               textDecoration: 'underline', padding: 0,
             }}
           >
@@ -88,18 +85,15 @@ export default function StorageNotice({ onShowPrivacy }) {
 
       {/* Accept button */}
       <button
+        type="button"
         onClick={handleAccept}
+        className="rq-btn-primary"
         style={{
           flexShrink: 0,
-          padding: '8px 18px', borderRadius: 12, border: 'none',
-          background: 'linear-gradient(135deg, #F59E0B, #D97706)',
-          color: '#000', fontSize: 12, fontWeight: 700,
-          cursor: 'pointer', transition: 'all 0.2s',
-          boxShadow: '0 4px 12px rgba(245,158,11,0.3)',
+          padding: '8px 16px',
+          fontSize: 12,
           whiteSpace: 'nowrap',
         }}
-        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; }}
-        onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
       >
         Aceptar
       </button>
