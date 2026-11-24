@@ -62,8 +62,8 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
           onClick={onMenuToggle}
           id="menu-toggle-btn"
           style={{
-            width: 32,
-            height: 32,
+            width: 30,
+            height: 30,
             borderRadius: 8,
             border: `1px solid ${menuOpen ? 'var(--brand)' : 'var(--border-color)'}`,
             background: menuOpen ? 'var(--brand)' : 'var(--bg-card)',
@@ -77,15 +77,15 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
           }}
           aria-label="Alternar panel lateral"
         >
-          {menuOpen ? <X size={16} /> : <Menu size={16} />}
+          {menuOpen ? <X size={15} /> : <Menu size={15} />}
         </button>
 
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           <div
             style={{
-              width: 30,
-              height: 30,
-              borderRadius: 8,
+              width: 28,
+              height: 28,
+              borderRadius: 7,
               flexShrink: 0,
               overflow: 'hidden',
               border: '1px solid var(--border-color)',
@@ -102,7 +102,7 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
             <h1
               className="font-display"
               style={{
-                fontSize: 16.5,
+                fontSize: 15.5,
                 fontWeight: 800,
                 color: 'var(--text-primary)',
                 lineHeight: 1.05,
@@ -119,7 +119,7 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
                   color: 'var(--plate-fg)',
                   padding: '1px 6px',
                   borderRadius: 5,
-                  fontSize: 14.5,
+                  fontSize: 14,
                   border: '1px solid rgba(255, 194, 26, 0.28)',
                 }}
               >
@@ -217,9 +217,9 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
           aria-label="Síguenos en Instagram"
           title="Instagram @ruta.quilla"
           className="rq-icon-btn"
-          style={{ width: 32, height: 32, textDecoration: 'none' }}
+          style={{ width: 30, height: 30, textDecoration: 'none' }}
         >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
           </svg>
         </a>
@@ -230,9 +230,9 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
           aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
           title={isDark ? 'Modo claro' : 'Modo oscuro'}
           className="rq-icon-btn"
-          style={{ width: 32, height: 32, color: isDark ? 'var(--brand)' : 'var(--text-primary)' }}
+          style={{ width: 30, height: 30, color: isDark ? 'var(--brand)' : 'var(--text-primary)' }}
         >
-          {isDark ? <Sun size={15} /> : <Moon size={15} />}
+          {isDark ? <Sun size={14} /> : <Moon size={14} />}
         </button>
 
         {onAdminClick && (
@@ -444,7 +444,7 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
             onClick={onLoginClick}
             id="login-btn"
             className="rq-btn-primary"
-            style={{ padding: '0 12px', fontSize: 12, height: 32, whiteSpace: 'nowrap' }}
+            style={{ padding: '0 10px', fontSize: 11.5, height: 30, whiteSpace: 'nowrap' }}
           >
             <span className="sm:hidden">Ingresar</span>
             <span className="hidden sm:inline">Iniciar sesión</span>

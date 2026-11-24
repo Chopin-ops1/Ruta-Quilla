@@ -55,11 +55,17 @@ export default function MapQuickBar({
     if (prevOriginRef.current === key) return;
     prevOriginRef.current = key;
 
+    const presetOriginName = effectiveOrigin.displayName || effectiveOrigin.name;
+    if (presetOriginName) {
+      setOriginName(presetOriginName);
+      return;
+    }
+
     setOriginName(null); // Show "Cargando..." while fetching
     reverseGeocode(effectiveOrigin.lat, effectiveOrigin.lng)
       .then(name => setOriginName(name))
       .catch(() => setOriginName(`${effectiveOrigin.lat.toFixed(4)}, ${effectiveOrigin.lng.toFixed(4)}`));
-  }, [effectiveOrigin?.lat, effectiveOrigin?.lng]);
+  }, [effectiveOrigin?.lat, effectiveOrigin?.lng, effectiveOrigin?.displayName, effectiveOrigin?.name]);
 
   // Resolve destination address
   useEffect(() => {
@@ -72,11 +78,17 @@ export default function MapQuickBar({
     if (prevDestRef.current === key) return;
     prevDestRef.current = key;
 
+    const presetDestName = effectiveDest.displayName || effectiveDest.name;
+    if (presetDestName) {
+      setDestName(presetDestName);
+      return;
+    }
+
     setDestName(null);
     reverseGeocode(effectiveDest.lat, effectiveDest.lng)
       .then(name => setDestName(name))
       .catch(() => setDestName(`${effectiveDest.lat.toFixed(4)}, ${effectiveDest.lng.toFixed(4)}`));
-  }, [effectiveDest?.lat, effectiveDest?.lng]);
+  }, [effectiveDest?.lat, effectiveDest?.lng, effectiveDest?.displayName, effectiveDest?.name]);
 
   // Hide when navigation results are shown
   if (navigationResult) return null;
@@ -107,19 +119,20 @@ export default function MapQuickBar({
       className="animate-slide-up rq-sheet"
       style={{
         position: 'fixed',
-        bottom: 'calc(20px + env(safe-area-inset-bottom, 0px))',
+        bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
         left: '50%',
         translate: '-50% 0',
         zIndex: 1200,
-        width: 'calc(100% - 28px)',
+        width: 'calc(100% - 20px)',
         maxWidth: 420,
         overflow: 'hidden',
       }}
     >
       <div className="sheet-handle" />
 
-      <div style={{ padding: '6px 14px 13px', display: 'flex', flexDirection: 'column', gap: 9 }}>
+      <div style={{ padding: '4px 12px 11px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
           {effectiveOrigin && (
             <div
               style={{
@@ -127,7 +140,7 @@ export default function MapQuickBar({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 7,
-                padding: '7px 10px',
+                padding: '6px 10px',
                 borderRadius: 8,
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
@@ -160,7 +173,7 @@ export default function MapQuickBar({
           )}
 
           {effectiveOrigin && effectiveDest && (
-            <Navigation size={12} style={{ color: 'var(--text-muted)', flexShrink: 0, transform: 'rotate(90deg)' }} />
+            <Navigation size={12} className="hidden sm:block" style={{ color: 'var(--text-muted)', flexShrink: 0, transform: 'rotate(90deg)' }} />
           )}
 
           {effectiveDest && (
@@ -170,7 +183,7 @@ export default function MapQuickBar({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 7,
-                padding: '7px 10px',
+                padding: '6px 10px',
                 borderRadius: 8,
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
@@ -201,6 +214,7 @@ export default function MapQuickBar({
               </span>
             </div>
           )}
+          </div>
 
           <button
             onClick={handleClose}

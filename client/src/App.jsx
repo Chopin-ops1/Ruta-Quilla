@@ -110,10 +110,25 @@ export default function App() {
 
   const { isPremium, isAuthenticated, isAdmin, canNavigate, incrementUsage, remainingFreeSearches } = useAuth();
   const toast = useToast();
-  const hasNavBottomBar = Boolean(
-    navigationResult || previewOrigin || previewDestination || originFromMap || destFromMap
+  const hasQuickBar = Boolean(
+    !navigationResult && (previewOrigin || previewDestination || originFromMap || destFromMap)
   );
-  const fabBottom = hasNavBottomBar ? 204 : selectedRoute ? 160 : 28;
+  const hideMobileMapChrome = !isDesktop && menuOpen;
+  const fabBottom = isDesktop
+    ? navigationResult
+      ? 224
+      : hasQuickBar
+      ? 156
+      : selectedRoute
+      ? 160
+      : 34
+    : navigationResult
+    ? 224
+    : hasQuickBar
+    ? 152
+    : selectedRoute
+    ? 146
+    : 44;
 
   /**
    * Full state reset on logout.
@@ -558,6 +573,7 @@ export default function App() {
               }}
               activeReports={activeReports}
               onReportClick={setSelectedReport}
+              isLiveNav={Boolean(liveNavOption)}
             />
           )}
         </main>
@@ -590,19 +606,21 @@ export default function App() {
       <StorageNotice onShowPrivacy={() => setShowLegal('privacy')} />
 
       {/* Floating bottom bar for map-picked points (mobile-friendly) */}
-      <MapQuickBar
-        originFromMap={originFromMap}
-        destFromMap={destFromMap}
-        previewOrigin={previewOrigin}
-        previewDestination={previewDestination}
-        onNavigate={handleNavigate}
-        onClear={handleClearNavigation}
-        isNavigating={isNavigating}
-        navigationResult={navigationResult}
-      />
+      {!hideMobileMapChrome && (
+        <MapQuickBar
+          originFromMap={originFromMap}
+          destFromMap={destFromMap}
+          previewOrigin={previewOrigin}
+          previewDestination={previewDestination}
+          onNavigate={handleNavigate}
+          onClear={handleClearNavigation}
+          isNavigating={isNavigating}
+          navigationResult={navigationResult}
+        />
+      )}
 
       {/* Route result bar (replaces MapQuickBar when results exist) */}
-      {!liveNavOption && (
+      {!liveNavOption && !hideMobileMapChrome && (
         <RouteResultBar
           navigationResult={navigationResult}
           selectedOptionIdx={selectedOptionIdx}
@@ -624,13 +642,14 @@ export default function App() {
         />
       )}
 
-      {/* Incident Reporter (floating button + modal) — hidden during live nav */}
-      {!liveNavOption && (
+      {/* Incident Reporter (floating button + modal) — hidden during live nav or open mobile drawer */}
+      {!liveNavOption && !hideMobileMapChrome && (
         <IncidentReporter
           routes={routes}
           userPosition={userPosition}
           onReportCreated={loadActiveReports}
           bottomOffset={fabBottom}
+          compact={!isDesktop}
         />
       )}
 
@@ -643,18 +662,18 @@ export default function App() {
         />
       )}
 
-      {/* Community toggle button — hidden during live nav */}
-      {!liveNavOption && (
+      {/* Community toggle button — hidden during live nav, open mobile drawer, or mobile navigation result */}
+      {!liveNavOption && !hideMobileMapChrome && (isDesktop || !navigationResult) && (
       <button
         onClick={() => setShowCommunity(true)}
         style={{
           position: 'fixed',
-          bottom: fabBottom + 54,
-          right: 16,
+          bottom: fabBottom + (isDesktop ? 54 : 48),
+          right: isDesktop ? 16 : 10,
           zIndex: 1100,
-          width: 44,
-          height: 44,
-          borderRadius: 12,
+          width: isDesktop ? 44 : 40,
+          height: isDesktop ? 44 : 40,
+          borderRadius: isDesktop ? 12 : 10,
           border: '1px solid var(--border-color)',
           background: 'var(--bg-card)',
           color: 'var(--brand)',
@@ -676,7 +695,7 @@ export default function App() {
         title="Comunidad Quilla"
         aria-label="Abrir Comunidad Quilla"
       >
-        <Trophy size={19} />
+        <Trophy size={isDesktop ? 19 : 17} />
       </button>
       )}
 

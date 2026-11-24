@@ -37,36 +37,36 @@ export default function StorageNotice({ onShowPrivacy }) {
       className="animate-slide-up rq-sheet"
       style={{
         position: 'fixed',
-        bottom: 16,
-        left: 16,
-        right: 16,
+        bottom: 12,
+        left: 12,
+        right: 12,
         zIndex: 1500,
         width: 'auto',
         maxWidth: 520,
         margin: '0 auto',
-        borderRadius: 16,
-        padding: '14px 16px',
+        borderRadius: 14,
+        padding: '10px 12px',
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
-        flexWrap: 'wrap',
+        gap: 10,
+        flexWrap: 'nowrap',
       }}
     >
       {/* Storage icon */}
       <div style={{
-        width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+        width: 34, height: 34, borderRadius: 9, flexShrink: 0,
         background: 'var(--bg-surface)',
         border: '1px solid var(--border-color)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         color: 'var(--brand)',
       }}>
-        <ShieldCheck size={18} />
+        <ShieldCheck size={17} />
       </div>
 
       {/* Text */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{
-          fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0,
+          fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.4, margin: 0,
         }}>
           Usamos almacenamiento local para tu sesión y preferencias.{' '}
           <button
@@ -74,7 +74,7 @@ export default function StorageNotice({ onShowPrivacy }) {
             onClick={onShowPrivacy}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
-              color: 'var(--caribe)', fontSize: 12.5, fontWeight: 600,
+              color: 'var(--caribe)', fontSize: 11.5, fontWeight: 600,
               textDecoration: 'underline', padding: 0,
             }}
           >
@@ -90,8 +90,8 @@ export default function StorageNotice({ onShowPrivacy }) {
         className="rq-btn-primary"
         style={{
           flexShrink: 0,
-          padding: '8px 16px',
-          fontSize: 12,
+          padding: '7px 12px',
+          fontSize: 11.5,
           whiteSpace: 'nowrap',
         }}
       >

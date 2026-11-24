@@ -340,11 +340,12 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
         className="relative w-full animate-slide-up rq-card"
         style={{
           maxWidth: 420,
+          maxHeight: 'calc(100dvh - 24px)',
+          overflowY: 'auto',
           borderRadius: 18,
           background: 'var(--bg-card)',
           border: '1px solid var(--border-color)',
           boxShadow: 'var(--shadow-lg)',
-          overflow: 'hidden',
         }}
       >
         {/* Close button (hidden when limit-gated) */}
@@ -366,12 +367,14 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
 
         {/* Reason banner (when limit reached) */}
         {reasonData.title && !forgotStep && !resetStep && !verifyStep && (
-          <div style={{
-            padding: '16px 28px',
-            background: 'var(--bg-surface)',
-            borderBottom: '1px solid var(--border-color)',
-            textAlign: 'center',
-          }}>
+          <div
+            className="px-5 py-4 sm:px-7"
+            style={{
+              background: 'var(--bg-surface)',
+              borderBottom: '1px solid var(--border-color)',
+              textAlign: 'center',
+            }}
+          >
             {ReasonIcon && (
               <div style={{
                 width: 36, height: 36, borderRadius: 10, margin: '0 auto 8px',
@@ -396,7 +399,11 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
         )}
 
         {/* Hero section */}
-        <div style={{ padding: reasonData.title && !forgotStep && !resetStep && !verifyStep ? '18px 28px 14px' : '28px 28px 18px', textAlign: 'center' }}>
+        <div
+          className={`text-center px-5 sm:px-7 ${
+            reasonData.title && !forgotStep && !resetStep && !verifyStep ? 'pt-4 pb-3' : 'pt-6 pb-4 sm:pt-7'
+          }`}
+        >
           {/* Brand or reset mark */}
           {(!reasonData.title || forgotStep || resetStep || verifyStep) && (
             forgotStep || resetStep ? (
@@ -465,10 +472,10 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
 
         {/* === VERIFICATION STEP === */}
         {verifyStep ? (
-          <div style={{ padding: '0 28px 28px' }}>
+          <div className="px-5 pb-6 sm:px-7 sm:pb-7">
             {/* Code input boxes */}
             <div style={{
-              display: 'flex', justifyContent: 'center', gap: 7,
+              display: 'flex', justifyContent: 'center', gap: 6,
               marginBottom: 18,
             }}>
               {verifyCode.map((digit, i) => (
@@ -485,10 +492,10 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
                   autoFocus={i === 0}
                   className="font-mono tabular-nums"
                   style={{
-                    width: 44, height: 52, borderRadius: 10,
+                    flex: '1 1 0', maxWidth: 44, minWidth: 0, height: 48, borderRadius: 10,
                     background: digit ? 'var(--bg-card)' : 'var(--bg-surface)',
                     border: `1.5px solid ${digit ? 'var(--brand)' : 'var(--border-color)'}`,
-                    color: 'var(--text-primary)', fontSize: 22, fontWeight: 700,
+                    color: 'var(--text-primary)', fontSize: 20, fontWeight: 700,
                     textAlign: 'center', outline: 'none',
                     transition: 'border-color 0.15s, background 0.15s',
                     caretColor: 'var(--brand)',
@@ -550,7 +557,7 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
           </div>
         ) : forgotStep ? (
           /* === FORGOT PASSWORD STEP 1: EMAIL === */
-          <form onSubmit={handleForgotSubmit} style={{ padding: '0 28px 28px' }}>
+          <form onSubmit={handleForgotSubmit} className="px-5 pb-6 sm:px-7 sm:pb-7">
             <FloatingInput
               id="forgot-email-input"
               label="Correo electrónico"
@@ -603,7 +610,7 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
           </form>
         ) : resetStep ? (
           /* === FORGOT PASSWORD STEP 2: CODE + NEW PASSWORD === */
-          <form onSubmit={handleResetSubmit} style={{ padding: '0 28px 28px' }}>
+          <form onSubmit={handleResetSubmit} className="px-5 pb-6 sm:px-7 sm:pb-7">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <FloatingInput
                 id="reset-code-input"
@@ -687,7 +694,7 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
         ) : (
         <>
         {/* Mode toggle pills */}
-        <div style={{ padding: '0 28px 18px' }}>
+        <div className="px-5 pb-4 sm:px-7">
           <div style={{
             display: 'flex',
             background: 'var(--bg-surface)',
@@ -717,7 +724,7 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} style={{ padding: '0 28px 24px' }}>
+        <form onSubmit={handleSubmit} className="px-5 pb-6 sm:px-7">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {mode === 'register' && (
               <FloatingInput

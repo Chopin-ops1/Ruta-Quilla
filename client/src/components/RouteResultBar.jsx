@@ -54,14 +54,14 @@ function RouteResultBarContent({
       style={{
         '--route-color': routeCol,
         position: 'fixed',
-        bottom: 'calc(20px + env(safe-area-inset-bottom, 0px))',
+        bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
         left: '50%',
         translate: '-50% 0',
         zIndex: 1200,
-        width: 'calc(100% - 24px)',
+        width: 'calc(100% - 20px)',
         maxWidth: 448,
         overflow: 'hidden',
-        maxHeight: showAll ? '72vh' : 'auto',
+        maxHeight: showAll ? '58vh' : 'auto',
         display: 'flex',
         flexDirection: 'column',
       }}
@@ -69,9 +69,9 @@ function RouteResultBarContent({
       <div style={{ height: 3, flexShrink: 0, background: routeCol }} />
       <div className="sheet-handle" />
 
-      <div style={{ padding: '6px 14px 12px', flexShrink: 0 }}>
+      <div style={{ padding: '5px 12px 10px', flexShrink: 0 }}>
         {/* Encabezado: placas + nombre + bloque de tiempo y tarifa */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', marginBottom: 5 }}>
               {selectedOpt.isOptimal && (
@@ -256,8 +256,8 @@ function RouteResultBarContent({
             onClick={() => onStartLiveNav(selectedOpt)}
             style={{
               width: '100%',
-              marginTop: 9,
-              padding: '10px 14px',
+              marginTop: 8,
+              padding: '9px 12px',
               borderRadius: 8,
               border: '1px solid rgba(255,255,255,0.12)',
               background: 'var(--mangle)',
@@ -289,8 +289,8 @@ function RouteResultBarContent({
             className="rq-btn-ghost"
             style={{
               width: '100%',
-              marginTop: 7,
-              padding: '7px 12px',
+              marginTop: 6,
+              padding: '6px 10px',
               fontSize: 11.5,
             }}
           >

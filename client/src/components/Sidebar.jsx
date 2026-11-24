@@ -70,12 +70,16 @@ function ScheduleRow({ label, block }) {
   const freqStr = freqParts.length > 0 ? ` · ${freqParts.join(' / ')}` : '';
 
   return (
-    <div className="flex items-center justify-between flex-wrap gap-x-2 gap-y-0.5 text-[11px] py-1">
+    <div className="flex items-start justify-between gap-2 text-[11px] py-1">
       <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</span>
-      <span className="tabular-nums text-right" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-        {timeRange}
-        {freqStr && <span className="text-[10.5px]" style={{ color: 'var(--caribe)', fontWeight: 500 }}>{freqStr}</span>}
-      </span>
+      <div className="flex flex-col items-end leading-tight tabular-nums text-right">
+        <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{timeRange}</span>
+        {freqParts.length > 0 && (
+          <span className="text-[10px]" style={{ color: 'var(--caribe)', fontWeight: 500 }}>
+            {freqParts.join(' · ')}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -384,8 +388,8 @@ function SelectedRouteFicha({
           </div>
           <div className="text-center">
             <div className="rq-section-label">Tarifa</div>
-            <div className="text-[11.5px] font-bold tabular-nums mt-0.5" style={{ color: 'var(--brand)' }}>
-              $3.700 / $3.8k
+            <div className="text-[11px] font-bold tabular-nums mt-0.5" style={{ color: 'var(--brand)' }}>
+              $3.7k / $3.8k
             </div>
           </div>
         </div>

@@ -242,6 +242,7 @@ export default function MapComponent({
   onSetDestination,
   activeReports = [],
   onReportClick,
+  isLiveNav = false,
 }) {
   const { isPremium } = useAuth();
   const { isDark } = useTheme();
@@ -1622,7 +1623,7 @@ export default function MapComponent({
       <div ref={containerRef} className="w-full h-full" />
 
       {/* Category filter chips */}
-      {showPOIs && !pinMode && (
+      {showPOIs && !pinMode && !isLiveNav && (
         <div className="poi-chips" role="toolbar" aria-label="Filtrar lugares de interés">
           <button
             type="button"
@@ -1654,7 +1655,7 @@ export default function MapComponent({
       )}
 
       {/* Subtle zoom hint when zoomed out */}
-      {showPOIs && mapZoom < 13.8 && !pinMode && !navigationResult && !selectedRoute && (
+      {showPOIs && mapZoom < 13.8 && !pinMode && !isLiveNav && !navigationResult && !selectedRoute && (
         <div className="map-hint-pill animate-fade-in">
           <MapPin size={12} color="var(--brand)" />
           <span>Acércate para ver más lugares en esta zona</span>
@@ -1662,7 +1663,7 @@ export default function MapComponent({
       )}
 
       {/* Custom map control dock (top-right) */}
-      <div className="map-dock" role="group" aria-label="Controles del mapa">
+      <div className={`map-dock${isLiveNav ? ' live-nav-offset' : ''}`} role="group" aria-label="Controles del mapa">
         <button
           type="button"
           className="map-dock-btn"

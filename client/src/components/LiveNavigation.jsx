@@ -292,11 +292,11 @@ export default function LiveNavigation({
       <div
         style={{
           position: 'fixed',
-          top: 66,
+          top: 62,
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 1300,
-          width: 'calc(100% - 24px)',
+          width: 'calc(100% - 16px)',
           maxWidth: 440,
           pointerEvents: 'auto',
         }}
@@ -310,12 +310,12 @@ export default function LiveNavigation({
             overflow: 'hidden',
           }}
         >
-          <div style={{ padding: '12px 14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+          <div style={{ padding: '10px 12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div
                 style={{
-                  width: 38,
-                  height: 38,
+                  width: 34,
+                  height: 34,
                   borderRadius: 9,
                   flexShrink: 0,
                   background: config.bgColor,
@@ -332,7 +332,7 @@ export default function LiveNavigation({
                 <p
                   className="font-display"
                   style={{
-                    fontSize: 15.5,
+                    fontSize: 14.5,
                     fontWeight: 700,
                     color: 'var(--text-primary)',
                     margin: 0,
@@ -341,7 +341,7 @@ export default function LiveNavigation({
                 >
                   {config.title}
                 </p>
-                <p className="tabular-nums" style={{ fontSize: 12, fontWeight: 600, color: config.color, margin: '3px 0 0' }}>
+                <p className="tabular-nums" style={{ fontSize: 11.5, fontWeight: 600, color: config.color, margin: '2px 0 0' }}>
                   {config.subtitle}
                 </p>
               </div>
@@ -351,8 +351,8 @@ export default function LiveNavigation({
                 aria-label={soundEnabled ? 'Silenciar alertas' : 'Activar alertas'}
                 className="rq-icon-btn"
                 style={{
-                  width: 32,
-                  height: 32,
+                  width: 30,
+                  height: 30,
                   color: soundEnabled ? 'var(--brand)' : 'var(--text-muted)',
                 }}
               >
@@ -360,7 +360,7 @@ export default function LiveNavigation({
               </button>
             </div>
 
-            <p style={{ fontSize: 11.5, color: 'var(--text-secondary)', margin: '7px 0 0', paddingLeft: 49 }}>
+            <p style={{ fontSize: 11.5, color: 'var(--text-secondary)', margin: '6px 0 0', paddingLeft: 0 }}>
               {config.instruction}
             </p>
           </div>
@@ -382,7 +382,7 @@ export default function LiveNavigation({
           style={{
             borderRadius: '16px 16px 0 0',
             borderBottom: 'none',
-            padding: '8px 16px 14px',
+            padding: '6px 14px 12px',
           }}
         >
           <div className="sheet-handle" style={{ marginBottom: 8 }} />

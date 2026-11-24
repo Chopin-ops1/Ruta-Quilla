@@ -44,7 +44,7 @@ const REPORT_TYPES = [
   { id: 'otro',       icon: Flag,         label: 'Otro',            color: '#6E7581' },
 ];
 
-export default function IncidentReporter({ routes: propRoutes, userPosition, onReportCreated, bottomOffset = 28 }) {
+export default function IncidentReporter({ routes: propRoutes, userPosition, onReportCreated, bottomOffset = 28, compact = false }) {
   const { isAuthenticated } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [selectedType, setSelectedType] = useState(null);
@@ -132,8 +132,8 @@ export default function IncidentReporter({ routes: propRoutes, userPosition, onR
         type="button"
         onClick={handleOpen}
         style={{
-          position: 'fixed', bottom: bottomOffset, right: 16, zIndex: 1100,
-          width: 44, height: 44, borderRadius: 12,
+          position: 'fixed', bottom: bottomOffset, right: compact ? 10 : 16, zIndex: 1100,
+          width: compact ? 40 : 44, height: compact ? 40 : 44, borderRadius: compact ? 10 : 12,
           background: 'var(--brand)',
           color: 'var(--brand-ink)',
           border: '1px solid rgba(0, 0, 0, 0.08)',
@@ -146,7 +146,7 @@ export default function IncidentReporter({ routes: propRoutes, userPosition, onR
         title="Reportar incidencia"
         aria-label="Reportar incidencia"
       >
-        <AlertTriangle size={20} strokeWidth={2.25} />
+        <AlertTriangle size={compact ? 18 : 20} strokeWidth={2.25} />
       </button>
 
       {/* Feedback toast */}
@@ -154,7 +154,7 @@ export default function IncidentReporter({ routes: propRoutes, userPosition, onR
         <div
           className="animate-fade-in"
           style={{
-            position: 'fixed', bottom: bottomOffset + 56, right: 16, zIndex: 1200,
+            position: 'fixed', bottom: bottomOffset + (compact ? 48 : 56), right: compact ? 10 : 16, zIndex: 1200,
             padding: '10px 14px', borderRadius: 10, maxWidth: 260,
             background: 'var(--bg-card)',
             border: '1px solid var(--border-color)',
