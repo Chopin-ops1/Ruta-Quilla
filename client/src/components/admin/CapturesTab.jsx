@@ -1,100 +1,50 @@
-import { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import { Bus, CheckCircle2, XCircle, GitCompare } from 'lucide-react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import {
+  Bus,
+  CheckCircle2,
+  XCircle,
+  GitCompare,
+  ArrowLeft,
+  Search,
+  Trash2,
+  Map as MapIcon,
+  Loader2,
+} from 'lucide-react';
 import { adminAPI } from '../../services/api';
-import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
+import AdminVectorMap from './AdminVectorMap';
 
-const COLORS = ['#F59E0B', '#06B6D4', '#10B981', '#EF4444', '#8B5CF6', '#EC4899', '#F97316'];
+const COLORS = ['#FFC21A', '#3B8BF0', '#1F9D6B', '#E5484D', '#8B7CF6', '#EC4899', '#F97316'];
 
-/**
- * Sub-component: Fixes the Leaflet "gray tiles" bug when the map is inside a
- * dynamically-sized panel. Calls invalidateSize() on mount and whenever
- * the capture data changes. Also fits bounds to show the captured route.
- */
-function MapResizer({ coordinates, boardingPoint }) {
-  const map = useMap();
-
-  useEffect(() => {
-    // Fix gray tiles — tell Leaflet to recalculate its container size
-    const timer = setTimeout(() => {
-      map.invalidateSize({ animate: false });
-
-      // Fit bounds to show the captured route
-      if (coordinates && coordinates.length >= 2) {
-        try {
-          const latLngs = coordinates.map(c => [c[1], c[0]]);
-          const bounds = L.latLngBounds(latLngs);
-          if (bounds.isValid()) {
-            map.fitBounds(bounds, { padding: [30, 30], maxZoom: 16 });
-          }
-        } catch (e) {
-          console.warn('Error fitting bounds:', e);
-        }
-      }
-    }, 150);
-
-    return () => clearTimeout(timer);
-  }, [map, coordinates, boardingPoint]);
-
-  return null;
-}
-
-/**
- * Sub-component for comparison mode: fits bounds to all compared captures.
- */
-function CompareResizer({ captures }) {
-  const map = useMap();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      map.invalidateSize({ animate: false });
-
-      if (captures && captures.length > 0) {
-        try {
-          const allLatLngs = captures.flatMap(cap =>
-            (cap.geometry?.coordinates || []).map(c => [c[1], c[0]])
-          );
-          if (allLatLngs.length >= 2) {
-            const bounds = L.latLngBounds(allLatLngs);
-            if (bounds.isValid()) {
-              map.fitBounds(bounds, { padding: [30, 30], maxZoom: 16 });
-            }
-          }
-        } catch (e) {
-          console.warn('Error fitting compare bounds:', e);
-        }
-      }
-    }, 150);
-
-    return () => clearTimeout(timer);
-  }, [map, captures]);
-
-  return null;
-}
-
-export default function CapturesTab() {
-  const { isDark } = useTheme();
+export default function CapturesTab({ refreshTick = 0, onUseInEditor, onCapturesMutated }) {
   const toast = useToast();
   const [captures, setCaptures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending');
+  const [search, setSearch] = useState('');
   const [selected, setSelected] = useState(null);
   const [comparing, setComparing] = useState(null);
   const [reviewNotes, setReviewNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [fitTrigger, setFitTrigger] = useState(0);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await adminAPI.getCaptures(filter ? { status: filter } : {});
       setCaptures(res.data || []);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
-  };
+    } catch (e) {
+      console.error(e);
+      toast.error('Error al cargar capturas');
+    } finally {
+      setLoading(false);
+    }
+  }, [filter, toast]);
 
-  useEffect(() => { load(); }, [filter]);
+  useEffect(() => {
+    load();
+  }, [load, refreshTick]);
 
   const handleReview = async (id, status) => {
     setSaving(true);
@@ -102,255 +52,436 @@ export default function CapturesTab() {
       await adminAPI.reviewCapture(id, { status, adminNotes: reviewNotes });
       setReviewNotes('');
       setSelected(null);
+      toast.success(status === 'approved' ? 'Captura aprobada (+50 XP al usuario)' : 'Captura rechazada');
       load();
-    } catch (e) { toast.error('Error: ' + (e.message || 'No se pudo guardar')); }
-    finally { setSaving(false); }
+      onCapturesMutated?.();
+    } catch (e) {
+      toast.error(e.message || 'No se pudo guardar la revisión');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteCapture = async (id) => {
+    setSaving(true);
+    try {
+      await adminAPI.deleteCapture(id);
+      setDeleteConfirm(false);
+      setSelected(null);
+      toast.success('Captura eliminada');
+      load();
+      onCapturesMutated?.();
+    } catch (e) {
+      toast.error(e.message || 'No se pudo eliminar');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCompare = async (routeName) => {
     try {
       const res = await adminAPI.compareCaptures(routeName);
       setComparing({ routeName, captures: res.data || [] });
-    } catch (e) { console.error(e); }
-  };
-
-  // When selecting a capture, if geometry is missing (list didn't include it), fetch full detail
-  const handleSelect = async (capture) => {
-    setComparing(null);
-    if (capture.geometry?.coordinates?.length > 0) {
-      setSelected(capture);
-    } else {
-      // Fetch full detail with geometry
-      try {
-        const res = await adminAPI.getCaptureById(capture._id);
-        setSelected(res.data || capture);
-      } catch (e) {
-        console.error('Error fetching capture detail:', e);
-        setSelected(capture);
-      }
+      setFitTrigger((n) => n + 1);
+    } catch (e) {
+      toast.error('No se pudieron comparar capturas');
     }
   };
 
-  // Determine coordinates for the map
+  const handleSelect = async (capture) => {
+    setComparing(null);
+    setDeleteConfirm(false);
+    if (capture.geometry?.coordinates?.length > 0) {
+      setSelected(capture);
+      setFitTrigger((n) => n + 1);
+      return;
+    }
+    try {
+      const res = await adminAPI.getCaptureById(capture._id);
+      setSelected(res.data || capture);
+      setFitTrigger((n) => n + 1);
+    } catch {
+      setSelected(capture);
+      setFitTrigger((n) => n + 1);
+    }
+  };
+
+  const filteredCaptures = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return captures;
+    return captures.filter(
+      (c) =>
+        (c.routeName || '').toLowerCase().includes(q) ||
+        (c.company || '').toLowerCase().includes(q) ||
+        (c.userName || '').toLowerCase().includes(q)
+    );
+  }, [captures, search]);
+
   const selectedCoords = selected?.geometry?.coordinates || [];
+  const hasDetail = Boolean(selected || comparing);
+
+  const mapPolylines = useMemo(() => {
+    if (comparing) {
+      return comparing.captures
+        .filter((cap) => cap.geometry?.coordinates?.length >= 2)
+        .map((cap, i) => ({
+          id: cap._id || `cmp-${i}`,
+          coordinates: cap.geometry.coordinates,
+          color: COLORS[i % COLORS.length],
+          width: 4,
+          opacity: 0.88,
+          showArrows: true,
+          label: `${cap.userName} · ${cap.direction}`,
+        }));
+    }
+    if (selectedCoords.length >= 2) {
+      return [
+        {
+          id: selected?._id || 'selected',
+          coordinates: selectedCoords,
+          color: '#FFC21A',
+          width: 4.5,
+          opacity: 0.94,
+          showArrows: true,
+          label: `${selected?.routeName || 'Captura'} · ${selected?.userName || ''}`,
+        },
+      ];
+    }
+    return [];
+  }, [comparing, selected, selectedCoords]);
+
+  const mapEndpoints = useMemo(() => {
+    if (comparing || selectedCoords.length < 2) return [];
+    const first = selectedCoords[0];
+    const last = selectedCoords[selectedCoords.length - 1];
+    return [
+      { lng: first[0], lat: first[1], color: '#1F9D6B', label: 'Inicio de captura' },
+      { lng: last[0], lat: last[1], color: '#E5484D', label: 'Fin de captura' },
+    ];
+  }, [comparing, selectedCoords]);
+
+  const fitCoordinates = useMemo(() => {
+    if (comparing) {
+      return comparing.captures.flatMap((cap) => cap.geometry?.coordinates || []);
+    }
+    return selectedCoords;
+  }, [comparing, selectedCoords]);
 
   return (
-    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Filters */}
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--subtle-border)', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-        {[
-          { v: 'pending', l: '⏳ Pendientes' },
-          { v: 'approved', l: '✅ Aprobadas' },
-          { v: 'rejected', l: '❌ Rechazadas' },
-          { v: '', l: '📋 Todas' },
-        ].map(f => (
-          <button key={f.v} onClick={() => setFilter(f.v)} style={{
-            padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
-            background: filter === f.v ? 'rgba(245,158,11,0.12)' : 'var(--subtle-bg)',
-            color: filter === f.v ? '#F59E0B' : 'var(--text-muted)',
-            fontSize: 11, fontWeight: 600, transition: 'all 0.2s',
-          }}>{f.l}</button>
-        ))}
-      </div>
-
-      {/* List + Detail split */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        {/* Capture list */}
-        <div style={{ width: selected || comparing ? '40%' : '100%', overflowY: 'auto', padding: 12, transition: 'width 0.3s' }}>
-          {loading ? <p style={{ color: 'var(--text-muted)', fontSize: 12, padding: 12 }}>Cargando...</p> :
-           captures.length === 0 ? <p style={{ color: 'var(--text-muted)', fontSize: 12, padding: 12 }}>No hay capturas</p> :
-           captures.map(c => (
-            <button key={c._id} onClick={() => handleSelect(c)} style={{
-              width: '100%', padding: '10px 12px', marginBottom: 6, borderRadius: 12, border: 'none', cursor: 'pointer',
-              background: selected?._id === c._id ? 'rgba(245,158,11,0.08)' : 'var(--subtle-bg)',
-              borderLeft: `3px solid ${c.status === 'pending' ? '#FBBF24' : c.status === 'approved' ? '#10B981' : '#EF4444'}`,
-              textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 3,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Bus size={12} color="#F59E0B" />
-                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.routeName}</span>
-                <span style={{ fontSize: 8, padding: '2px 6px', borderRadius: 6, fontWeight: 700, textTransform: 'uppercase',
-                  background: c.direction === 'ida' ? 'rgba(16,185,129,0.1)' : 'rgba(139,92,246,0.1)',
-                  color: c.direction === 'ida' ? '#34D399' : '#A78BFA',
-                }}>{c.direction}</span>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>👤 {c.userName}</span>
-                <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>🏢 {c.company}</span>
-                <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>{new Date(c.createdAt).toLocaleDateString('es-CO')}</span>
-              </div>
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Filtros + Buscador */}
+      <div
+        className="p-3 flex items-center justify-between gap-2 flex-wrap flex-shrink-0"
+        style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-color)' }}
+      >
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {[
+            { v: 'pending', l: 'Pendientes' },
+            { v: 'approved', l: 'Aprobadas' },
+            { v: 'rejected', l: 'Rechazadas' },
+            { v: '', l: 'Todas' },
+          ].map((f) => (
+            <button
+              key={f.v}
+              type="button"
+              onClick={() => {
+                setFilter(f.v);
+                setSelected(null);
+                setComparing(null);
+              }}
+              className={`rq-chip${filter === f.v ? ' active' : ''}`}
+              style={{ padding: '4px 10px', fontSize: 11 }}
+            >
+              {f.l}
             </button>
           ))}
         </div>
 
-        {/* Detail panel */}
-        {(selected || comparing) && (
-          <div style={{ flex: 1, borderLeft: '1px solid var(--subtle-border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            {/* Map — key forces remount when switching captures for clean tile rendering */}
-            <div style={{ height: '55%', position: 'relative' }}>
-              <MapContainer
-                key={selected?._id || comparing?.routeName || 'map'}
-                center={[10.9685, -74.7813]}
-                zoom={13}
-                style={{ width: '100%', height: '100%' }}
-                className={isDark ? 'dark-map-tiles' : ''}
+        <div
+          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg w-full sm:w-56"
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+        >
+          <Search size={13} style={{ color: 'var(--text-muted)' }} />
+          <input
+            type="text"
+            placeholder="Filtrar ruta o usuario..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 bg-transparent outline-none text-xs"
+            style={{ color: 'var(--text-primary)', minWidth: 0 }}
+          />
+        </div>
+      </div>
+
+      {/* Split responsivo */}
+      <div className="admin-split-layout flex-1 min-h-0">
+        {/* Lista */}
+        <div className={`admin-list-pane${hasDetail ? ' hidden md:block' : ''}`} style={{ width: hasDetail ? undefined : '100%' }}>
+          <div className="p-2.5 space-y-1.5">
+            {loading ? (
+              <div className="py-10 flex items-center justify-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+                <Loader2 size={14} className="animate-spin" color="var(--brand)" />
+                <span>Cargando capturas...</span>
+              </div>
+            ) : filteredCaptures.length === 0 ? (
+              <p className="py-10 text-center text-xs m-0" style={{ color: 'var(--text-muted)' }}>
+                No hay capturas en esta vista.
+              </p>
+            ) : (
+              filteredCaptures.map((c) => {
+                const stColor =
+                  c.status === 'pending'
+                    ? 'var(--brand)'
+                    : c.status === 'approved'
+                    ? 'var(--mangle)'
+                    : 'var(--carnaval)';
+                return (
+                  <button
+                    key={c._id}
+                    type="button"
+                    onClick={() => handleSelect(c)}
+                    className={`route-pass-card${selected?._id === c._id ? ' active' : ''}`}
+                    style={{ '--route-color': stColor }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Bus size={13} color="var(--brand)" className="flex-shrink-0" />
+                      <span className="font-display text-[13px] font-bold flex-1 truncate" style={{ color: 'var(--text-primary)' }}>
+                        {c.routeName}
+                      </span>
+                      <span
+                        className="font-mono text-[9.5px] font-bold px-1.5 py-0.5 rounded uppercase flex-shrink-0"
+                        style={{
+                          background: c.direction === 'ida' ? 'var(--mangle-soft)' : 'var(--caribe-soft)',
+                          color: c.direction === 'ida' ? 'var(--mangle)' : 'var(--caribe)',
+                        }}
+                      >
+                        {c.direction}
+                      </span>
+                    </div>
+                    <div className="text-[10.5px] mt-1 flex items-center gap-2 flex-wrap" style={{ color: 'var(--text-secondary)' }}>
+                      <span>{c.userName}</span>
+                      <span>· {c.company}</span>
+                      <span className="font-mono" style={{ color: 'var(--text-muted)' }}>
+                        · {new Date(c.createdAt).toLocaleDateString('es-CO')}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Detalle + Mapa */}
+        {hasDetail && (
+          <div className="admin-detail-pane">
+            {/* Volver en móvil */}
+            <div
+              className="md:hidden flex items-center justify-between gap-2 px-3 py-2 flex-shrink-0"
+              style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-color)' }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setSelected(null);
+                  setComparing(null);
+                }}
+                className="rq-chip"
+                style={{ padding: '4px 9px', fontSize: 11 }}
               >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  maxZoom={19}
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                />
+                <ArrowLeft size={12} />
+                <span>Volver a la lista</span>
+              </button>
+              <span className="font-display text-xs font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+                {comparing ? comparing.routeName : selected?.routeName}
+              </span>
+            </div>
 
-                {comparing ? (
-                  <>
-                    <CompareResizer captures={comparing.captures} />
-                    {comparing.captures.map((cap, i) => (
-                      cap.geometry?.coordinates?.length >= 2 && (
-                        <Polyline key={cap._id}
-                          positions={cap.geometry.coordinates.map(c => [c[1], c[0]])}
-                          pathOptions={{ color: COLORS[i % COLORS.length], weight: 4, opacity: 0.8 }}
-                        >
-                          <Popup><strong>{cap.userName}</strong><br/>{cap.direction} · {new Date(cap.createdAt).toLocaleDateString('es-CO')}</Popup>
-                        </Polyline>
-                      )
-                    ))}
-                  </>
-                ) : selectedCoords.length >= 2 ? (
-                  <>
-                    <MapResizer coordinates={selectedCoords} boardingPoint={selected?.boardingPoint} />
-                    <Polyline
-                      positions={selectedCoords.map(c => [c[1], c[0]])}
-                      pathOptions={{ color: '#F59E0B', weight: 4, opacity: 0.9 }}
-                    />
-                    {/* Start point marker */}
-                    {selectedCoords.length > 0 && (
-                      <CircleMarker
-                        center={[selectedCoords[0][1], selectedCoords[0][0]]}
-                        radius={7}
-                        pathOptions={{ color: '#10B981', fillColor: '#10B981', fillOpacity: 0.9, weight: 2 }}
-                      >
-                        <Popup>📍 Inicio de captura</Popup>
-                      </CircleMarker>
-                    )}
-                    {/* End point marker */}
-                    {selectedCoords.length > 1 && (
-                      <CircleMarker
-                        center={[selectedCoords[selectedCoords.length - 1][1], selectedCoords[selectedCoords.length - 1][0]]}
-                        radius={7}
-                        pathOptions={{ color: '#EF4444', fillColor: '#EF4444', fillOpacity: 0.9, weight: 2 }}
-                      >
-                        <Popup>🏁 Fin de captura</Popup>
-                      </CircleMarker>
-                    )}
-                    {/* Boarding point if different from start */}
-                    {selected?.boardingPoint?.coordinates && (
-                      <CircleMarker
-                        center={[selected.boardingPoint.coordinates[1], selected.boardingPoint.coordinates[0]]}
-                        radius={6}
-                        pathOptions={{ color: '#06B6D4', fillColor: '#06B6D4', fillOpacity: 0.8, weight: 2 }}
-                      >
-                        <Popup>🚏 Punto de abordaje</Popup>
-                      </CircleMarker>
-                    )}
-                  </>
-                ) : (
-                  <MapResizer coordinates={null} boardingPoint={null} />
-                )}
-              </MapContainer>
-
-              {/* No data overlay */}
-              {selected && selectedCoords.length < 2 && (
-                <div style={{
-                  position: 'absolute', inset: 0, zIndex: 1000,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'rgba(0,0,0,0.5)', pointerEvents: 'none',
-                }}>
-                  <p style={{ color: '#F87171', fontSize: 12, fontWeight: 600, background: 'rgba(0,0,0,0.6)', padding: '8px 16px', borderRadius: 10 }}>
-                    ⚠️ Esta captura no tiene coordenadas válidas
-                  </p>
-                </div>
-              )}
+            <div className="h-[46%] min-h-[190px] relative">
+              <AdminVectorMap
+                polylines={mapPolylines}
+                endpoints={mapEndpoints}
+                fitCoordinates={fitCoordinates}
+                fitTrigger={fitTrigger}
+                resizeKey={`${selected?._id || ''}-${comparing?.routeName || ''}`}
+              />
 
               {comparing && (
-                <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 1000, padding: '6px 12px', borderRadius: 10, background: 'rgba(7,11,22,0.9)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <p style={{ fontSize: 10, fontWeight: 700, color: '#F59E0B', margin: 0 }}>Comparando {comparing.captures.length} capturas de "{comparing.routeName}"</p>
-                  {/* Color legend */}
-                  <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 8,
+                    left: 8,
+                    zIndex: 900,
+                    padding: '6px 10px',
+                    borderRadius: 8,
+                    background: 'var(--panel-bg)',
+                    border: '1px solid var(--border-color)',
+                    boxShadow: 'var(--shadow-md)',
+                  }}
+                >
+                  <div className="text-[11px] font-bold" style={{ color: 'var(--brand)' }}>
+                    Comparando {comparing.captures.length} capturas
+                  </div>
+                  <div className="flex gap-2 flex-wrap mt-1">
                     {comparing.captures.map((cap, i) => (
-                      <div key={cap._id} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: COLORS[i % COLORS.length] }} />
-                        <span style={{ fontSize: 8, color: '#94A3B8' }}>{cap.userName}</span>
-                      </div>
+                      <span key={cap._id} className="inline-flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-secondary)' }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: COLORS[i % COLORS.length] }} />
+                        {cap.userName}
+                      </span>
                     ))}
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Info + actions */}
             {selected && !comparing && (
-              <div style={{ flex: 1, overflowY: 'auto', padding: 14 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 8px' }}>{selected.routeName}</h3>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10, fontSize: 10, color: 'var(--text-secondary)' }}>
-                  <span>🏢 {selected.company}</span>
-                  <span>👤 {selected.userName}</span>
-                  <span>📍 {selected.pointCount || selectedCoords.length} pts</span>
-                  <span>🎯 ±{selected.averageAccuracy?.toFixed(0)}m</span>
-                  {selected.durationSeconds > 0 && <span>⏱️ {Math.round(selected.durationSeconds / 60)} min</span>}
-                  <span style={{
-                    padding: '1px 6px', borderRadius: 6, fontWeight: 700, fontSize: 9, textTransform: 'uppercase',
-                    background: selected.direction === 'ida' ? 'rgba(16,185,129,0.1)' : 'rgba(139,92,246,0.1)',
-                    color: selected.direction === 'ida' ? '#34D399' : '#A78BFA',
-                  }}>{selected.direction}</span>
+              <div className="flex-1 overflow-y-auto p-3.5 space-y-3" style={{ background: 'var(--bg-dark)' }}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h3 className="font-display text-base font-bold m-0" style={{ color: 'var(--text-primary)' }}>
+                      {selected.routeName}
+                    </h3>
+                    <div className="text-[11.5px] mt-1 flex flex-wrap gap-2" style={{ color: 'var(--text-secondary)' }}>
+                      <span>{selected.company}</span>
+                      <span>· {selected.userName}</span>
+                      <span className="font-mono">· {selected.pointCount || selectedCoords.length} pts</span>
+                      <span className="font-mono">· ±{selected.averageAccuracy?.toFixed(0) || '?'} m</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelected(null)}
+                    className="rq-icon-btn hidden md:flex"
+                    style={{ width: 28, height: 28 }}
+                    title="Cerrar detalle"
+                  >
+                    <XCircle size={14} />
+                  </button>
                 </div>
 
-                {/* Compare button */}
-                <button onClick={() => handleCompare(selected.routeName)} style={{
-                  width: '100%', padding: '8px', borderRadius: 8, border: '1px solid rgba(6,182,212,0.2)',
-                  background: 'rgba(6,182,212,0.08)', color: '#06B6D4', fontSize: 11, fontWeight: 600,
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 10,
-                }}>
-                  <GitCompare size={12} /> Comparar con otras capturas de esta ruta
-                </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleCompare(selected.routeName)}
+                    className="rq-btn-ghost text-xs"
+                    style={{ padding: '7px 10px' }}
+                  >
+                    <GitCompare size={13} color="var(--caribe)" />
+                    <span>Comparar similares</span>
+                  </button>
 
-                {selected.status === 'pending' && (
-                  <>
-                    <textarea value={reviewNotes} onChange={e => setReviewNotes(e.target.value)}
-                      placeholder="Notas del admin (opcional)..."
-                      style={{
-                        width: '100%', padding: '8px 10px', borderRadius: 10, fontSize: 11, resize: 'vertical', minHeight: 50,
-                        background: 'var(--subtle-bg)', color: 'var(--text-primary)',
-                        border: '1px solid var(--subtle-border-strong)', outline: 'none', marginBottom: 8,
-                      }}
+                  {onUseInEditor && selectedCoords.length >= 2 && (
+                    <button
+                      type="button"
+                      onClick={() => onUseInEditor(selected)}
+                      className="rq-btn-ghost text-xs"
+                      style={{ padding: '7px 10px' }}
+                    >
+                      <MapIcon size={13} color="var(--brand)" />
+                      <span>Abrir en Editor de Rutas</span>
+                    </button>
+                  )}
+                </div>
+
+                {selected.status === 'pending' ? (
+                  <div className="rq-card p-3 space-y-2.5">
+                    <textarea
+                      value={reviewNotes}
+                      onChange={(e) => setReviewNotes(e.target.value)}
+                      placeholder="Notas para el contribuidor (opcional)..."
+                      rows={2}
+                      className="rq-input w-full p-2 text-xs resize-none"
                     />
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={() => handleReview(selected._id, 'approved')} disabled={saving} style={{
-                        flex: 1, padding: '10px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                        background: 'rgba(16,185,129,0.15)', color: '#10B981', fontSize: 12, fontWeight: 700,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                        opacity: saving ? 0.5 : 1,
-                      }}>
-                        <CheckCircle2 size={14} /> Aprobar
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        disabled={saving}
+                        onClick={() => handleReview(selected._id, 'approved')}
+                        className="flex-1 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                        style={{
+                          background: 'var(--mangle-soft)',
+                          color: 'var(--mangle)',
+                          border: '1px solid color-mix(in srgb, var(--mangle) 40%, transparent)',
+                        }}
+                      >
+                        <CheckCircle2 size={14} />
+                        <span>Aprobar (+50 XP)</span>
                       </button>
-                      <button onClick={() => handleReview(selected._id, 'rejected')} disabled={saving} style={{
-                        flex: 1, padding: '10px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                        background: 'rgba(239,68,68,0.12)', color: '#EF4444', fontSize: 12, fontWeight: 700,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                        opacity: saving ? 0.5 : 1,
-                      }}>
-                        <XCircle size={14} /> Rechazar
+                      <button
+                        type="button"
+                        disabled={saving}
+                        onClick={() => handleReview(selected._id, 'rejected')}
+                        className="flex-1 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                        style={{
+                          background: 'var(--carnaval-soft)',
+                          color: 'var(--carnaval)',
+                          border: '1px solid color-mix(in srgb, var(--carnaval) 40%, transparent)',
+                        }}
+                      >
+                        <XCircle size={14} />
+                        <span>Rechazar</span>
                       </button>
                     </div>
-                  </>
-                )}
-                {selected.status !== 'pending' && (
-                  <div style={{ padding: '8px 12px', borderRadius: 10, background: selected.status === 'approved' ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)', border: `1px solid ${selected.status === 'approved' ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}` }}>
-                    <p style={{ fontSize: 11, fontWeight: 600, color: selected.status === 'approved' ? '#10B981' : '#EF4444', margin: 0 }}>
-                      {selected.status === 'approved' ? '✅ Aprobada' : '❌ Rechazada'}
-                    </p>
-                    {selected.adminNotes && <p style={{ fontSize: 10, color: 'var(--text-secondary)', margin: '4px 0 0' }}>{selected.adminNotes}</p>}
+                  </div>
+                ) : (
+                  <div
+                    className="p-2.5 rounded-lg text-xs"
+                    style={{
+                      background: selected.status === 'approved' ? 'var(--mangle-soft)' : 'var(--carnaval-soft)',
+                      color: selected.status === 'approved' ? 'var(--mangle)' : 'var(--carnaval)',
+                      border: '1px solid var(--border-color)',
+                    }}
+                  >
+                    <strong>{selected.status === 'approved' ? 'Aprobada' : 'Rechazada'}</strong>
+                    {selected.adminNotes && <p className="m-0 mt-1 text-[11px]">{selected.adminNotes}</p>}
                   </div>
                 )}
+
+                <div className="pt-1">
+                  {deleteConfirm ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={saving}
+                        onClick={() => handleDeleteCapture(selected._id)}
+                        className="rq-chip"
+                        style={{ background: 'var(--carnaval)', color: '#fff', borderColor: 'var(--carnaval)', padding: '6px 12px' }}
+                      >
+                        Confirmar eliminación
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirm(false)}
+                        className="rq-chip"
+                        style={{ padding: '6px 12px' }}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setDeleteConfirm(true)}
+                      className="rq-chip"
+                      style={{ color: 'var(--carnaval)', padding: '5px 10px', fontSize: 11 }}
+                    >
+                      <Trash2 size={12} />
+                      <span>Eliminar captura</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {comparing && (
+              <div className="p-3 flex items-center justify-between" style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border-color)' }}>
+                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                  Mostrando {comparing.captures.length} trazados de {comparing.routeName}
+                </span>
+                <button type="button" onClick={() => setComparing(null)} className="rq-chip" style={{ padding: '4px 10px', fontSize: 11 }}>
+                  Volver al detalle
+                </button>
               </div>
             )}
           </div>

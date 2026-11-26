@@ -1,23 +1,64 @@
-import { useState, useEffect, useRef } from 'react';
-import { Users, Bus, MapPin, Clock, Activity, CheckCircle2, XCircle, AlertTriangle, TrendingUp, Zap, Trophy, Star } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  Users,
+  Bus,
+  MapPin,
+  Activity,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  TrendingUp,
+  Zap,
+  Trophy,
+  Server,
+  Trash2,
+  ArrowRight,
+  ShieldCheck,
+  Loader2,
+} from 'lucide-react';
 import { adminAPI, communityAPI } from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 
-function StatCard({ icon, label, value, color, sub }) {
+function StatCard({ icon: Icon, label, value, color, sub, onClick }) {
+  const Tag = onClick ? 'button' : 'div';
   return (
-    <div style={{
-      padding: '14px', borderRadius: 14,
-      background: 'var(--subtle-bg)', border: '1px solid rgba(255,255,255,0.06)',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <div style={{
-          width: 28, height: 28, borderRadius: 8,
-          background: `${color}12`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>{icon}</div>
-        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
+    <Tag
+      type={onClick ? 'button' : undefined}
+      onClick={onClick}
+      className="rq-card text-left w-full"
+      style={{
+        padding: '13px 14px',
+        cursor: onClick ? 'pointer' : 'default',
+        borderLeft: `3px solid ${color}`,
+      }}
+    >
+      <div className="flex items-center justify-between gap-2 mb-1.5">
+        <span className="rq-section-label">{label}</span>
+        <div
+          style={{
+            width: 26,
+            height: 26,
+            borderRadius: 7,
+            background: `color-mix(in srgb, ${color} 14%, transparent)`,
+            color,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <Icon size={14} />
+        </div>
       </div>
-      <p style={{ fontSize: 24, fontWeight: 800, color, margin: 0 }}>{value}</p>
-      {sub && <p style={{ fontSize: 10, color: 'var(--text-secondary)', margin: '2px 0 0' }}>{sub}</p>}
-    </div>
+      <p className="font-mono text-2xl font-bold tabular-nums m-0" style={{ color }}>
+        {value}
+      </p>
+      {sub && (
+        <p className="text-[11px] mt-1 mb-0 truncate" style={{ color: 'var(--text-secondary)' }}>
+          {sub}
+        </p>
+      )}
+    </Tag>
   );
 }
 
@@ -28,133 +69,120 @@ function TrafficChart({ data }) {
 
   if (!data?.length) return null;
 
-  const W = 500, H = 130;
-  const PAD = { top: 12, right: 12, bottom: 28, left: 36 };
+  const W = 520;
+  const H = 140;
+  const PAD = { top: 14, right: 12, bottom: 26, left: 36 };
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
 
-  const max = Math.max(...data.map(d => d.count), 1);
+  const max = Math.max(...data.map((d) => d.count), 1);
   const total = data.reduce((s, d) => s + d.count, 0);
-  const peakIndex = data.reduce((best, d, i) => d.count > data[best].count ? i : best, 0);
-
-  // Y-axis grid values
+  const peakIndex = data.reduce((best, d, i) => (d.count > data[best].count ? i : best), 0);
   const yTicks = [0, Math.round(max * 0.5), max];
 
-  const toX = i => PAD.left + (i / (data.length - 1)) * innerW;
-  const toY = v => PAD.top + innerH - (v / max) * innerH;
+  const toX = (i) => PAD.left + (i / Math.max(1, data.length - 1)) * innerW;
+  const toY = (v) => PAD.top + innerH - (v / max) * innerH;
 
-  // Build SVG path
   const points = data.map((d, i) => [toX(i), toY(d.count)]);
-  const linePath = points.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
-  const areaPath = `${linePath} L${points[points.length - 1][0].toFixed(1)},${(PAD.top + innerH).toFixed(1)} L${points[0][0].toFixed(1)},${(PAD.top + innerH).toFixed(1)} Z`;
+  const linePath = points
+    .map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`)
+    .join(' ');
+  const areaPath = `${linePath} L${points[points.length - 1][0].toFixed(1)},${(
+    PAD.top + innerH
+  ).toFixed(1)} L${points[0][0].toFixed(1)},${(PAD.top + innerH).toFixed(1)} Z`;
 
-  // Hours to show on x-axis (every 4h)
-  const xLabelIndices = [0, 6, 12, 18, 23];
+  const xLabelIndices = [0, 6, 12, 18, data.length - 1];
 
-  const handleMouseMove = (e) => {
+  const updatePointer = (clientX) => {
     const svg = svgRef.current;
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
-    const mx = (e.clientX - rect.left) * (W / rect.width) - PAD.left;
+    const mx = (clientX - rect.left) * (W / rect.width) - PAD.left;
     const idx = Math.round((mx / innerW) * (data.length - 1));
     const clamped = Math.max(0, Math.min(data.length - 1, idx));
     setHoverIndex(clamped);
     setTooltip({ x: toX(clamped), y: toY(data[clamped].count), d: data[clamped] });
   };
 
-  const handleMouseLeave = () => { setTooltip(null); setHoverIndex(null); };
-
   return (
-    <div style={{
-      borderRadius: 16,
-      background: 'rgba(255,255,255,0.025)',
-      border: '1px solid rgba(255,255,255,0.07)',
-      overflow: 'hidden',
-    }}>
-      {/* Header row */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '12px 14px 6px',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <Activity size={13} color="#F59E0B" />
-          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'Outfit, sans-serif' }}>
-            Tráfico API
+    <div className="rq-card overflow-hidden">
+      <div className="flex items-center justify-between gap-2 flex-wrap px-3.5 pt-3 pb-1.5">
+        <div className="flex items-center gap-2">
+          <Activity size={14} color="var(--brand)" />
+          <span className="font-display text-[13px] font-bold" style={{ color: 'var(--text-primary)' }}>
+            Tráfico API (24h)
           </span>
-          <span style={{
-            fontSize: 9, fontWeight: 600, color: 'var(--text-muted)',
-            background: 'var(--subtle-bg)', borderRadius: 6, padding: '2px 6px',
-          }}>24h</span>
-          {/* Live pulse */}
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{
-              width: 6, height: 6, borderRadius: '50%', background: '#10B981',
-              boxShadow: '0 0 0 2px rgba(16,185,129,0.25)',
-              animation: 'pulse 2s infinite',
-              display: 'inline-block',
-            }} />
-            <span style={{ fontSize: 9, color: '#10B981', fontWeight: 600 }}>LIVE</span>
+          <span
+            className="inline-flex items-center gap-1 font-mono text-[9.5px] font-bold px-1.5 py-0.5 rounded"
+            style={{ background: 'var(--mangle-soft)', color: 'var(--mangle)' }}
+          >
+            LIVE
           </span>
         </div>
-        {/* Summary pills */}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 5,
-            background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.18)',
-            borderRadius: 8, padding: '3px 8px',
-          }}>
-            <TrendingUp size={10} color="#F59E0B" />
-            <span style={{ fontSize: 10, fontWeight: 700, color: '#F59E0B' }}>
-              {total.toLocaleString('es-CO')} req
-            </span>
-          </div>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 5,
-            background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.18)',
-            borderRadius: 8, padding: '3px 8px',
-          }}>
-            <Zap size={10} color="#8B5CF6" />
-            <span style={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6' }}>
-              Pico: {data[peakIndex]?.count} @ {data[peakIndex]?.label}
-            </span>
-          </div>
+
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span
+            className="inline-flex items-center gap-1 font-mono text-[10.5px] font-bold px-2 py-0.5 rounded"
+            style={{ background: 'var(--brand-soft)', color: 'var(--brand)' }}
+          >
+            <TrendingUp size={10} />
+            {total.toLocaleString('es-CO')} req
+          </span>
+          <span
+            className="inline-flex items-center gap-1 font-mono text-[10.5px] font-bold px-2 py-0.5 rounded"
+            style={{ background: 'var(--caribe-soft)', color: 'var(--caribe)' }}
+          >
+            <Zap size={10} />
+            Pico {data[peakIndex]?.count} @ {data[peakIndex]?.label}
+          </span>
         </div>
       </div>
 
-      {/* SVG Chart */}
-      <div style={{ position: 'relative', padding: '0 14px 10px' }}>
+      <div style={{ position: 'relative', padding: '0 12px 10px' }}>
         <svg
           ref={svgRef}
           viewBox={`0 0 ${W} ${H}`}
-          style={{ width: '100%', height: 'auto', display: 'block', cursor: 'crosshair' }}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
+          style={{ width: '100%', height: 'auto', display: 'block', cursor: 'crosshair', touchAction: 'none' }}
+          onMouseMove={(e) => updatePointer(e.clientX)}
+          onTouchMove={(e) => {
+            if (e.touches[0]) updatePointer(e.touches[0].clientX);
+          }}
+          onMouseLeave={() => {
+            setTooltip(null);
+            setHoverIndex(null);
+          }}
+          onTouchEnd={() => {
+            setTooltip(null);
+            setHoverIndex(null);
+          }}
         >
           <defs>
-            <linearGradient id="tg-area" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.35" />
-              <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
-            </linearGradient>
-            <linearGradient id="tg-line" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.5" />
-              <stop offset="50%" stopColor="#F59E0B" stopOpacity="1" />
-              <stop offset="100%" stopColor="#FBBF24" stopOpacity="0.8" />
+            <linearGradient id="rq-traffic-area" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#FFC21A" stopOpacity="0.32" />
+              <stop offset="100%" stopColor="#FFC21A" stopOpacity="0" />
             </linearGradient>
           </defs>
 
-          {/* Y-axis grid lines */}
-          {yTicks.map(v => {
+          {yTicks.map((v) => {
             const y = toY(v);
             return (
               <g key={v}>
                 <line
-                  x1={PAD.left} y1={y} x2={W - PAD.right} y2={y}
-                  stroke="rgba(255,255,255,0.05)" strokeWidth="1"
+                  x1={PAD.left}
+                  y1={y}
+                  x2={W - PAD.right}
+                  y2={y}
+                  stroke="var(--border-color)"
+                  strokeWidth="1"
                   strokeDasharray={v === 0 ? 'none' : '4,4'}
                 />
                 <text
-                  x={PAD.left - 5} y={y + 4}
-                  textAnchor="end" fontSize="9" fill="#475569" fontFamily="Inter, sans-serif"
+                  x={PAD.left - 6}
+                  y={y + 3}
+                  textAnchor="end"
+                  fontSize="9"
+                  fill="var(--text-muted)"
+                  fontFamily="var(--font-mono)"
                 >
                   {v}
                 </text>
@@ -162,65 +190,84 @@ function TrafficChart({ data }) {
             );
           })}
 
-          {/* Area fill */}
-          <path d={areaPath} fill="url(#tg-area)" />
-
-          {/* Line */}
-          <path d={linePath} fill="none" stroke="url(#tg-line)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-
-          {/* Peak marker */}
+          <path d={areaPath} fill="url(#rq-traffic-area)" />
+          <path
+            d={linePath}
+            fill="none"
+            stroke="var(--brand)"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
           <circle
-            cx={toX(peakIndex)} cy={toY(data[peakIndex].count)}
-            r="4" fill="#F59E0B" stroke="#000" strokeWidth="1.5"
+            cx={toX(peakIndex)}
+            cy={toY(data[peakIndex].count)}
+            r="4"
+            fill="var(--brand)"
+            stroke="var(--bg-card)"
+            strokeWidth="1.5"
           />
 
-          {/* X-axis labels */}
-          {xLabelIndices.map(i => (
+          {xLabelIndices.map((i) => (
             <text
-              key={i} x={toX(i)} y={H - 4}
-              textAnchor="middle" fontSize="9" fill="#334155" fontFamily="Inter, sans-serif"
+              key={i}
+              x={toX(i)}
+              y={H - 5}
+              textAnchor="middle"
+              fontSize="9"
+              fill="var(--text-muted)"
+              fontFamily="var(--font-mono)"
             >
               {data[i]?.label}
             </text>
           ))}
 
-          {/* Hover line + dot */}
           {tooltip && hoverIndex !== null && (
             <>
               <line
-                x1={tooltip.x} y1={PAD.top}
-                x2={tooltip.x} y2={PAD.top + innerH}
-                stroke="rgba(245,158,11,0.35)" strokeWidth="1" strokeDasharray="4,3"
+                x1={tooltip.x}
+                y1={PAD.top}
+                x2={tooltip.x}
+                y2={PAD.top + innerH}
+                stroke="var(--brand)"
+                strokeOpacity="0.4"
+                strokeWidth="1"
+                strokeDasharray="3,3"
               />
               <circle
-                cx={tooltip.x} cy={tooltip.y}
-                r="5" fill="#F59E0B" stroke="#0F172A" strokeWidth="2"
+                cx={tooltip.x}
+                cy={tooltip.y}
+                r="5"
+                fill="var(--brand)"
+                stroke="var(--bg-card)"
+                strokeWidth="2"
               />
             </>
           )}
         </svg>
 
-        {/* Floating tooltip */}
         {tooltip && (
-          <div style={{
-            position: 'absolute',
-            left: `calc(${(tooltip.x / W) * 100}% + 6px)`,
-            top: `${(tooltip.y / H) * 80}%`,
-            transform: 'translateY(-50%)',
-            pointerEvents: 'none',
-            background: 'rgba(7,11,22,0.95)',
-            border: '1px solid rgba(245,158,11,0.35)',
-            borderRadius: 8,
-            padding: '6px 10px',
-            minWidth: 80,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
-            zIndex: 10,
-          }}>
-            <p style={{ margin: 0, fontSize: 9, color: 'var(--text-muted)', fontWeight: 600 }}>{tooltip.d.label}</p>
-            <p style={{ margin: '2px 0 0', fontSize: 15, fontWeight: 800, color: '#F59E0B', lineHeight: 1 }}>
-              {tooltip.d.count.toLocaleString('es-CO')}
-            </p>
-            <p style={{ margin: 0, fontSize: 9, color: 'var(--text-secondary)' }}>requests</p>
+          <div
+            style={{
+              position: 'absolute',
+              left: `${Math.min(72, Math.max(8, (tooltip.x / W) * 100))}%`,
+              top: 8,
+              pointerEvents: 'none',
+              background: 'var(--plate-bg)',
+              color: '#F2EFE8',
+              border: '1px solid rgba(255, 194, 26, 0.35)',
+              borderRadius: 8,
+              padding: '5px 9px',
+              boxShadow: 'var(--shadow-md)',
+              zIndex: 10,
+            }}
+          >
+            <div className="font-mono text-[9.5px]" style={{ color: '#A3A9B4' }}>
+              {tooltip.d.label}
+            </div>
+            <div className="font-mono text-sm font-bold tabular-nums" style={{ color: '#FFC21A' }}>
+              {tooltip.d.count.toLocaleString('es-CO')} req
+            </div>
           </div>
         )}
       </div>
@@ -228,144 +275,352 @@ function TrafficChart({ data }) {
   );
 }
 
-export default function DashboardTab() {
+function formatUptime(seconds = 0) {
+  const s = Math.max(0, Math.floor(seconds));
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+export default function DashboardTab({ refreshTick = 0, onNavigateTab }) {
+  const toast = useToast();
   const [stats, setStats] = useState(null);
   const [traffic, setTraffic] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [health, setHealth] = useState(null);
+  const [clearingCache, setClearingCache] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
-      const [dashRes, trafficRes, lbRes] = await Promise.all([
+      const [dashRes, trafficRes, lbRes, healthRes] = await Promise.all([
         adminAPI.getDashboard(),
         adminAPI.getTraffic(),
         communityAPI.getLeaderboard(5),
+        adminAPI.getSystemHealth(),
       ]);
       setStats(dashRes.data);
       setTraffic(trafficRes.data || []);
       setLeaderboard(lbRes.data || []);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+      setHealth(healthRes.data || null);
+    } catch (e) {
+      console.error('Error cargando dashboard:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+    const timer = setInterval(loadData, 30000);
+    return () => clearInterval(timer);
+  }, [loadData, refreshTick]);
+
+  const handleClearCaches = async () => {
+    setClearingCache(true);
+    try {
+      await adminAPI.clearCaches();
+      toast.success('Cachés de mapas limpiadas');
+      loadData();
+    } catch (e) {
+      toast.error(e.message || 'No se pudieron limpiar las cachés');
+    } finally {
+      setClearingCache(false);
+    }
   };
 
-  useEffect(() => { loadData(); const t = setInterval(loadData, 30000); return () => clearInterval(t); }, []);
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+        <Loader2 size={15} className="animate-spin" color="var(--brand)" />
+        <span>Cargando métricas del sistema...</span>
+      </div>
+    );
+  }
 
-  if (loading) return <p style={{ padding: 20, color: 'var(--text-secondary)', fontSize: 12 }}>Cargando dashboard...</p>;
-  if (!stats) return <p style={{ padding: 20, color: '#EF4444', fontSize: 12 }}>Error al cargar</p>;
+  if (!stats) {
+    return (
+      <div className="p-6 text-center text-xs" style={{ color: 'var(--carnaval)' }}>
+        No se pudieron cargar las estadísticas de administración.
+      </div>
+    );
+  }
+
+  const cacheTotal = health?.caches
+    ? Object.values(health.caches).reduce((s, n) => s + (Number(n) || 0), 0)
+    : 0;
 
   return (
-    <div className="animate-fade-in" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-        <StatCard icon={<Users size={14} color="#06B6D4" />} label="Usuarios" value={stats.users.total} color="#06B6D4"
-          sub={`${stats.users.active} activos (7d)`} />
-        <StatCard icon={<Bus size={14} color="#F59E0B" />} label="Rutas oficiales" value={stats.routes.total} color="#F59E0B" />
-        <StatCard icon={<MapPin size={14} color="#10B981" />} label="Capturas" value={stats.captures.total} color="#10B981"
-          sub={`${stats.captures.pending} pendientes`} />
-        <StatCard icon={<Clock size={14} color="#8B5CF6" />} label="Aprobadas" value={stats.captures.approved} color="#8B5CF6"
-          sub={`${stats.captures.rejected} rechazadas`} />
+    <div className="animate-fade-in p-3 sm:p-4 space-y-3.5 max-w-[1200px] mx-auto">
+      {/* KPIs principales */}
+      <div className="admin-kpi-grid">
+        <StatCard
+          icon={Bus}
+          label="Red de Rutas"
+          value={stats.routes?.active ?? stats.routes?.total ?? 0}
+          color="var(--brand)"
+          sub={`${stats.routes?.total || 0} totales · ${stats.routes?.inactive || 0} pausadas`}
+          onClick={() => onNavigateTab?.('routes', 'all')}
+        />
+        <StatCard
+          icon={Users}
+          label="Usuarios"
+          value={stats.users?.total || 0}
+          color="var(--caribe)"
+          sub={`${stats.users?.active || 0} activos · ${stats.users?.premium || 0} Quilla-Pass`}
+          onClick={() => onNavigateTab?.('users')}
+        />
+        <StatCard
+          icon={MapPin}
+          label="Capturas GPS"
+          value={stats.captures?.total || 0}
+          color="var(--mangle)"
+          sub={`${stats.captures?.pending || 0} pendientes · ${stats.captures?.approved || 0} aprobadas`}
+          onClick={() => onNavigateTab?.('captures')}
+        />
+        <StatCard
+          icon={AlertTriangle}
+          label="Reportes en vivo"
+          value={stats.reports?.activeNow ?? 0}
+          color="var(--carnaval)"
+          sub={`${stats.reports?.total || 0} históricos`}
+          onClick={() => onNavigateTab?.('reports')}
+        />
       </div>
 
-      <TrafficChart data={traffic} />
-
-      {/* Leaderboard Quilla XP */}
-      <div style={{ borderRadius: 14, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-        <div style={{ padding: '12px 14px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <Trophy size={13} color="#F59E0B" />
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'Outfit, sans-serif' }}>Ranking Quilla XP</span>
+      {/* Bandeja de atención rápida */}
+      {(stats.captures?.pending > 0 || stats.routes?.needsAudit > 0 || stats.reports?.activeNow > 0 || stats.users?.suspended > 0) && (
+        <div className="rq-card p-3 flex items-center justify-between gap-2 flex-wrap">
+          <span className="rq-section-label">Pendientes operativos</span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {stats.captures?.pending > 0 && (
+              <button
+                type="button"
+                onClick={() => onNavigateTab?.('captures')}
+                className="rq-chip active"
+              >
+                <span>{stats.captures.pending} capturas por revisar</span>
+                <ArrowRight size={11} />
+              </button>
+            )}
+            {stats.routes?.needsAudit > 0 && (
+              <button
+                type="button"
+                onClick={() => onNavigateTab?.('routes', 'audit')}
+                className="rq-chip"
+                style={{ color: 'var(--caribe)', borderColor: 'color-mix(in srgb, var(--caribe) 35%, var(--border-color))' }}
+              >
+                <span>{stats.routes.needsAudit} rutas por auditar</span>
+                <ArrowRight size={11} />
+              </button>
+            )}
+            {stats.reports?.activeNow > 0 && (
+              <button
+                type="button"
+                onClick={() => onNavigateTab?.('reports')}
+                className="rq-chip"
+                style={{ color: 'var(--carnaval)', borderColor: 'color-mix(in srgb, var(--carnaval) 35%, var(--border-color))' }}
+              >
+                <span>{stats.reports.activeNow} incidencias activas</span>
+                <ArrowRight size={11} />
+              </button>
+            )}
           </div>
-          <span style={{ fontSize: 9, color: 'var(--text-secondary)', background: 'var(--subtle-bg)', borderRadius: 6, padding: '2px 7px', fontWeight: 600 }}>TOP 5</span>
+        </div>
+      )}
+
+      {/* Tráfico + Salud del sistema */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div className="lg:col-span-2">
+          <TrafficChart data={traffic} />
         </div>
 
-        {leaderboard.length === 0 ? (
-          <p style={{ fontSize: 11, color: 'var(--text-secondary)', padding: '8px 14px 14px', margin: 0 }}>Sin contribuidores aún</p>
-        ) : (
-          <div style={{ padding: '0 14px 12px' }}>
-            {leaderboard.map((u, i) => {
-              const rankColors = ['#F59E0B', 'var(--text-secondary)', '#CD7F32', 'var(--text-muted)', 'var(--text-muted)'];
-              const rankIcons = ['🥇', '🥈', '🥉', '4°', '5°'];
-              const initials = u.name?.charAt(0)?.toUpperCase() || '?';
-              const xpMax = leaderboard[0]?.xp || 1;
-              const barW = Math.max(4, Math.round((u.xp / xpMax) * 100));
-              return (
-                <div key={u._id} style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '7px 0',
-                  borderBottom: i < leaderboard.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                }}>
-                  {/* Rank */}
-                  <span style={{ fontSize: 12, width: 22, textAlign: 'center', flexShrink: 0 }}>{rankIcons[i]}</span>
+        <div className="rq-card p-3.5 flex flex-col justify-between gap-3">
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-2.5">
+              <div className="flex items-center gap-2">
+                <Server size={14} color="var(--mangle)" />
+                <span className="font-display text-[13px] font-bold" style={{ color: 'var(--text-primary)' }}>
+                  Salud del servidor
+                </span>
+              </div>
+              <span
+                className="font-mono text-[9.5px] font-bold px-2 py-0.5 rounded uppercase"
+                style={{
+                  background: health?.database?.status === 'connected' ? 'var(--mangle-soft)' : 'var(--carnaval-soft)',
+                  color: health?.database?.status === 'connected' ? 'var(--mangle)' : 'var(--carnaval)',
+                }}
+              >
+                {health?.database?.status === 'connected' ? 'Atlas OK' : health?.database?.status || 'N/A'}
+              </span>
+            </div>
 
-                  {/* Avatar initial */}
-                  <div style={{
-                    width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
-                    background: `${u.levelColor}22`,
-                    border: `1.5px solid ${u.levelColor}55`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 11, fontWeight: 800, color: u.levelColor,
-                  }}>{initials}</div>
+            <div className="space-y-1.5 text-[11.5px]">
+              <div className="flex items-center justify-between py-1" style={{ borderBottom: '1px solid var(--border-color)' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Latencia MongoDB</span>
+                <span className="font-mono font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+                  {health?.database?.latencyMs != null ? `${health.database.latencyMs} ms` : '—'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-1" style={{ borderBottom: '1px solid var(--border-color)' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Memoria Heap / RSS</span>
+                <span className="font-mono font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+                  {health?.memory ? `${health.memory.heapUsedMB} / ${health.memory.rssMB} MB` : '—'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-1" style={{ borderBottom: '1px solid var(--border-color)' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Tiempo activo</span>
+                <span className="font-mono font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+                  {health ? formatUptime(health.uptimeSeconds) : '—'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-1">
+                <span style={{ color: 'var(--text-secondary)' }}>Cachés en memoria</span>
+                <span className="font-mono font-bold tabular-nums" style={{ color: 'var(--caribe)' }}>
+                  {cacheTotal} entradas
+                </span>
+              </div>
+            </div>
+          </div>
 
-                  {/* Name + XP bar */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: '#E2E8F0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 110 }}>
-                        {u.name}
-                      </span>
-                      <span style={{ fontSize: 9, fontWeight: 700, color: u.levelColor, flexShrink: 0 }}>
-                        {u.xp} XP
-                      </span>
-                    </div>
-                    {/* XP progress bar */}
-                    <div style={{ height: 3, borderRadius: 2, background: 'var(--subtle-border)', overflow: 'hidden' }}>
-                      <div style={{ width: `${barW}%`, height: '100%', background: `linear-gradient(90deg, ${u.levelColor}99, ${u.levelColor})`, borderRadius: 2, transition: 'width 0.6s ease' }} />
-                    </div>
+          <button
+            type="button"
+            onClick={handleClearCaches}
+            disabled={clearingCache}
+            className="rq-btn-ghost w-full text-[11.5px]"
+            style={{ padding: '7px 10px' }}
+          >
+            <Trash2 size={12} color="var(--brand)" />
+            <span>{clearingCache ? 'Limpiando...' : 'Vaciar cachés de mapas'}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Desglose de red + Leaderboard + Últimos eventos */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* Composición de la red */}
+        <div className="rq-card p-3.5">
+          <div className="rq-section-label mb-2.5">Composición de la red</div>
+          <div className="space-y-2 text-[12px]">
+            {[
+              { label: 'Transmetro (BRT)', val: stats.routes?.masivo || 0, color: 'var(--caribe)' },
+              { label: 'Buses Urbanos', val: stats.routes?.urbano || 0, color: 'var(--mangle)' },
+              { label: 'Intermunicipales', val: stats.routes?.intermunicipal || 0, color: 'var(--brand)' },
+              { label: 'Colab. en curso', val: (stats.composites?.building || 0) + (stats.composites?.complete || 0), color: 'var(--text-secondary)' },
+            ].map((row) => (
+              <div key={row.label} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: row.color }} />
+                  <span style={{ color: 'var(--text-secondary)' }}>{row.label}</span>
+                </div>
+                <span className="font-mono font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+                  {row.val}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Ranking Quilla XP */}
+        <div className="rq-card p-3.5">
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="flex items-center gap-1.5">
+              <Trophy size={13} color="var(--brand)" />
+              <span className="rq-section-label">Top 5 Quilla XP</span>
+            </div>
+          </div>
+          {leaderboard.length === 0 ? (
+            <p className="text-xs m-0" style={{ color: 'var(--text-muted)' }}>
+              Sin contribuidores aún
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {leaderboard.map((u, idx) => (
+                <div key={u._id} className="flex items-center gap-2 text-[11.5px]">
+                  <span className="font-mono font-bold w-4 text-center" style={{ color: 'var(--brand)' }}>
+                    {idx + 1}
+                  </span>
+                  <span className="flex-1 truncate font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    {u.name}
+                  </span>
+                  <span className="font-mono text-[10.5px] font-bold tabular-nums" style={{ color: 'var(--mangle)' }}>
+                    {u.xp} XP
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Bitácora reciente */}
+        <div className="rq-card p-3.5">
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck size={13} color="var(--caribe)" />
+              <span className="rq-section-label">Auditoría reciente</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigateTab?.('security')}
+              className="text-[10.5px] font-semibold cursor-pointer bg-transparent border-none p-0"
+              style={{ color: 'var(--brand)' }}
+            >
+              Ver todo
+            </button>
+          </div>
+          {(stats.recentLogs || []).length === 0 ? (
+            <p className="text-xs m-0" style={{ color: 'var(--text-muted)' }}>
+              Sin acciones registradas aún
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {(stats.recentLogs || []).slice(0, 5).map((log) => (
+                <div key={log._id} className="text-[11px] leading-snug pb-1.5" style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <div className="font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                    {log.summary || log.action}
                   </div>
-
-                  {/* Level badge */}
-                  <div style={{
-                    fontSize: 9, fontWeight: 700, color: u.levelColor,
-                    background: `${u.levelColor}15`, border: `1px solid ${u.levelColor}30`,
-                    borderRadius: 6, padding: '2px 6px', flexShrink: 0, whiteSpace: 'nowrap',
-                  }}>
-                    {u.levelName}
+                  <div className="text-[9.5px] font-mono mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
+                    {log.adminEmail} · {new Date(log.createdAt).toLocaleString('es-CO', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* User breakdown */}
-      <div style={{ padding: 14, borderRadius: 14, background: 'var(--subtle-bg)', border: '1px solid rgba(255,255,255,0.06)' }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>👥 Distribución de usuarios</p>
-        {[
-          { label: 'Free', count: stats.users.free, color: 'var(--text-muted)' },
-          { label: 'Premium', count: stats.users.premium, color: '#F59E0B' },
-          { label: 'Admin', count: stats.users.admin, color: '#EF4444' },
-        ].map(r => (
-          <div key={r.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: r.color }} />
-            <span style={{ fontSize: 11, color: 'var(--text-secondary)', flex: 1 }}>{r.label}</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: r.color }}>{r.count}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Recent captures */}
-      {stats.recentCaptures?.length > 0 && (
-        <div style={{ padding: 14, borderRadius: 14, background: 'var(--subtle-bg)', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>📡 Capturas recientes</p>
-          {stats.recentCaptures.map((c, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: i < stats.recentCaptures.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-              {c.status === 'pending' ? <AlertTriangle size={11} color="#FBBF24" /> : c.status === 'approved' ? <CheckCircle2 size={11} color="#10B981" /> : <XCircle size={11} color="#EF4444" />}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 11, color: '#E2E8F0', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.routeName}</p>
-                <p style={{ fontSize: 9, color: 'var(--text-secondary)', margin: 0 }}>{c.userName} · {c.company}</p>
-              </div>
-              <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>{new Date(c.createdAt).toLocaleDateString('es-CO')}</span>
+              ))}
             </div>
-          ))}
+          )}
+        </div>
+      </div>
+
+      {/* Capturas recientes */}
+      {(stats.recentCaptures || []).length > 0 && (
+        <div className="rq-card p-3.5">
+          <div className="rq-section-label mb-2">Últimas capturas recibidas</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {stats.recentCaptures.map((c, idx) => (
+              <div
+                key={c._id || idx}
+                className="flex items-center gap-2.5 p-2 rounded-lg"
+                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)' }}
+              >
+                {c.status === 'pending' ? (
+                  <AlertTriangle size={13} color="var(--brand)" />
+                ) : c.status === 'approved' ? (
+                  <CheckCircle2 size={13} color="var(--mangle)" />
+                ) : (
+                  <XCircle size={13} color="var(--carnaval)" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="text-[11.5px] font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+                    {c.routeName}
+                  </div>
+                  <div className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>
+                    {c.userName} · {c.company}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

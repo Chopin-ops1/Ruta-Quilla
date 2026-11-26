@@ -30,6 +30,33 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { usersAPI } from '../services/api';
 
+const COMMON_EMAIL_TYPOS = {
+  'gmai.com': 'gmail.com',
+  'gamil.com': 'gmail.com',
+  'gnail.com': 'gmail.com',
+  'gmial.com': 'gmail.com',
+  'gmail.con': 'gmail.com',
+  'gmail.co': 'gmail.com',
+  'hotmai.com': 'hotmail.com',
+  'hotmai.con': 'hotmail.com',
+  'hotmail.con': 'hotmail.com',
+  'yahoo.con': 'yahoo.com',
+  'yaho.com': 'yahoo.com',
+  'outlok.com': 'outlook.com',
+  'outlook.con': 'outlook.com',
+  'iclod.com': 'icloud.com',
+};
+
+function getSuggestedEmail(rawEmail) {
+  const trimmed = String(rawEmail || '').trim().toLowerCase();
+  const at = trimmed.lastIndexOf('@');
+  if (at <= 0) return null;
+  const local = trimmed.slice(0, at);
+  const domain = trimmed.slice(at + 1);
+  if (!COMMON_EMAIL_TYPOS[domain]) return null;
+  return `${local}@${COMMON_EMAIL_TYPOS[domain]}`;
+}
+
 function FloatingInput({ id, label, type = 'text', value, onChange, icon: Icon, rightElement, autoFocus }) {
   const [focused, setFocused] = useState(false);
   const hasValue = value && value.length > 0;
@@ -116,8 +143,9 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-  // Verification step
+  // Verification step (email OTP o 2FA de Administrador)
   const [verifyStep, setVerifyStep] = useState(false);
+  const [twoFactorStep, setTwoFactorStep] = useState(false);
   const [verifyEmail, setVerifyEmailAddr] = useState('');
   const [verifyCode, setVerifyCode] = useState(['', '', '', '', '', '']);
   const [verifyLoading, setVerifyLoading] = useState(false);
@@ -133,24 +161,107 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
 
-  const { login, register, verifyEmail: verifyEmailFn, resendCode: resendCodeFn, error: authError } = useAuth();
+  // Anti-bot state (honeypot invisible + token HMAC + Turnstile opcional)
+  const [honeypotWebsite, setHoneypotWebsite] = useState('');
+  const [formToken, setFormToken] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileRef = useRef(null);
+  const turnstileWidgetIdRef = useRef(null);
+
+  const {
+    login,
+    register,
+    verifyEmail: verifyEmailFn,
+    verifyTwoFactor: verifyTwoFactorFn,
+    resendCode: resendCodeFn,
+    error: authError,
+    publicConfig,
+    refreshPublicConfig,
+  } = useAuth();
   const toast = useToast();
+  const emailSuggestion = mode === 'register' ? getSuggestedEmail(email) : null;
+  const registrationDisabled = mode === 'register' && publicConfig?.registrationEnabled === false;
 
   useEffect(() => {
     if (!isOpen) {
       setEmail(''); setPassword(''); setName('');
       setLocalError(''); setMode('login');
       setAcceptedTerms(false);
-      setVerifyStep(false); setVerifyEmailAddr('');
+      setHoneypotWebsite(''); setTurnstileToken('');
+      setVerifyStep(false); setTwoFactorStep(false); setVerifyEmailAddr('');
       setVerifyCode(['', '', '', '', '', '']);
       setForgotStep(false); setResetStep(false);
       setResetEmail(''); setResetCode(''); setNewPassword('');
       setShowNewPassword(false);
+      return;
     }
-    if (isOpen && reason === 'limit') {
+
+    if (reason === 'limit') {
       setMode('register');
     }
+
+    refreshPublicConfig();
+    usersAPI.getFormToken()
+      .then((res) => {
+        if (res?.formToken) setFormToken(res.formToken);
+      })
+      .catch(() => {
+        if (publicConfig?.formToken) setFormToken(publicConfig.formToken);
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, reason]);
+
+  // Cargar widget oficial Cloudflare Turnstile en Login y Registro cuando esté activado en Admin Seguridad
+  useEffect(() => {
+    if (
+      !isOpen ||
+      verifyStep ||
+      forgotStep ||
+      resetStep ||
+      !publicConfig?.turnstileEnabled ||
+      !publicConfig?.turnstileSiteKey
+    ) {
+      setTurnstileToken('');
+      return;
+    }
+
+    let cancelled = false;
+    const renderWidget = () => {
+      if (cancelled || !turnstileRef.current || !window.turnstile) return;
+      try {
+        if (turnstileWidgetIdRef.current !== null) {
+          window.turnstile.remove(turnstileWidgetIdRef.current);
+        }
+        turnstileWidgetIdRef.current = window.turnstile.render(turnstileRef.current, {
+          sitekey: publicConfig.turnstileSiteKey,
+          callback: (token) => setTurnstileToken(token || ''),
+          'expired-callback': () => setTurnstileToken(''),
+        });
+      } catch (_) {}
+    };
+
+    if (window.turnstile) {
+      renderWidget();
+    } else if (!document.getElementById('cf-turnstile-script')) {
+      const s = document.createElement('script');
+      s.id = 'cf-turnstile-script';
+      s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      s.async = true;
+      s.defer = true;
+      s.onload = renderWidget;
+      document.head.appendChild(s);
+    }
+
+    return () => {
+      cancelled = true;
+      try {
+        if (window.turnstile && turnstileWidgetIdRef.current !== null) {
+          window.turnstile.remove(turnstileWidgetIdRef.current);
+          turnstileWidgetIdRef.current = null;
+        }
+      } catch (_) {}
+    };
+  }, [isOpen, mode, verifyStep, forgotStep, resetStep, publicConfig?.turnstileEnabled, publicConfig?.turnstileSiteKey]);
 
   // Resend cooldown timer
   useEffect(() => {
@@ -184,10 +295,32 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
 
     setIsSubmitting(true);
     try {
+      const antiBotMeta = {
+        website: honeypotWebsite,
+        formToken: formToken || publicConfig?.formToken || '',
+        turnstileToken,
+      };
       if (mode === 'login') {
-        const result = await login(email, password);
+        if (publicConfig?.turnstileEnabled && publicConfig?.turnstileSiteKey && !turnstileToken) {
+          setLocalError('Completa la verificación humana (Turnstile) antes de continuar.');
+          setIsSubmitting(false);
+          return;
+        }
+        const result = await login(email, password, {
+          website: honeypotWebsite,
+          turnstileToken,
+        });
+        if (result?.requiresTwoFactor) {
+          setTwoFactorStep(true);
+          setVerifyEmailAddr(result.email || email);
+          setVerifyCode(['', '', '', '', '', '']);
+          setVerifyStep(true);
+          setIsSubmitting(false);
+          return;
+        }
         // If NOT_VERIFIED, show verify step
         if (result?.notVerified) {
+          setTwoFactorStep(false);
           setVerifyEmailAddr(result.email || email);
           setVerifyStep(true);
           setResendCooldown(60);
@@ -196,9 +329,20 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
         }
         onClose();
       } else {
-        const result = await register(name, email, password);
+        if (registrationDisabled) {
+          setLocalError('El registro de nuevas cuentas está pausado temporalmente.');
+          setIsSubmitting(false);
+          return;
+        }
+        if (publicConfig?.turnstileEnabled && publicConfig?.turnstileSiteKey && !turnstileToken) {
+          setLocalError('Completa la verificación de seguridad antes de crear tu cuenta.');
+          setIsSubmitting(false);
+          return;
+        }
+        const result = await register(name, email, password, antiBotMeta);
         // If requires verification, show verify step
         if (result?.data?.requiresVerification) {
+          setTwoFactorStep(false);
           setVerifyEmailAddr(result.data.email || email);
           setVerifyStep(true);
           setResendCooldown(60);
@@ -298,7 +442,11 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
     }
     setVerifyLoading(true); setLocalError('');
     try {
-      await verifyEmailFn(verifyEmail, code);
+      if (twoFactorStep) {
+        await verifyTwoFactorFn(verifyEmail, code);
+      } else {
+        await verifyEmailFn(verifyEmail, code);
+      }
       onClose();
     } catch (err) {
       setLocalError(err.message || 'Código incorrecto');
@@ -449,7 +597,7 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
             color: 'var(--text-primary)', margin: '0 0 4px', lineHeight: 1.2, letterSpacing: '-0.02em',
           }}>
             {verifyStep
-              ? 'Verifica tu email'
+              ? (twoFactorStep ? 'Verificación Admin (2FA)' : 'Verifica tu email')
               : forgotStep
                 ? 'Recupera tu contraseña'
                 : resetStep
@@ -536,23 +684,43 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
               {verifyLoading ? 'Verificando...' : 'Verificar cuenta'}
             </button>
 
-            {/* Resend code */}
+            {/* Resend code or return to login for 2FA */}
             <div style={{ textAlign: 'center', marginTop: 14 }}>
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 6px' }}>
-                ¿No recibiste el código?
-              </p>
-              <button
-                type="button"
-                onClick={handleResend}
-                disabled={resendCooldown > 0}
-                style={{
-                  background: 'none', border: 'none', cursor: resendCooldown > 0 ? 'default' : 'pointer',
-                  color: resendCooldown > 0 ? 'var(--text-muted)' : 'var(--caribe)',
-                  fontSize: 12.5, fontWeight: 600,
-                }}
-              >
-                {resendCooldown > 0 ? `Reenviar en ${resendCooldown}s` : 'Reenviar código'}
-              </button>
+              {twoFactorStep ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVerifyStep(false);
+                    setTwoFactorStep(false);
+                    setVerifyCode(['', '', '', '', '', '']);
+                    setLocalError('');
+                  }}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600,
+                  }}
+                >
+                  Volver a iniciar sesión
+                </button>
+              ) : (
+                <>
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 6px' }}>
+                    ¿No recibiste el código?
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={resendCooldown > 0}
+                    style={{
+                      background: 'none', border: 'none', cursor: resendCooldown > 0 ? 'default' : 'pointer',
+                      color: resendCooldown > 0 ? 'var(--text-muted)' : 'var(--caribe)',
+                      fontSize: 12.5, fontWeight: 600,
+                    }}
+                  >
+                    {resendCooldown > 0 ? `Reenviar en ${resendCooldown}s` : 'Reenviar código'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         ) : forgotStep ? (
@@ -725,6 +893,38 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-5 pb-6 sm:px-7">
+          {/* Trampa honeypot oculta para atrapar bots automatizados */}
+          <div style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, overflow: 'hidden' }} aria-hidden="true">
+            <label htmlFor="rq-website-trap">Sitio web</label>
+            <input
+              id="rq-website-trap"
+              name="website"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value={honeypotWebsite}
+              onChange={(e) => setHoneypotWebsite(e.target.value)}
+            />
+          </div>
+
+          {registrationDisabled && (
+            <div style={{
+              marginBottom: 12,
+              padding: '10px 12px',
+              borderRadius: 10,
+              background: 'rgba(255, 194, 26, 0.1)',
+              border: '1px solid rgba(255, 194, 26, 0.35)',
+              color: 'var(--brand)',
+              fontSize: 12,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}>
+              <AlertTriangle size={14} style={{ flexShrink: 0 }} />
+              <span>El registro de nuevas cuentas está pausado temporalmente por el administrador.</span>
+            </div>
+          )}
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {mode === 'register' && (
               <FloatingInput
@@ -746,6 +946,25 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
               icon={Mail}
               autoFocus={mode === 'login'}
             />
+
+            {emailSuggestion && (
+              <button
+                type="button"
+                onClick={() => setEmail(emailSuggestion)}
+                style={{
+                  textAlign: 'left',
+                  padding: '7px 10px',
+                  borderRadius: 9,
+                  background: 'rgba(59, 139, 240, 0.1)',
+                  border: '1px solid rgba(59, 139, 240, 0.3)',
+                  color: 'var(--caribe)',
+                  fontSize: 11.5,
+                  cursor: 'pointer',
+                }}
+              >
+                ¿Quisiste decir <strong>{emailSuggestion}</strong>? Toca para corregir
+              </button>
+            )}
 
             <FloatingInput
               id="password-input"
@@ -829,6 +1048,31 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
             </div>
           )}
 
+          {/* Turnstile opcional (Login y Registro) o sello visible Escudo Anti-Bots */}
+          {publicConfig?.turnstileEnabled && publicConfig?.turnstileSiteKey && (
+            <div className="mt-3 flex justify-center">
+              <div ref={turnstileRef} />
+            </div>
+          )}
+
+          {publicConfig?.botShieldEnabled && (
+            <div
+              className="mt-2.5 px-2.5 py-1.5 rounded-lg flex items-center justify-center gap-1.5 text-[10.5px]"
+              style={{
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              <Shield size={11} color="var(--mangle)" style={{ flexShrink: 0 }} />
+              <span>
+                {mode === 'login'
+                  ? 'Escudo Anti-Bots activo · Protección contra accesos automatizados'
+                  : 'Escudo Anti-Bots activo · Validación DNS MX y verificación OTP'}
+              </span>
+            </div>
+          )}
+
           {/* Error */}
           {errorMsg && (
             <div className="animate-fade-in" style={{
@@ -846,14 +1090,14 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
           {/* Submit */}
           <button
             type="submit"
-            disabled={isSubmitting || (mode === 'register' && !acceptedTerms)}
+            disabled={isSubmitting || registrationDisabled || (mode === 'register' && !acceptedTerms)}
             id="submit-auth-btn"
             className="rq-btn-primary"
             style={{
               width: '100%', marginTop: 18, padding: '13px 0',
               fontSize: 13.5,
-              opacity: (isSubmitting || (mode === 'register' && !acceptedTerms)) ? 0.45 : 1,
-              cursor: (isSubmitting || (mode === 'register' && !acceptedTerms)) ? 'not-allowed' : 'pointer',
+              opacity: (isSubmitting || registrationDisabled || (mode === 'register' && !acceptedTerms)) ? 0.45 : 1,
+              cursor: (isSubmitting || registrationDisabled || (mode === 'register' && !acceptedTerms)) ? 'not-allowed' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}
           >

@@ -1,0 +1,7426 @@
+[
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 1,
+  "parada": "Carrera 8 con Calle 31 Lado Sur",
+  "lat": 10.94677,
+  "lng": -74.785825
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 2,
+  "parada": "Calle 30 con Carrera 4B Home Center",
+  "lat": 10.947509,
+  "lng": -74.784848
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 3,
+  "parada": "Carrera 14 con Calle 30",
+  "lat": 10.952259,
+  "lng": -74.786842
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 4,
+  "parada": "Calle 31 No. 13-39",
+  "lat": 10.950202,
+  "lng": -74.786862
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 5,
+  "parada": "Calle 31 con Carrera 11",
+  "lat": 10.948802,
+  "lng": -74.786426
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 6,
+  "parada": "Carrera 8 No. 30-158 Lado Norte Torres de Las Palm",
+  "lat": 10.946696,
+  "lng": -74.786867
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 7,
+  "parada": "Carrera 8 No. 34-26 Lado Norte",
+  "lat": 10.946451,
+  "lng": -74.788999
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 8,
+  "parada": "Carrera 8 con Calle 35A Lado Norte",
+  "lat": 10.946205,
+  "lng": -74.791229
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 9,
+  "parada": "Carrera 8 con Calle 37D Lado Norte",
+  "lat": 10.945931,
+  "lng": -74.793248
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 10,
+  "parada": "Carrera 8 No. 40-32 Lado Norte",
+  "lat": 10.946245,
+  "lng": -74.795742
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 11,
+  "parada": "Carrera 8 con Calle 42B Lado Norte",
+  "lat": 10.946242,
+  "lng": -74.797833
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 12,
+  "parada": "Carrera 8 con Calle 45 Lado Norte",
+  "lat": 10.946182,
+  "lng": -74.80004
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 13,
+  "parada": "Carrera 8 No. 47-84 Lado Norte",
+  "lat": 10.946134,
+  "lng": -74.802865
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 14,
+  "parada": "Carrera 8 No. 49-64 Lado Norte",
+  "lat": 10.946182,
+  "lng": -74.805547
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 15,
+  "parada": "Calle 51B con Carrera 8B Lado Oriente",
+  "lat": 10.947604,
+  "lng": -74.806106
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 16,
+  "parada": "Carrera 8D con Calle 52C Lado Norte",
+  "lat": 10.948591,
+  "lng": -74.807847
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 17,
+  "parada": "Calle 53 con Carrera 8G Lado Oriente",
+  "lat": 10.95143,
+  "lng": -74.807871
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 18,
+  "parada": "Calle 56 con Carrera 9D SAO Macarena",
+  "lat": 10.954218,
+  "lng": -74.808092
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 19,
+  "parada": "Carrera 10 con Calle 54",
+  "lat": 10.953969,
+  "lng": -74.806833
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 20,
+  "parada": "Calle 53 con Carrera 9D Lado Occidente",
+  "lat": 10.95271,
+  "lng": -74.806762
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 21,
+  "parada": "Calle 53 con Carrera 8G Lado Occidente",
+  "lat": 10.951271,
+  "lng": -74.808028
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 22,
+  "parada": "Carrera 8D No. 52-41 Lado Sur",
+  "lat": 10.949151,
+  "lng": -74.808557
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 23,
+  "parada": "Calle 51B No. 8C-15 Lado Occidente",
+  "lat": 10.947859,
+  "lng": -74.806133
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 24,
+  "parada": "Carrera 8 con Calle 49 Lado Sur",
+  "lat": 10.946058,
+  "lng": -74.805661
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 25,
+  "parada": "Carrera 8 No. 47-117 Lado Sur",
+  "lat": 10.946057,
+  "lng": -74.803118
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 26,
+  "parada": "Carrera 8 con Calle 45 Lado Sur Farmacia Torres",
+  "lat": 10.946078,
+  "lng": -74.800409
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 27,
+  "parada": "Carrera 8 No. 42-127 Lado Sur",
+  "lat": 10.946107,
+  "lng": -74.798475
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 28,
+  "parada": "Carrera 8 con Calle 41 Lado Sur",
+  "lat": 10.946113,
+  "lng": -74.795858
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 29,
+  "parada": "Carrera 8 No. 36B-125 Lado Sur",
+  "lat": 10.945887,
+  "lng": -74.793093
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 30,
+  "parada": "Carrera 8 con Calle 35A Lado Sur",
+  "lat": 10.94619,
+  "lng": -74.790928
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 31,
+  "parada": "Carrera 8 con Calle 34 Lado Sur",
+  "lat": 10.946428,
+  "lng": -74.788717
+ },
+ {
+  "ruta": "A1-2",
+  "ruta_oficial": "A1-2 Carrera 8",
+  "orden": 32,
+  "parada": "Carrera 8 con Calle 31 Lado Sur",
+  "lat": 10.94677,
+  "lng": -74.785825
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 1,
+  "parada": "Carrera 1H con calle 45 esq",
+  "lat": 10.932732,
+  "lng": -74.798927
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 2,
+  "parada": "Carrera 2E No. 44B-13",
+  "lat": 10.934835,
+  "lng": -74.798927
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 3,
+  "parada": "Carrera 2B No. 42A-05",
+  "lat": 10.934503,
+  "lng": -74.797133
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 4,
+  "parada": "Carrera 2 con Calle 39 esq",
+  "lat": 10.934873,
+  "lng": -74.794397
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 5,
+  "parada": "Carrera 2 No. 37E-23",
+  "lat": 10.934828,
+  "lng": -74.792567
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 6,
+  "parada": "Calle 37C Carrera 2 Tienda El danubio",
+  "lat": 10.93562,
+  "lng": -74.790987
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 7,
+  "parada": "Calle 37C con Carrera 3A",
+  "lat": 10.937258,
+  "lng": -74.791567
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 8,
+  "parada": "Calle 37C No. 3D-04",
+  "lat": 10.938568,
+  "lng": -74.791708
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 9,
+  "parada": "Carrera 4 con Calle 36 Esq",
+  "lat": 10.938947,
+  "lng": -74.790488
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 10,
+  "parada": "Carrera 4 con Calle 34B Esq",
+  "lat": 10.939295,
+  "lng": -74.788622
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 11,
+  "parada": "Carrera 4 No. 30-175 Coltabaco",
+  "lat": 10.939613,
+  "lng": -74.786048
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 12,
+  "parada": "Carrera 4 con Calle 30 Cannon",
+  "lat": 10.939838,
+  "lng": -74.783297
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 13,
+  "parada": "Calle 30 con Carrera 2 frente a Coomeva",
+  "lat": 10.938205,
+  "lng": -74.782365
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 14,
+  "parada": "Carrera 2 con Calle 30 Colegio San Jose",
+  "lat": 10.937722,
+  "lng": -74.782895
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 15,
+  "parada": "Carrera 2 con Calle 33A esq",
+  "lat": 10.936585,
+  "lng": -74.78478
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 16,
+  "parada": "Carrera 2 con Calle 34 esq",
+  "lat": 10.935955,
+  "lng": -74.786967
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 17,
+  "parada": "Carrera 2 con Calle 35A esq",
+  "lat": 10.935437,
+  "lng": -74.789325
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 18,
+  "parada": "Calle 37C con Carrera 2 Esq",
+  "lat": 10.934685,
+  "lng": -74.791298
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 19,
+  "parada": "Calle 37C con Carrera 1H esq",
+  "lat": 10.932828,
+  "lng": -74.791708
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 20,
+  "parada": "Carrera 1H con Calle 37F esq",
+  "lat": 10.933207,
+  "lng": -74.793172
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 21,
+  "parada": "Carrera 1H con Calle 41B esq",
+  "lat": 10.933708,
+  "lng": -74.79478
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 22,
+  "parada": "Carrera 1H No. 41B-236",
+  "lat": 10.933242,
+  "lng": -74.796837
+ },
+ {
+  "ruta": "A1-3",
+  "ruta_oficial": "A1-3 Galan",
+  "orden": 23,
+  "parada": "Carrera 1H con calle 45 esq",
+  "lat": 10.932732,
+  "lng": -74.798927
+ },
+ {
+  "ruta": "A1-4",
+  "ruta_oficial": "A1-4 La Magdalena",
+  "orden": 1,
+  "parada": "Carrera 7 con Calle 44",
+  "lat": 10.94138,
+  "lng": -74.799259
+ },
+ {
+  "ruta": "A1-4",
+  "ruta_oficial": "A1-4 La Magdalena",
+  "orden": 2,
+  "parada": "Carrera 7 con Calle 42",
+  "lat": 10.943021,
+  "lng": -74.797674
+ },
+ {
+  "ruta": "A1-4",
+  "ruta_oficial": "A1-4 La Magdalena",
+  "orden": 3,
+  "parada": "Carrera 6B No. 41-101 Lado Sur",
+  "lat": 10.941309,
+  "lng": -74.796807
+ },
+ {
+  "ruta": "A1-4",
+  "ruta_oficial": "A1-4 La Magdalena",
+  "orden": 4,
+  "parada": "Carrera 6B No. 38B-73 Lado Sur",
+  "lat": 10.941651,
+  "lng": -74.794265
+ },
+ {
+  "ruta": "A1-4",
+  "ruta_oficial": "A1-4 La Magdalena",
+  "orden": 5,
+  "parada": "Carrera 6B con Calle 37C Lado Sur",
+  "lat": 10.94185,
+  "lng": -74.79245
+ },
+ {
+  "ruta": "A1-4",
+  "ruta_oficial": "A1-4 La Magdalena",
+  "orden": 6,
+  "parada": "Carrera 6B No. 34C-23 Lado Sur",
+  "lat": 10.942309,
+  "lng": -74.788919
+ },
+ {
+  "ruta": "A1-4",
+  "ruta_oficial": "A1-4 La Magdalena",
+  "orden": 7,
+  "parada": "Carrera 6B No. 33-65 Lado Sur",
+  "lat": 10.942884,
+  "lng": -74.786845
+ },
+ {
+  "ruta": "A1-4",
+  "ruta_oficial": "A1-4 La Magdalena",
+  "orden": 8,
+  "parada": "Carrera 6B con Calle 30 Lado Sur",
+  "lat": 10.943153,
+  "lng": -74.784392
+ },
+ {
+  "ruta": "A1-4",
+  "ruta_oficial": "A1-4 La Magdalena",
+  "orden": 9,
+  "parada": "Carrera 4B No. 23-57 Lado Sur",
+  "lat": 10.942376,
+  "lng": -74.779549
+ },
+ {
+  "ruta": "A1-4",
+  "ruta_oficial": "A1-4 La Magdalena",
+  "orden": 10,
+  "parada": "Calle 19 con Carrera 4A",
+  "lat": 10.941577,
+  "lng": -74.778192
+ },
+ {
+  "ruta": "A1-4",
+  "ruta_oficial": "A1-4 La Magdalena",
+  "orden": 11,
+  "parada": "Carrera 4B con Calle 23 Lado Norte",
+  "lat": 10.942344,
+  "lng": -74.779474
+ },
+ {
+  "ruta": "A1-4",
+  "ruta_oficial": "A1-4 La Magdalena",
+  "orden": 12,
+  "parada": "Carrera 6B con Calle 31 Nacional de Chocolate",
+  "lat": 10.94294,
+  "lng": -74.785247
+ },
+ {
+  "ruta": "A1-4",
+  "ruta_oficial": "A1-4 La Magdalena",
+  "orden": 13,
+  "parada": "Carrera 6B No. 33-58 Lado Norte",
+  "lat": 10.942972,
+  "lng": -74.786828
+ },
+ {
+  "ruta": "A1-4",
+  "ruta_oficial": "A1-4 La Magdalena",
+  "orden": 14,
+  "parada": "Carrera 6B con Calle 34C Lado Norte",
+  "lat": 10.942427,
+  "lng": -74.788677
+ },
+ {
+  "ruta": "A1-4",
+  "ruta_oficial": "A1-4 La Magdalena",
+  "orden": 15,
+  "parada": "Carrera 6B con Calle 36B Lado Norte",
+  "lat": 10.942057,
+  "lng": -74.791518
+ },
+ {
+  "ruta": "A1-4",
+  "ruta_oficial": "A1-4 La Magdalena",
+  "orden": 16,
+  "parada": "Carrera 6B No. 38B-02 Lado Norte",
+  "lat": 10.941757,
+  "lng": -74.793893
+ },
+ {
+  "ruta": "A1-4",
+  "ruta_oficial": "A1-4 La Magdalena",
+  "orden": 17,
+  "parada": "Carrera 6B con Calle 41 Lado Norte",
+  "lat": 10.941369,
+  "lng": -74.796746
+ },
+ {
+  "ruta": "A1-4",
+  "ruta_oficial": "A1-4 La Magdalena",
+  "orden": 18,
+  "parada": "Carrera 7 con Calle 44",
+  "lat": 10.94138,
+  "lng": -74.799259
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 1,
+  "parada": "Calle 45 con Carrera 1 Metrocentro",
+  "lat": 10.93169,
+  "lng": -74.799333
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 2,
+  "parada": "Tv 14 sur con calle 45",
+  "lat": 10.93025,
+  "lng": -74.799877
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 3,
+  "parada": "Calle 45D con Carrera 1 Conj. Res. Metrocentro",
+  "lat": 10.931347,
+  "lng": -74.800533
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 4,
+  "parada": "Carrera 1E con Calle 45H frente a Bloque 159",
+  "lat": 10.931865,
+  "lng": -74.802072
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 5,
+  "parada": "Av. Las Torres frente Nom. 45H-42 Lado Sur",
+  "lat": 10.930277,
+  "lng": -74.802065
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 6,
+  "parada": "Av. Las Torres con Calle 44B Lado Sur",
+  "lat": 10.929922,
+  "lng": -74.798772
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 7,
+  "parada": "Av. Las Torres No. 41C-93 Lado Sur",
+  "lat": 10.929695,
+  "lng": -74.796522
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 8,
+  "parada": "Av. Las Torres No. 56A-93 Lado Sur Soledad",
+  "lat": 10.929483,
+  "lng": -74.79439
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 9,
+  "parada": "Av. Las Torres con Calle 54D Lado Sur Soledad",
+  "lat": 10.929482,
+  "lng": -74.791593
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 10,
+  "parada": "Av. Las Torres No. 48-25 Lado Sur Soledad",
+  "lat": 10.930147,
+  "lng": -74.78906
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 11,
+  "parada": "Av. Las Torres No. 44-33 Lado Sur Soledad",
+  "lat": 10.930925,
+  "lng": -74.78645
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 12,
+  "parada": "Calle 30 Colegio ITIDA",
+  "lat": 10.930997,
+  "lng": -74.780267
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 13,
+  "parada": "Carrera 30 con Calle 30 SAO Hipodromo Lado Sur",
+  "lat": 10.927345,
+  "lng": -74.77786
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 14,
+  "parada": "Carrera 30 con Calle 29 Lado Sur Soledad",
+  "lat": 10.928045,
+  "lng": -74.774838
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 15,
+  "parada": "Carrera 30 con Calle 27 Lado Sur Soledad",
+  "lat": 10.927622,
+  "lng": -74.772903
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 16,
+  "parada": "Carrera 30 No. 24-151 Lado Sur Soledad",
+  "lat": 10.926817,
+  "lng": -74.76981
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 17,
+  "parada": "Calle 24 con Carrera 31 Soledad",
+  "lat": 10.926987,
+  "lng": -74.768267
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 18,
+  "parada": "Calle 24 con Carrera 33 Soledad",
+  "lat": 10.927953,
+  "lng": -74.768103
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 19,
+  "parada": "Calle 24 con Carrera 34 Soledad",
+  "lat": 10.928907,
+  "lng": -74.767977
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 20,
+  "parada": "Carrera 35 con Calle 25B esq Soledad",
+  "lat": 10.92987,
+  "lng": -74.770465
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 21,
+  "parada": "Carrera 37 No. 25A-13 Soledad",
+  "lat": 10.931178,
+  "lng": -74.769835
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 22,
+  "parada": "Carrera 37 con Calle 23A esq Soledad",
+  "lat": 10.931365,
+  "lng": -74.767895
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 23,
+  "parada": "Carrera 37 con Calle 18A esq Soledad",
+  "lat": 10.931863,
+  "lng": -74.764956
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 24,
+  "parada": "Calle 18 con Carrera 36A esq Soledad",
+  "lat": 10.931152,
+  "lng": -74.764512
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 25,
+  "parada": "Calle 18 No. 32-59 Soledad",
+  "lat": 10.92868,
+  "lng": -74.76435
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 26,
+  "parada": "Calle 18 con Carrera 30 Soledad",
+  "lat": 10.926713,
+  "lng": -74.764153
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 27,
+  "parada": "Calle 18 con Carrera 27 Soledad",
+  "lat": 10.924445,
+  "lng": -74.763768
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 28,
+  "parada": "Calle 18 No. 25A-16 Soledad",
+  "lat": 10.92153,
+  "lng": -74.763537
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 29,
+  "parada": "Calle 18 No. 23-37 Soledad",
+  "lat": 10.919673,
+  "lng": -74.764115
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 30,
+  "parada": "Calle 18 No. 21-37 Soledad",
+  "lat": 10.917542,
+  "lng": -74.765113
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 31,
+  "parada": "Carrera 19 Frente Nom. 20-19 Soledad",
+  "lat": 10.916582,
+  "lng": -74.7671
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 32,
+  "parada": "Calle 23 con Carrera 19A esq Soledad",
+  "lat": 10.917762,
+  "lng": -74.768873
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 33,
+  "parada": "Calle 23 No. 22-36 Soledad",
+  "lat": 10.920545,
+  "lng": -74.768107
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 34,
+  "parada": "Calle 23 No. 25-40 Soledad",
+  "lat": 10.922783,
+  "lng": -74.767398
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 35,
+  "parada": "Carrera 26 No. 24A-32 Soledad",
+  "lat": 10.923965,
+  "lng": -74.768765
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 36,
+  "parada": "Carrera 30 con Calle 24 Lado Norte Soledad",
+  "lat": 10.926667,
+  "lng": -74.768853
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 37,
+  "parada": "Carrera 30 con Calle 27 esq Lado Norte Soledad",
+  "lat": 10.927552,
+  "lng": -74.772697
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 38,
+  "parada": "Carrera 30 con Calle 29C esq Lado Norte Soledad",
+  "lat": 10.927883,
+  "lng": -74.775767
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 39,
+  "parada": "Carrera 30 con Calle 30 SAO Hipodromo Lado Norte",
+  "lat": 10.92744,
+  "lng": -74.77775
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 40,
+  "parada": "Calle 30 con Carrera 34A entrada al Tucan Soledad",
+  "lat": 10.930023,
+  "lng": -74.779742
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 41,
+  "parada": "Calle 30 Colegio INEM",
+  "lat": 10.93168,
+  "lng": -74.78023
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 42,
+  "parada": "Av. Las Torres Circunvalar Iglesia Lado Norte",
+  "lat": 10.931798,
+  "lng": -74.784507
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 43,
+  "parada": "Av. Las Torres con Calle 45 Olimpica Soledad",
+  "lat": 10.930985,
+  "lng": -74.787303
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 44,
+  "parada": "Av. Las Torres con Calle 54 Lado Norte Soledad",
+  "lat": 10.929845,
+  "lng": -74.790683
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 45,
+  "parada": "Av. Las Torres No. 56A-12 Lado Norte Soledad",
+  "lat": 10.929528,
+  "lng": -74.793657
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 46,
+  "parada": "Av. Las Torres No. 41C-92 Lado Norte",
+  "lat": 10.929863,
+  "lng": -74.796545
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 47,
+  "parada": "Av. Las Torres No. 43-76 Lado Norte",
+  "lat": 10.930047,
+  "lng": -74.798235
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 48,
+  "parada": "Av. Las Torres con Calle 45 Lado Norte",
+  "lat": 10.930197,
+  "lng": -74.799847
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 49,
+  "parada": "Av. Las Torres con Calle 45H Lado Norte",
+  "lat": 10.93041,
+  "lng": -74.801802
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 50,
+  "parada": "Carrera 1E No. 45H-41",
+  "lat": 10.93184,
+  "lng": -74.801897
+ },
+ {
+  "ruta": "A2-1",
+  "ruta_oficial": "A2-1 Hipodromo",
+  "orden": 51,
+  "parada": "Calle 45 con Carrera 1 Metrocentro",
+  "lat": 10.931795,
+  "lng": -74.799609
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 1,
+  "parada": "Carrera 24 Con Calle 63",
+  "lat": 10.921226,
+  "lng": -74.798931
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 2,
+  "parada": "Carrera 24 con Calle 59 Lado Sur Soledad",
+  "lat": 10.92152,
+  "lng": -74.796022
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 3,
+  "parada": "Carrera 24 con Calle 57D Lado Sur Soledad",
+  "lat": 10.921237,
+  "lng": -74.794565
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 4,
+  "parada": "Carrera 24 con Calle 55B Lado Sur Soledad",
+  "lat": 10.920945,
+  "lng": -74.793112
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 5,
+  "parada": "Carrera 24 con Calle 54 Lado Sur Soledad",
+  "lat": 10.921297,
+  "lng": -74.791322
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 6,
+  "parada": "Carrera 24 con Calle 48 Lado Sur Soledad",
+  "lat": 10.92143,
+  "lng": -74.789708
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 7,
+  "parada": "Carrera 24 con Calle 45A2 Lado Sur Soledad",
+  "lat": 10.921263,
+  "lng": -74.788557
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 8,
+  "parada": "Calle 45 con Carrera 25 esq Lado Oriental Soledad",
+  "lat": 10.922547,
+  "lng": -74.787095
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 9,
+  "parada": "Calle 45 con Carrera 26A Lado Oriental Soledad",
+  "lat": 10.923683,
+  "lng": -74.7863
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 10,
+  "parada": "Calle 43 con Carrera 31 Lado Oriental Soledad",
+  "lat": 10.925265,
+  "lng": -74.784267
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 11,
+  "parada": "Calle 43 con Carrera 37 Lado Oriental Soledad",
+  "lat": 10.927214,
+  "lng": -74.784229
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 12,
+  "parada": "Calle 43 con Carrera 37 Lado Occidental Soledad",
+  "lat": 10.927029,
+  "lng": -74.784264
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 13,
+  "parada": "Calle 43 con Carrera 32 Lado Occidental Soledad",
+  "lat": 10.925545,
+  "lng": -74.784264
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 14,
+  "parada": "Calle 45 con Carrera 26 Lado Occidental Soledad",
+  "lat": 10.922297,
+  "lng": -74.787265
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 15,
+  "parada": "Calle 45 con Carrera 24B Lado Occidental Soledad",
+  "lat": 10.921752,
+  "lng": -74.78763
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 16,
+  "parada": "Carrera 24 con Calle 48 esq Lado Norte Soledad",
+  "lat": 10.921452,
+  "lng": -74.789715
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 17,
+  "parada": "Carrera 24 con Calle 53 esq Lado Norte Soledad",
+  "lat": 10.92151,
+  "lng": -74.790858
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 18,
+  "parada": "Carrera 24 con Calle 54C Lado Norte Soledad",
+  "lat": 10.921133,
+  "lng": -74.79225
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 19,
+  "parada": "Calle 56 con Carrera 22C Soledad",
+  "lat": 10.919863,
+  "lng": -74.793343
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 20,
+  "parada": "Calle 56 con Carrera 20 Soledad",
+  "lat": 10.918265,
+  "lng": -74.793335
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 21,
+  "parada": "Carrera 18 No. 56-46 Soledad",
+  "lat": 10.917155,
+  "lng": -74.79393
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 22,
+  "parada": "Carrera 18 No. 59-18 Soledad",
+  "lat": 10.917143,
+  "lng": -74.796177
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 23,
+  "parada": "Carrera 18 No. 62-10 Soledad",
+  "lat": 10.917132,
+  "lng": -74.798233
+ },
+ {
+  "ruta": "A3-1",
+  "ruta_oficial": "A3-1 Villa Katanga",
+  "orden": 24,
+  "parada": "Carrera 24 Con Calle 63",
+  "lat": 10.921226,
+  "lng": -74.798931
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 1,
+  "parada": "Portal de Soledad",
+  "lat": 10.907941,
+  "lng": -74.800165
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 2,
+  "parada": "Carrera 14 con Calle 62 Soledad",
+  "lat": 10.909228,
+  "lng": -74.798492
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 3,
+  "parada": "Carrera 14 con Calle 59 Ent. Nuevo Milenio Soledad",
+  "lat": 10.908877,
+  "lng": -74.795947
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 4,
+  "parada": "Calle 59 con Carrera 12D Soledad",
+  "lat": 10.906929,
+  "lng": -74.795822
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 5,
+  "parada": "Calle 59 No. 12-29 Soledad",
+  "lat": 10.905013,
+  "lng": -74.795685
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 6,
+  "parada": "Carrera 12 con Calle 56 Lado Sur Soledad",
+  "lat": 10.904918,
+  "lng": -74.793891
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 7,
+  "parada": "Carrera 13 con Calle 54 Lado Sur Soledad",
+  "lat": 10.906035,
+  "lng": -74.792297
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 8,
+  "parada": "Calle 54 Con Carrera 11B Lado Occidental Soledad",
+  "lat": 10.905077,
+  "lng": -74.791623
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 9,
+  "parada": "Carrera 11 con Calle 52 Siete Bocas Soledad",
+  "lat": 10.905058,
+  "lng": -74.789035
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 10,
+  "parada": "Carrera 11 con Calle 49 Polideportivo Soledad 2000",
+  "lat": 10.905652,
+  "lng": -74.78593
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 11,
+  "parada": "Carrera 11 con Calle 46 Soledad",
+  "lat": 10.906155,
+  "lng": -74.783343
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 12,
+  "parada": "Carrera 11 con Calle 44 Col.Club de Leones Soledad",
+  "lat": 10.906417,
+  "lng": -74.781622
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 13,
+  "parada": "Calle 43 con Carrera 13 Soledad",
+  "lat": 10.908305,
+  "lng": -74.780645
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 14,
+  "parada": "Calle 41 No. 14-68 Barrio La Fe Soledad",
+  "lat": 10.910237,
+  "lng": -74.779402
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 15,
+  "parada": "Carrera 15B con Calle 43C Soledad",
+  "lat": 10.911695,
+  "lng": -74.780897
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 16,
+  "parada": "Carrera 15B con Calle 44D Colegio Tajamar Soledad",
+  "lat": 10.912152,
+  "lng": -74.782268
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 17,
+  "parada": "Calle 45B con Carrera 12G Soledad",
+  "lat": 10.910737,
+  "lng": -74.782867
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 18,
+  "parada": "Calle 45B con Carrera 14 Soledad",
+  "lat": 10.908963,
+  "lng": -74.782889
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 19,
+  "parada": "Carrera 14 con Calle 47 Drog. Santa Lucia Soledad",
+  "lat": 10.908438,
+  "lng": -74.784507
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 20,
+  "parada": "Carrera 14 con Calle 47A Conj. Res. Doña Soledad",
+  "lat": 10.908482,
+  "lng": -74.78601
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 21,
+  "parada": "Carrera 14 con Calle 50 Soledad",
+  "lat": 10.908898,
+  "lng": -74.787952
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 22,
+  "parada": "Carrera 14 con Calle 52 Soledad",
+  "lat": 10.908058,
+  "lng": -74.789332
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 23,
+  "parada": "Carrera 13 con Calle 54 Lado Norte Soledad",
+  "lat": 10.906126,
+  "lng": -74.792329
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 24,
+  "parada": "Carrera 12 con Calle 57 Lado Norte Soledad",
+  "lat": 10.904914,
+  "lng": -74.794149
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 25,
+  "parada": "Carrera 12 con Calle 59A Lado Norte Soledad",
+  "lat": 10.904777,
+  "lng": -74.796171
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 26,
+  "parada": "Carrera 12 con Calle 62 Lado Norte Soledad",
+  "lat": 10.904135,
+  "lng": -74.798383
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 27,
+  "parada": "Carrera 12 con Calle 63A Lado Norte Soledad",
+  "lat": 10.903957,
+  "lng": -74.800747
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 28,
+  "parada": "Calle 65 con Carrera 11C Terranova 2da Etapa",
+  "lat": 10.904042,
+  "lng": -74.801957
+ },
+ {
+  "ruta": "A3-2",
+  "ruta_oficial": "A3-2 Soledad 2000",
+  "orden": 29,
+  "parada": "Portal de Soledad",
+  "lat": 10.907941,
+  "lng": -74.800165
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 1,
+  "parada": "Portal de Soledad",
+  "lat": 10.907631,
+  "lng": -74.800391
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 2,
+  "parada": "Carrera 14 con Calle 62 Soledad",
+  "lat": 10.909228,
+  "lng": -74.798492
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 3,
+  "parada": "Carrera 14 con Calle 59 Ent. Nuevo Milenio Soledad",
+  "lat": 10.908877,
+  "lng": -74.795947
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 4,
+  "parada": "Terminal de Transportes",
+  "lat": 10.908944,
+  "lng": -74.794045
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 5,
+  "parada": "Calle 54 con Carrera 14 El Percal Lado Occidental",
+  "lat": 10.906455,
+  "lng": -74.791893
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 6,
+  "parada": "Calle 54 Con Carrera 11B Lado Occidental Soledad",
+  "lat": 10.905077,
+  "lng": -74.791623
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 7,
+  "parada": "Carrera 11 con Calle 52 Siete Bocas Soledad",
+  "lat": 10.905058,
+  "lng": -74.789035
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 8,
+  "parada": "Carrera 11 con Calle 49 Polideportivo Soledad 2000",
+  "lat": 10.905652,
+  "lng": -74.78593
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 9,
+  "parada": "Carrera 11 con Calle 46 Soledad",
+  "lat": 10.906155,
+  "lng": -74.783343
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 10,
+  "parada": "Carrera 11 con Calle 44 Col.Club de Leones Soledad",
+  "lat": 10.906417,
+  "lng": -74.781622
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 11,
+  "parada": "Calle 47 No. 5B-16 Lado Oriental Soledad",
+  "lat": 10.899358,
+  "lng": -74.782847
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 12,
+  "parada": "Calle 47 No. 6A-22 Lado Oriental Soledad",
+  "lat": 10.900828,
+  "lng": -74.783167
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 13,
+  "parada": "Carrera 6C No. 47C-08 Lado Norte Soledad",
+  "lat": 10.90098,
+  "lng": -74.784192
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 14,
+  "parada": "Calle 49 No. 6E-22 Lado Nororiental Soledad",
+  "lat": 10.9017,
+  "lng": -74.785527
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 15,
+  "parada": "Carrera 14 con Calle 50 Soledad",
+  "lat": 10.908898,
+  "lng": -74.787952
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 16,
+  "parada": "Carrera 14 con Calle 52 Soledad",
+  "lat": 10.908058,
+  "lng": -74.789332
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 17,
+  "parada": "Carrera 13 con Calle 54 Lado Norte Soledad",
+  "lat": 10.906126,
+  "lng": -74.792329
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 18,
+  "parada": "Carrera 12 con Calle 57 Lado Norte Soledad",
+  "lat": 10.904914,
+  "lng": -74.794149
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 19,
+  "parada": "Carrera 12 con Calle 59A Lado Norte Soledad",
+  "lat": 10.904777,
+  "lng": -74.796171
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 20,
+  "parada": "Carrera 12 con Calle 62 Lado Norte Soledad",
+  "lat": 10.904135,
+  "lng": -74.798383
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 21,
+  "parada": "Carrera 12 con Calle 63A Lado Norte Soledad",
+  "lat": 10.903957,
+  "lng": -74.800747
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 22,
+  "parada": "Calle 65 con Carrera 11C Terranova 2da Etapa",
+  "lat": 10.904042,
+  "lng": -74.801957
+ },
+ {
+  "ruta": "A3-3",
+  "ruta_oficial": "A3-3 Manuela Beltran",
+  "orden": 23,
+  "parada": "Portal de Soledad",
+  "lat": 10.907631,
+  "lng": -74.800391
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 1,
+  "parada": "Portal de Soledad",
+  "lat": 10.907377,
+  "lng": -74.800586
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 2,
+  "parada": "Centro Comercial Nuestro Atlantico",
+  "lat": 10.905385,
+  "lng": -74.801316
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 3,
+  "parada": "Calle 65 con Carrera 12 Ciudad Transmetro Lado Occ",
+  "lat": 10.904125,
+  "lng": -74.802113
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 4,
+  "parada": "Calle 65 con Carrera 8 Los Loteros Lado Occidental",
+  "lat": 10.901335,
+  "lng": -74.802702
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 5,
+  "parada": "Calle 65 Ciudad Camelot Lado Occidental",
+  "lat": 10.899415,
+  "lng": -74.803115
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 6,
+  "parada": "Calle 65 La Candelaria Lado Occidental",
+  "lat": 10.895393,
+  "lng": -74.803785
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 7,
+  "parada": "Calle 65 con Carrera 5 La Central Lado Occidental",
+  "lat": 10.891485,
+  "lng": -74.80419
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 8,
+  "parada": "Calle 65 Gran Central de Abastos del Caribe",
+  "lat": 10.887832,
+  "lng": -74.803852
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 9,
+  "parada": "Diagonal 56 Las Cometas Lado Sur",
+  "lat": 10.890973,
+  "lng": -74.799828
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 10,
+  "parada": "Diagonal 56 Mega Colegio Lado Sur",
+  "lat": 10.892458,
+  "lng": -74.797293
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 11,
+  "parada": "Diagonal 56 Villa Maria 1ra Etapa Lado Sur",
+  "lat": 10.89324,
+  "lng": -74.795803
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 12,
+  "parada": "Diagonal 56 Villa Maria 2da Etapa Lado Sur",
+  "lat": 10.894047,
+  "lng": -74.794525
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 13,
+  "parada": "Calle 57 con Carrera 3 Las Cuatro Villas",
+  "lat": 10.89342,
+  "lng": -74.793272
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 14,
+  "parada": "Carrera 3 No. 56C-21 Movimiento Misionero Lado Sur",
+  "lat": 10.892867,
+  "lng": -74.792117
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 15,
+  "parada": "Carrera 3 No. 54C-03 Tienda El Milagro Lado Sur",
+  "lat": 10.892803,
+  "lng": -74.790272
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 16,
+  "parada": "Calle 54B con Transversal 2D10 Soledad",
+  "lat": 10.891348,
+  "lng": -74.789497
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 17,
+  "parada": "Calle 54B con Carrera 2F Iglesia Lado Oriente",
+  "lat": 10.891917,
+  "lng": -74.7896
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 18,
+  "parada": "Carrera 3 No. 55-16 Lado Norte Soledad",
+  "lat": 10.892782,
+  "lng": -74.79065
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 19,
+  "parada": "Carrera 3 No. 56-142 Lado Norte Soledad",
+  "lat": 10.892948,
+  "lng": -74.792595
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 20,
+  "parada": "Diagonal 56 Villa Karla Lado Sur",
+  "lat": 10.895408,
+  "lng": -74.792565
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 21,
+  "parada": "Diagonal 56 Villa Karla Lado Norte",
+  "lat": 10.895937,
+  "lng": -74.791992
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 22,
+  "parada": "Diagonal 56 Villa Maria 2da Etapa Lado Norte",
+  "lat": 10.894315,
+  "lng": -74.794233
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 23,
+  "parada": "Diagonal 56 Villa Maria 1ra Etapa Lado Norte",
+  "lat": 10.893168,
+  "lng": -74.79599
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 24,
+  "parada": "Diagonal 56 Mega Colegio Lado Norte",
+  "lat": 10.89253,
+  "lng": -74.797202
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 25,
+  "parada": "Diagonal 56 Las Cometas Lado Norte",
+  "lat": 10.890955,
+  "lng": -74.799928
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 26,
+  "parada": "Calle 65 con Diagonal 56 EDS La Inmaculada Soledad",
+  "lat": 10.889405,
+  "lng": -74.803507
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 27,
+  "parada": "Calle 65 Villa Linda Av. Murillo Soledad",
+  "lat": 10.891925,
+  "lng": -74.804013
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 28,
+  "parada": "Calle 65 La Candelaria Lado Oriental",
+  "lat": 10.893602,
+  "lng": -74.804009
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 29,
+  "parada": "Calle 65 Villas del Portal 2 Lado Oriental",
+  "lat": 10.8988,
+  "lng": -74.803067
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 30,
+  "parada": "Calle 65 con Carrera 8 Los Loteros Lado Oriental",
+  "lat": 10.900938,
+  "lng": -74.802592
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 31,
+  "parada": "Calle 65 con Carrera 11C Terranova 2da Etapa",
+  "lat": 10.904042,
+  "lng": -74.801957
+ },
+ {
+  "ruta": "A3-4",
+  "ruta_oficial": "A3-4 Villa Sol",
+  "orden": 32,
+  "parada": "Portal de Soledad",
+  "lat": 10.907377,
+  "lng": -74.800586
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 1,
+  "parada": "Portal de Soledad",
+  "lat": 10.907377,
+  "lng": -74.800586
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 2,
+  "parada": "Centro Comercial Nuestro Atlantico",
+  "lat": 10.905385,
+  "lng": -74.801316
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 3,
+  "parada": "Calle 65 con Carrera 12 Ciudad Transmetro Lado Occ",
+  "lat": 10.904125,
+  "lng": -74.802113
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 4,
+  "parada": "Calle 65 con Carrera 8 Los Loteros Lado Occidental",
+  "lat": 10.901335,
+  "lng": -74.802702
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 5,
+  "parada": "Calle 65 Ciudad Camelot Lado Occidental",
+  "lat": 10.899415,
+  "lng": -74.803115
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 6,
+  "parada": "Calle 65 La Candelaria Lado Occidental",
+  "lat": 10.895393,
+  "lng": -74.803785
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 7,
+  "parada": "Calle 65 con Carrera 5 La Central Lado Occidental",
+  "lat": 10.891485,
+  "lng": -74.80419
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 8,
+  "parada": "Calle 65 Gran Central de Abastos del Caribe",
+  "lat": 10.887832,
+  "lng": -74.803852
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 9,
+  "parada": "Diagonal 56 Las Cometas Lado Sur",
+  "lat": 10.890973,
+  "lng": -74.799828
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 10,
+  "parada": "Diagonal 56 Mega Colegio Lado Sur",
+  "lat": 10.892458,
+  "lng": -74.797293
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 11,
+  "parada": "Diagonal 56 Villa Maria 1ra Etapa Lado Sur",
+  "lat": 10.89324,
+  "lng": -74.795803
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 12,
+  "parada": "Diagonal 56 Villa Maria 2da Etapa Lado Sur",
+  "lat": 10.894047,
+  "lng": -74.794525
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 13,
+  "parada": "Calle 57 con Carrera 3 Las Cuatro Villas",
+  "lat": 10.89342,
+  "lng": -74.793272
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 14,
+  "parada": "Carrera 3 No. 56C-21 Movimiento Misionero Lado Sur",
+  "lat": 10.892867,
+  "lng": -74.792117
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 15,
+  "parada": "Carrera 3 No. 54C-03 Tienda El Milagro Lado Sur",
+  "lat": 10.892803,
+  "lng": -74.790272
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 16,
+  "parada": "Calle 54B con Transversal 2D10 Soledad",
+  "lat": 10.891348,
+  "lng": -74.789497
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 17,
+  "parada": "Calle 54B con Carrera 2F Iglesia Lado Oriente",
+  "lat": 10.891917,
+  "lng": -74.7896
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 18,
+  "parada": "Carrera 3 No. 55-16 Lado Norte Soledad",
+  "lat": 10.892782,
+  "lng": -74.79065
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 19,
+  "parada": "Carrera 3 No. 56-142 Lado Norte Soledad",
+  "lat": 10.892948,
+  "lng": -74.792595
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 20,
+  "parada": "Diagonal 56 Villa Maria 2da Etapa Lado Norte",
+  "lat": 10.894315,
+  "lng": -74.794233
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 21,
+  "parada": "Diagonal 56 Villa Maria 1ra Etapa Lado Norte",
+  "lat": 10.893168,
+  "lng": -74.79599
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 22,
+  "parada": "Diagonal 56 Mega Colegio Lado Norte",
+  "lat": 10.89253,
+  "lng": -74.797202
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 23,
+  "parada": "Diagonal 56 Las Cometas Lado Norte",
+  "lat": 10.890955,
+  "lng": -74.799928
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 24,
+  "parada": "Calle 65 con Diagonal 56 EDS La Inmaculada Soledad",
+  "lat": 10.889405,
+  "lng": -74.803507
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 25,
+  "parada": "Calle 65 Villa Linda Av. Murillo Soledad",
+  "lat": 10.891925,
+  "lng": -74.804013
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 26,
+  "parada": "Calle 65 La Candelaria Lado Oriental",
+  "lat": 10.893602,
+  "lng": -74.804009
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 27,
+  "parada": "Calle 65 Villas del Portal 2 Lado Oriental",
+  "lat": 10.8988,
+  "lng": -74.803067
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 28,
+  "parada": "Calle 65 con Carrera 8 Los Loteros Lado Oriental",
+  "lat": 10.900938,
+  "lng": -74.802592
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 29,
+  "parada": "Calle 65 con Carrera 11C Terranova 2da Etapa",
+  "lat": 10.904042,
+  "lng": -74.801957
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-40 Villa Sol",
+  "orden": 30,
+  "parada": "Portal de Soledad",
+  "lat": 10.907377,
+  "lng": -74.800586
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 1,
+  "parada": "Portal de Soledad",
+  "lat": 10.907377,
+  "lng": -74.800586
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 2,
+  "parada": "Centro Comercial Nuestro Atlantico",
+  "lat": 10.905385,
+  "lng": -74.801316
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 3,
+  "parada": "Calle 65 con Carrera 12 Ciudad Transmetro Lado Occ",
+  "lat": 10.904125,
+  "lng": -74.802113
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 4,
+  "parada": "Calle 65 con Carrera 8 Los Loteros Lado Occidental",
+  "lat": 10.901335,
+  "lng": -74.802702
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 5,
+  "parada": "Calle 65 Ciudad Camelot Lado Occidental",
+  "lat": 10.899415,
+  "lng": -74.803115
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 6,
+  "parada": "Calle 65 La Candelaria Lado Occidental",
+  "lat": 10.895393,
+  "lng": -74.803785
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 7,
+  "parada": "Calle 65 con Carrera 5 La Central Lado Occidental",
+  "lat": 10.891485,
+  "lng": -74.80419
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 8,
+  "parada": "Calle 65 Gran Central de Abastos del Caribe",
+  "lat": 10.887832,
+  "lng": -74.803852
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 9,
+  "parada": "Diagonal 56 Las Cometas Lado Sur",
+  "lat": 10.890973,
+  "lng": -74.799828
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 10,
+  "parada": "Diagonal 56 Mega Colegio Lado Sur",
+  "lat": 10.892458,
+  "lng": -74.797293
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 11,
+  "parada": "Diagonal 56 Villa Maria 1ra Etapa Lado Sur",
+  "lat": 10.89324,
+  "lng": -74.795803
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 12,
+  "parada": "Diagonal 56 Villa Maria 2da Etapa Lado Sur",
+  "lat": 10.894047,
+  "lng": -74.794525
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 13,
+  "parada": "Diagonal 56 Villa Karla Lado Sur",
+  "lat": 10.895408,
+  "lng": -74.792565
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 14,
+  "parada": "Diagonal 56 Villa Karla Lado Norte",
+  "lat": 10.895937,
+  "lng": -74.791992
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 15,
+  "parada": "Diagonal 56 Villa Maria 2da Etapa Lado Norte",
+  "lat": 10.894315,
+  "lng": -74.794233
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 16,
+  "parada": "Diagonal 56 Villa Maria 1ra Etapa Lado Norte",
+  "lat": 10.893168,
+  "lng": -74.79599
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 17,
+  "parada": "Diagonal 56 Mega Colegio Lado Norte",
+  "lat": 10.89253,
+  "lng": -74.797202
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 18,
+  "parada": "Diagonal 56 Las Cometas Lado Norte",
+  "lat": 10.890955,
+  "lng": -74.799928
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 19,
+  "parada": "Calle 65 con Diagonal 56 EDS La Inmaculada Soledad",
+  "lat": 10.889405,
+  "lng": -74.803507
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 20,
+  "parada": "Calle 65 Villa Linda Av. Murillo Soledad",
+  "lat": 10.891925,
+  "lng": -74.804013
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 21,
+  "parada": "Calle 65 La Candelaria Lado Oriental",
+  "lat": 10.893602,
+  "lng": -74.804009
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 22,
+  "parada": "Calle 65 Villas del Portal 2 Lado Oriental",
+  "lat": 10.8988,
+  "lng": -74.803067
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 23,
+  "parada": "Calle 65 con Carrera 8 Los Loteros Lado Oriental",
+  "lat": 10.900938,
+  "lng": -74.802592
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 24,
+  "parada": "Calle 65 con Carrera 11C Terranova 2da Etapa",
+  "lat": 10.904042,
+  "lng": -74.801957
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A3-41 Villa Karla",
+  "orden": 25,
+  "parada": "Portal de Soledad",
+  "lat": 10.907377,
+  "lng": -74.800586
+ },
+ {
+  "ruta": "A3-5",
+  "ruta_oficial": "A3-5 Ciudadela Metropolitana",
+  "orden": 1,
+  "parada": "Portal de Soledad",
+  "lat": 10.907587,
+  "lng": -74.800303
+ },
+ {
+  "ruta": "A3-5",
+  "ruta_oficial": "A3-5 Ciudadela Metropolitana",
+  "orden": 2,
+  "parada": "Carrera 14 con Calle 62 Soledad",
+  "lat": 10.909228,
+  "lng": -74.798492
+ },
+ {
+  "ruta": "A3-5",
+  "ruta_oficial": "A3-5 Ciudadela Metropolitana",
+  "orden": 3,
+  "parada": "Carrera 14 con Calle 59 Ent. Nuevo Milenio Soledad",
+  "lat": 10.908877,
+  "lng": -74.795947
+ },
+ {
+  "ruta": "A3-5",
+  "ruta_oficial": "A3-5 Ciudadela Metropolitana",
+  "orden": 4,
+  "parada": "Terminal de Transportes",
+  "lat": 10.908944,
+  "lng": -74.794045
+ },
+ {
+  "ruta": "A3-5",
+  "ruta_oficial": "A3-5 Ciudadela Metropolitana",
+  "orden": 5,
+  "parada": "Calle 54 con Carrera 14 El Percal Lado Occidental",
+  "lat": 10.906455,
+  "lng": -74.791893
+ },
+ {
+  "ruta": "A3-5",
+  "ruta_oficial": "A3-5 Ciudadela Metropolitana",
+  "orden": 6,
+  "parada": "Calle 54 Con Carrera 11B Lado Occidental Soledad",
+  "lat": 10.905077,
+  "lng": -74.791623
+ },
+ {
+  "ruta": "A3-5",
+  "ruta_oficial": "A3-5 Ciudadela Metropolitana",
+  "orden": 7,
+  "parada": "Calle 52 con Carrera 10C1 Siete Bocas",
+  "lat": 10.904732,
+  "lng": -74.78935
+ },
+ {
+  "ruta": "A3-5",
+  "ruta_oficial": "A3-5 Ciudadela Metropolitana",
+  "orden": 8,
+  "parada": "Carrera 8 con Callle 53A H. Materno Infantil Norte",
+  "lat": 10.90196,
+  "lng": -74.789625
+ },
+ {
+  "ruta": "A3-5",
+  "ruta_oficial": "A3-5 Ciudadela Metropolitana",
+  "orden": 9,
+  "parada": "Calle 54 con Carrera 8B Jesus Maestro Oriente",
+  "lat": 10.902397,
+  "lng": -74.79088
+ },
+ {
+  "ruta": "A3-5",
+  "ruta_oficial": "A3-5 Ciudadela Metropolitana",
+  "orden": 10,
+  "parada": "Calle 54 No. 11-18 Soledad",
+  "lat": 10.904798,
+  "lng": -74.791417
+ },
+ {
+  "ruta": "A3-5",
+  "ruta_oficial": "A3-5 Ciudadela Metropolitana",
+  "orden": 11,
+  "parada": "Calle 54 con Carrera 14 El Percal Lado Oriental",
+  "lat": 10.906856,
+  "lng": -74.791828
+ },
+ {
+  "ruta": "A3-5",
+  "ruta_oficial": "A3-5 Ciudadela Metropolitana",
+  "orden": 12,
+  "parada": "Calle 54 No. 14-3-110 Compraventa Express Soledad",
+  "lat": 10.910017,
+  "lng": -74.792017
+ },
+ {
+  "ruta": "A3-5",
+  "ruta_oficial": "A3-5 Ciudadela Metropolitana",
+  "orden": 13,
+  "parada": "Carrera 15 con Calle 59 Barrio Pta De Oro Soledad",
+  "lat": 10.910698,
+  "lng": -74.79516
+ },
+ {
+  "ruta": "A3-5",
+  "ruta_oficial": "A3-5 Ciudadela Metropolitana",
+  "orden": 14,
+  "parada": "Carrera 15 con Calle 57 Villa Linda Soledad",
+  "lat": 10.911055,
+  "lng": -74.797862
+ },
+ {
+  "ruta": "A3-5",
+  "ruta_oficial": "A3-5 Ciudadela Metropolitana",
+  "orden": 15,
+  "parada": "Portal de Soledad",
+  "lat": 10.907587,
+  "lng": -74.800303
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 1,
+  "parada": "Carrera 23B con Calle 63",
+  "lat": 10.921138,
+  "lng": -74.79951
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 2,
+  "parada": "Carrera 23B con Calle 67B Esq Soledad",
+  "lat": 10.92109,
+  "lng": -74.801988
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 3,
+  "parada": "Carrera 18 Sur No. 46C-04 Baq / Cra24 Cl69A Sol",
+  "lat": 10.921888,
+  "lng": -74.803522
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 4,
+  "parada": "Carrera 18 Sur con Calle 46H Baq / Cra24 Cl72 Sol",
+  "lat": 10.922383,
+  "lng": -74.804978
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 5,
+  "parada": "Carrera 18 Sur con Calle 47E Baq / Cra24 Cl74 Sol",
+  "lat": 10.92194,
+  "lng": -74.806707
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 6,
+  "parada": "Calle 74 con Carrera 23A Lado Occidente Soledad",
+  "lat": 10.920968,
+  "lng": -74.806863
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 7,
+  "parada": "Carrera 23A con Calle 75B Esq Lado Norte Soledad",
+  "lat": 10.920595,
+  "lng": -74.808545
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 8,
+  "parada": "Carrera 23A No. 76B-14 Lado Norte Soledad",
+  "lat": 10.920482,
+  "lng": -74.810165
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 9,
+  "parada": "Calle 77 con Carrera 23D Lado Oriente Soledad",
+  "lat": 10.92112,
+  "lng": -74.81162
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 10,
+  "parada": "Calle 79 No. 23B-03 Soledad",
+  "lat": 10.920608,
+  "lng": -74.812565
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 11,
+  "parada": "Calle 79 No. 21B-15 Soledad",
+  "lat": 10.919267,
+  "lng": -74.81397
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 12,
+  "parada": "Calle 79 No. 19-15 Soledad",
+  "lat": 10.91808,
+  "lng": -74.815215
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 13,
+  "parada": "Carrera 18 No. 80C-12 Lado Norte Soledad",
+  "lat": 10.917393,
+  "lng": -74.817938
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 14,
+  "parada": "Calle 83 No. 17-65 Lado Occidente Soledad",
+  "lat": 10.917762,
+  "lng": -74.819767
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 15,
+  "parada": "Calle 83 No. 15-23 Lado Occidente Soledad",
+  "lat": 10.916053,
+  "lng": -74.820338
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 16,
+  "parada": "Carrera 12D con Calle 84 Esq Soledad",
+  "lat": 10.91442,
+  "lng": -74.822783
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 17,
+  "parada": "Calle 85 con Carrera 13 Esq Soledad",
+  "lat": 10.915288,
+  "lng": -74.822995
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 18,
+  "parada": "Calle 84 con Carrera 14A Soledad",
+  "lat": 10.916137,
+  "lng": -74.822024
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 19,
+  "parada": "Carrera 16 con Calle 83A Esq Soledad",
+  "lat": 10.916793,
+  "lng": -74.820565
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 20,
+  "parada": "Calle 83 No. 17-62 Lado Oriente Soledad",
+  "lat": 10.917722,
+  "lng": -74.819723
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 21,
+  "parada": "Carrera 18 No. 81-29 Lado Sur Soledad",
+  "lat": 10.917537,
+  "lng": -74.818362
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 22,
+  "parada": "Calle 81 No. 18C-46 Soledad",
+  "lat": 10.918798,
+  "lng": -74.817343
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 23,
+  "parada": "Calle 81 No. 19A-22 Soledad",
+  "lat": 10.919723,
+  "lng": -74.816382
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 24,
+  "parada": "Calle 81 No. 21C-26 Soledad",
+  "lat": 10.920842,
+  "lng": -74.815188
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 25,
+  "parada": "Carrera 22B No. 79-15 Soledad",
+  "lat": 10.92014,
+  "lng": -74.813387
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 26,
+  "parada": "Calle 77 No. 23A-07 Lado Occidente Soledad",
+  "lat": 10.920568,
+  "lng": -74.81167
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 27,
+  "parada": "Carrera 23A No. 76-03 Lado Sur Soledad",
+  "lat": 10.920475,
+  "lng": -74.810078
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 28,
+  "parada": "Carrera 23A No. 74C-11 Lado Sur Soledad",
+  "lat": 10.920617,
+  "lng": -74.807818
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 29,
+  "parada": "Calle 74 con Carrera 23D Lado Oriente",
+  "lat": 10.9218,
+  "lng": -74.80691
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 30,
+  "parada": "Carrera 15 Sur No. 47C - 39",
+  "lat": 10.922777,
+  "lng": -74.806583
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 31,
+  "parada": "Carrera 15 Sur con Calle 46H",
+  "lat": 10.922848,
+  "lng": -74.804888
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 32,
+  "parada": "Av. Circunvalar con Calle 45H Puente Peat. Velodro",
+  "lat": 10.923168,
+  "lng": -74.801603
+ },
+ {
+  "ruta": "A5-1",
+  "ruta_oficial": "A5-1 Los Robles / Los Almendros",
+  "orden": 33,
+  "parada": "Carrera 23B con Calle 63",
+  "lat": 10.921138,
+  "lng": -74.79951
+ },
+ {
+  "ruta": "A5-2",
+  "ruta_oficial": "A5-2 Las Moras",
+  "orden": 1,
+  "parada": "Carrera 16 Con Calle 64 Esq Pacho Galan Sur",
+  "lat": 10.914618,
+  "lng": -74.799829
+ },
+ {
+  "ruta": "A5-2",
+  "ruta_oficial": "A5-2 Las Moras",
+  "orden": 2,
+  "parada": "Carrera 16 con Calle 68 Esq Soledad",
+  "lat": 10.914585,
+  "lng": -74.801387
+ },
+ {
+  "ruta": "A5-2",
+  "ruta_oficial": "A5-2 Las Moras",
+  "orden": 3,
+  "parada": "Carrera 15 con Calle 69 Centro Salud Adela de Char",
+  "lat": 10.913761,
+  "lng": -74.803263
+ },
+ {
+  "ruta": "A5-2",
+  "ruta_oficial": "A5-2 Las Moras",
+  "orden": 4,
+  "parada": "Carrera 16 No. 73-26 Soledad",
+  "lat": 10.914402,
+  "lng": -74.805789
+ },
+ {
+  "ruta": "A5-2",
+  "ruta_oficial": "A5-2 Las Moras",
+  "orden": 5,
+  "parada": "Calle 74A con Carrera 14 Soledad",
+  "lat": 10.913403,
+  "lng": -74.807091
+ },
+ {
+  "ruta": "A5-2",
+  "ruta_oficial": "A5-2 Las Moras",
+  "orden": 6,
+  "parada": "Calle 76 No. 16-22 Soledad",
+  "lat": 10.914396,
+  "lng": -74.808772
+ },
+ {
+  "ruta": "A5-2",
+  "ruta_oficial": "A5-2 Las Moras",
+  "orden": 7,
+  "parada": "Calle 76 con Carrera 18C Esq Soledad",
+  "lat": 10.916982,
+  "lng": -74.808981
+ },
+ {
+  "ruta": "A5-2",
+  "ruta_oficial": "A5-2 Las Moras",
+  "orden": 8,
+  "parada": "Carrera 19 con Calle 74A Esq Soledad",
+  "lat": 10.917364,
+  "lng": -74.807207
+ },
+ {
+  "ruta": "A5-2",
+  "ruta_oficial": "A5-2 Las Moras",
+  "orden": 9,
+  "parada": "Carrera 19 con Calle 72B Esq Soledad",
+  "lat": 10.917501,
+  "lng": -74.805663
+ },
+ {
+  "ruta": "A5-2",
+  "ruta_oficial": "A5-2 Las Moras",
+  "orden": 10,
+  "parada": "Carrera 18 con Calle 70 Esq Soledad",
+  "lat": 10.916551,
+  "lng": -74.804415
+ },
+ {
+  "ruta": "A5-2",
+  "ruta_oficial": "A5-2 Las Moras",
+  "orden": 11,
+  "parada": "Carrera 18 No. 68C-11 Soledad",
+  "lat": 10.916902,
+  "lng": -74.802606
+ },
+ {
+  "ruta": "A5-2",
+  "ruta_oficial": "A5-2 Las Moras",
+  "orden": 12,
+  "parada": "Carrera 18 No. 65-15 Soledad",
+  "lat": 10.917038,
+  "lng": -74.800371
+ },
+ {
+  "ruta": "A5-2",
+  "ruta_oficial": "A5-2 Las Moras",
+  "orden": 13,
+  "parada": "Carrera 16 Con Calle 64 Esq Pacho Galan Sur",
+  "lat": 10.914618,
+  "lng": -74.799829
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Contingencia",
+  "orden": 1,
+  "parada": "Portal de Soledad",
+  "lat": 10.907649,
+  "lng": -74.800399
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Contingencia",
+  "orden": 2,
+  "parada": "Calle 65 con Carrera 12 Ciudad Transmetro Lado Occ",
+  "lat": 10.904125,
+  "lng": -74.802113
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Contingencia",
+  "orden": 3,
+  "parada": "Calle 65 con Carrera 8 Los Loteros Lado Occidental",
+  "lat": 10.901335,
+  "lng": -74.802702
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Contingencia",
+  "orden": 4,
+  "parada": "Calle 65 Ciudad Camelot Lado Occidental",
+  "lat": 10.899415,
+  "lng": -74.803115
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Contingencia",
+  "orden": 5,
+  "parada": "Calle 65 La Candelaria Lado Occidental",
+  "lat": 10.895393,
+  "lng": -74.803785
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Contingencia",
+  "orden": 6,
+  "parada": "Calle 65 con Carrera 5 La Central Lado Occidental",
+  "lat": 10.891485,
+  "lng": -74.80419
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Contingencia",
+  "orden": 7,
+  "parada": "Calle 65 Gran Central de Abastos del Caribe",
+  "lat": 10.887832,
+  "lng": -74.803852
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Contingencia",
+  "orden": 8,
+  "parada": "Calle 65 con Diagonal 56 EDS La Inmaculada Soledad",
+  "lat": 10.889405,
+  "lng": -74.803507
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Contingencia",
+  "orden": 9,
+  "parada": "Calle 65 Villa Linda Av. Murillo Soledad",
+  "lat": 10.891925,
+  "lng": -74.804013
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Contingencia",
+  "orden": 10,
+  "parada": "Calle 65 La Candelaria Lado Oriental",
+  "lat": 10.893602,
+  "lng": -74.804009
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Contingencia",
+  "orden": 11,
+  "parada": "Calle 65 Villas del Portal 2 Lado Oriental",
+  "lat": 10.8988,
+  "lng": -74.803067
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Contingencia",
+  "orden": 12,
+  "parada": "Calle 65 con Carrera 8 Los Loteros Lado Oriental",
+  "lat": 10.900938,
+  "lng": -74.802592
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Contingencia",
+  "orden": 13,
+  "parada": "Calle 65 con Carrera 11C Terranova 2da Etapa",
+  "lat": 10.904042,
+  "lng": -74.801957
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Contingencia",
+  "orden": 14,
+  "parada": "Portal de Soledad",
+  "lat": 10.907649,
+  "lng": -74.800399
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 1,
+  "parada": "Portal de Soledad",
+  "lat": 10.907649,
+  "lng": -74.800399
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 2,
+  "parada": "Centro Comercial Nuestro Atlantico",
+  "lat": 10.905385,
+  "lng": -74.801316
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 3,
+  "parada": "Calle 65 con Carrera 12 Ciudad Transmetro Lado Occ",
+  "lat": 10.904125,
+  "lng": -74.802113
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 4,
+  "parada": "Calle 65 con Carrera 8 Los Loteros Lado Occidental",
+  "lat": 10.901335,
+  "lng": -74.802702
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 5,
+  "parada": "Calle 65 Ciudad Camelot Lado Occidental",
+  "lat": 10.899415,
+  "lng": -74.803115
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 6,
+  "parada": "Calle 65 La Candelaria Lado Occidental",
+  "lat": 10.895393,
+  "lng": -74.803785
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 7,
+  "parada": "Calle 65 con Carrera 5 La Central Lado Occidental",
+  "lat": 10.891485,
+  "lng": -74.80419
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 8,
+  "parada": "Carrera 5 con Calle 66C Lado Norte Soledad",
+  "lat": 10.891468,
+  "lng": -74.806688
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 9,
+  "parada": "Carrera 5 con Calle 68B Esq Lado Norte Soledad",
+  "lat": 10.891413,
+  "lng": -74.808489
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 10,
+  "parada": "Calle 69 con Carrera 4 Soledad",
+  "lat": 10.889523,
+  "lng": -74.808669
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 11,
+  "parada": "Carrera 4 con Calle 71A Lado Norte Soledad",
+  "lat": 10.88937,
+  "lng": -74.810643
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 12,
+  "parada": "Diagonal 71 con Transversal 1A4 Lado Occidente",
+  "lat": 10.888093,
+  "lng": -74.812008
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 13,
+  "parada": "Diagonal 71 con Transversal 1BSur Lado Occidente",
+  "lat": 10.886892,
+  "lng": -74.81279
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 14,
+  "parada": "Transversal 1C sur con Diagonal 72 Cancha Don Bosc",
+  "lat": 10.887139,
+  "lng": -74.813893
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 15,
+  "parada": "Transversal 2 sur con Diagonal 72 Esq (Panaderia)",
+  "lat": 10.886447,
+  "lng": -74.814633
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 16,
+  "parada": "Diagonal 71 con Transversal 1BSur Lado Oriente",
+  "lat": 10.88687,
+  "lng": -74.812773
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 17,
+  "parada": "Diagonal 71 con Transversal 1A4 Lado Oriente",
+  "lat": 10.888243,
+  "lng": -74.81185
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 18,
+  "parada": "Carrera 4 con Calle 71 Lado Sur Soledad",
+  "lat": 10.889353,
+  "lng": -74.810478
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 19,
+  "parada": "Carrera 4 con Calle 69A Lado Sur Soledad",
+  "lat": 10.889343,
+  "lng": -74.808878
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 20,
+  "parada": "Carrera 5 con Calle 69 Esq Lado Sur Soledad",
+  "lat": 10.891352,
+  "lng": -74.808445
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 21,
+  "parada": "Carrera 5 con Calle 66A Lado Sur Soledad",
+  "lat": 10.891378,
+  "lng": -74.806367
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 22,
+  "parada": "Calle 65 Gran Central de Abastos del Caribe",
+  "lat": 10.887832,
+  "lng": -74.803852
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 23,
+  "parada": "Calle 65 con Diagonal 56 EDS La Inmaculada Soledad",
+  "lat": 10.889405,
+  "lng": -74.803507
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 24,
+  "parada": "Calle 65 Villa Linda Av. Murillo Soledad",
+  "lat": 10.891925,
+  "lng": -74.804013
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 25,
+  "parada": "Calle 65 La Candelaria Lado Oriental",
+  "lat": 10.893602,
+  "lng": -74.804009
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 26,
+  "parada": "Calle 65 Villas del Portal 2 Lado Oriental",
+  "lat": 10.8988,
+  "lng": -74.803067
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 27,
+  "parada": "Calle 65 con Carrera 8 Los Loteros Lado Oriental",
+  "lat": 10.900938,
+  "lng": -74.802592
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 28,
+  "parada": "Calle 65 con Carrera 11C Terranova 2da Etapa",
+  "lat": 10.904042,
+  "lng": -74.801957
+ },
+ {
+  "ruta": "A5-3",
+  "ruta_oficial": "A5-3 Don Bosco",
+  "orden": 29,
+  "parada": "Portal de Soledad",
+  "lat": 10.907649,
+  "lng": -74.800399
+ },
+ {
+  "ruta": "A5-4",
+  "ruta_oficial": "A5-4 San Antonio",
+  "orden": 1,
+  "parada": "Portal de Soledad",
+  "lat": 10.907649,
+  "lng": -74.800399
+ },
+ {
+  "ruta": "A5-4",
+  "ruta_oficial": "A5-4 San Antonio",
+  "orden": 2,
+  "parada": "Centro Comercial Nuestro Atlantico",
+  "lat": 10.905385,
+  "lng": -74.801316
+ },
+ {
+  "ruta": "A5-4",
+  "ruta_oficial": "A5-4 San Antonio",
+  "orden": 3,
+  "parada": "Calle 65 con Carrera 12 Ciudad Transmetro Lado Occ",
+  "lat": 10.904125,
+  "lng": -74.802113
+ },
+ {
+  "ruta": "A5-4",
+  "ruta_oficial": "A5-4 San Antonio",
+  "orden": 4,
+  "parada": "Calle 65 con Carrera 8 Los Loteros Lado Occidental",
+  "lat": 10.901335,
+  "lng": -74.802702
+ },
+ {
+  "ruta": "A5-4",
+  "ruta_oficial": "A5-4 San Antonio",
+  "orden": 5,
+  "parada": "Calle 65 Ciudad Camelot Lado Occidental",
+  "lat": 10.899415,
+  "lng": -74.803115
+ },
+ {
+  "ruta": "A5-4",
+  "ruta_oficial": "A5-4 San Antonio",
+  "orden": 6,
+  "parada": "Calle 65 La Candelaria Lado Occidental",
+  "lat": 10.895393,
+  "lng": -74.803785
+ },
+ {
+  "ruta": "A5-4",
+  "ruta_oficial": "A5-4 San Antonio",
+  "orden": 7,
+  "parada": "Calle 65 con Carrera 5 La Central Lado Occidental",
+  "lat": 10.891485,
+  "lng": -74.80419
+ },
+ {
+  "ruta": "A5-4",
+  "ruta_oficial": "A5-4 San Antonio",
+  "orden": 8,
+  "parada": "Urb. Salitre Lado Norte Soledad",
+  "lat": 10.886208,
+  "lng": -74.806806
+ },
+ {
+  "ruta": "A5-4",
+  "ruta_oficial": "A5-4 San Antonio",
+  "orden": 9,
+  "parada": "Urb. San Antonio Soledad",
+  "lat": 10.885832,
+  "lng": -74.80868
+ },
+ {
+  "ruta": "A5-4",
+  "ruta_oficial": "A5-4 San Antonio",
+  "orden": 10,
+  "parada": "Urb. Salitre Lado Sur Soledad",
+  "lat": 10.88617,
+  "lng": -74.806858
+ },
+ {
+  "ruta": "A5-4",
+  "ruta_oficial": "A5-4 San Antonio",
+  "orden": 11,
+  "parada": "Calle 65 Gran Central de Abastos del Caribe",
+  "lat": 10.887832,
+  "lng": -74.803852
+ },
+ {
+  "ruta": "A5-4",
+  "ruta_oficial": "A5-4 San Antonio",
+  "orden": 12,
+  "parada": "Calle 65 con Diagonal 56 EDS La Inmaculada Soledad",
+  "lat": 10.889405,
+  "lng": -74.803507
+ },
+ {
+  "ruta": "A5-4",
+  "ruta_oficial": "A5-4 San Antonio",
+  "orden": 13,
+  "parada": "Calle 65 Villa Linda Av. Murillo Soledad",
+  "lat": 10.891925,
+  "lng": -74.804013
+ },
+ {
+  "ruta": "A5-4",
+  "ruta_oficial": "A5-4 San Antonio",
+  "orden": 14,
+  "parada": "Calle 65 La Candelaria Lado Occidental",
+  "lat": 10.895393,
+  "lng": -74.803785
+ },
+ {
+  "ruta": "A5-4",
+  "ruta_oficial": "A5-4 San Antonio",
+  "orden": 15,
+  "parada": "Calle 65 Villas del Portal 2 Lado Oriental",
+  "lat": 10.8988,
+  "lng": -74.803067
+ },
+ {
+  "ruta": "A5-4",
+  "ruta_oficial": "A5-4 San Antonio",
+  "orden": 16,
+  "parada": "Calle 65 con Carrera 8 Los Loteros Lado Oriental",
+  "lat": 10.900938,
+  "lng": -74.802592
+ },
+ {
+  "ruta": "A5-4",
+  "ruta_oficial": "A5-4 San Antonio",
+  "orden": 17,
+  "parada": "Calle 65 con Carrera 11C Terranova 2da Etapa",
+  "lat": 10.904042,
+  "lng": -74.801957
+ },
+ {
+  "ruta": "A5-4",
+  "ruta_oficial": "A5-4 San Antonio",
+  "orden": 18,
+  "parada": "Portal de Soledad",
+  "lat": 10.907649,
+  "lng": -74.800399
+ },
+ {
+  "ruta": "A5-5",
+  "ruta_oficial": "A5-5 El Manantial",
+  "orden": 1,
+  "parada": "Portal de Soledad",
+  "lat": 10.907649,
+  "lng": -74.800399
+ },
+ {
+  "ruta": "A5-5",
+  "ruta_oficial": "A5-5 El Manantial",
+  "orden": 2,
+  "parada": "Centro Comercial Nuestro Atlantico",
+  "lat": 10.905385,
+  "lng": -74.801316
+ },
+ {
+  "ruta": "A5-5",
+  "ruta_oficial": "A5-5 El Manantial",
+  "orden": 3,
+  "parada": "Calle 65 con Carrera 12 Ciudad Transmetro Lado Occ",
+  "lat": 10.904125,
+  "lng": -74.802113
+ },
+ {
+  "ruta": "A5-5",
+  "ruta_oficial": "A5-5 El Manantial",
+  "orden": 4,
+  "parada": "Carrera 12 con Calle 66 Lado Norte Soledad",
+  "lat": 10.903984,
+  "lng": -74.804235
+ },
+ {
+  "ruta": "A5-5",
+  "ruta_oficial": "A5-5 El Manantial",
+  "orden": 5,
+  "parada": "Carrera 11C con Calle 68 Lado Norte Soledad",
+  "lat": 10.903575,
+  "lng": -74.806412
+ },
+ {
+  "ruta": "A5-5",
+  "ruta_oficial": "A5-5 El Manantial",
+  "orden": 6,
+  "parada": "Carrera 11C con Calle 70 Lado Norte Soledad",
+  "lat": 10.903093,
+  "lng": -74.80875
+ },
+ {
+  "ruta": "A5-5",
+  "ruta_oficial": "A5-5 El Manantial",
+  "orden": 7,
+  "parada": "Calle 71 con Carrera 11C Lado Oriente Soledad",
+  "lat": 10.903156,
+  "lng": -74.810245
+ },
+ {
+  "ruta": "A5-5",
+  "ruta_oficial": "A5-5 El Manantial",
+  "orden": 8,
+  "parada": "Calle 72 con Carrera 12 Soledad",
+  "lat": 10.903976,
+  "lng": -74.811209
+ },
+ {
+  "ruta": "A5-5",
+  "ruta_oficial": "A5-5 El Manantial",
+  "orden": 9,
+  "parada": "Calle 71 con Carrera 12 Lado Occidente Soledad",
+  "lat": 10.903044,
+  "lng": -74.810338
+ },
+ {
+  "ruta": "A5-5",
+  "ruta_oficial": "A5-5 El Manantial",
+  "orden": 10,
+  "parada": "Carrera 11C con Calle 69 Lado Sur Soledad",
+  "lat": 10.903085,
+  "lng": -74.808402
+ },
+ {
+  "ruta": "A5-5",
+  "ruta_oficial": "A5-5 El Manantial",
+  "orden": 11,
+  "parada": "Carrera 11C con Calle 68 Lado Sur Soledad",
+  "lat": 10.903472,
+  "lng": -74.806421
+ },
+ {
+  "ruta": "A5-5",
+  "ruta_oficial": "A5-5 El Manantial",
+  "orden": 12,
+  "parada": "Carrera 12 con Calle 66 Lado Sur Soledad",
+  "lat": 10.903901,
+  "lng": -74.804209
+ },
+ {
+  "ruta": "A5-5",
+  "ruta_oficial": "A5-5 El Manantial",
+  "orden": 13,
+  "parada": "Calle 65 con Carrera 11C Terranova 2da Etapa",
+  "lat": 10.904042,
+  "lng": -74.801957
+ },
+ {
+  "ruta": "A5-5",
+  "ruta_oficial": "A5-5 El Manantial",
+  "orden": 14,
+  "parada": "Portal de Soledad",
+  "lat": 10.907649,
+  "lng": -74.800399
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A5-6 Granabastos",
+  "orden": 1,
+  "parada": "Calle 65 Gran Central de Abastos del Caribe",
+  "lat": 10.887832,
+  "lng": -74.803852
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A5-6 Granabastos",
+  "orden": 2,
+  "parada": "Calle 65 con Diagonal 56 EDS La Inmaculada Soledad",
+  "lat": 10.889405,
+  "lng": -74.803507
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A5-6 Granabastos",
+  "orden": 3,
+  "parada": "Calle 65 Villa Linda Av. Murillo Soledad",
+  "lat": 10.891925,
+  "lng": -74.804013
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A5-6 Granabastos",
+  "orden": 4,
+  "parada": "Calle 65 La Candelaria Lado Occidental",
+  "lat": 10.895393,
+  "lng": -74.803785
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A5-6 Granabastos",
+  "orden": 5,
+  "parada": "Calle 65 Villas del Portal 2 Lado Oriental",
+  "lat": 10.8988,
+  "lng": -74.803067
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A5-6 Granabastos",
+  "orden": 6,
+  "parada": "Calle 65 con Carrera 8 Los Loteros Lado Oriental",
+  "lat": 10.900938,
+  "lng": -74.802592
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A5-6 Granabastos",
+  "orden": 7,
+  "parada": "Calle 65 con Carrera 11C Terranova 2da Etapa",
+  "lat": 10.904042,
+  "lng": -74.801957
+ },
+ {
+  "ruta": null,
+  "ruta_oficial": "A5-6 Granabastos",
+  "orden": 8,
+  "parada": "Portal de Soledad",
+  "lat": 10.907649,
+  "lng": -74.800399
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 1,
+  "parada": "Calle 45 con Carrera 5B Iglesia",
+  "lat": 10.940807,
+  "lng": -74.799647
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 2,
+  "parada": "Carrera 4 con Calle 45B",
+  "lat": 10.938387,
+  "lng": -74.799987
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 3,
+  "parada": "Carrera 4 con Calle 45H",
+  "lat": 10.938394,
+  "lng": -74.802086
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 4,
+  "parada": "Calle 49 No. 3D-11 Lado Occidental",
+  "lat": 10.93715,
+  "lng": -74.802692
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 5,
+  "parada": "Calle 49 con Carrera 3 Lado Occidental",
+  "lat": 10.935974,
+  "lng": -74.803306
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 6,
+  "parada": "Calle 49 No. 2G-17 Lado Occidental",
+  "lat": 10.935257,
+  "lng": -74.804337
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 7,
+  "parada": "Carrera 2F No. 49F-40 Lado Norte",
+  "lat": 10.935675,
+  "lng": -74.805897
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 8,
+  "parada": "Calle 50C No. 2B-29",
+  "lat": 10.935786,
+  "lng": -74.808294
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 9,
+  "parada": "Carrera 2 No. 50D-16",
+  "lat": 10.934719,
+  "lng": -74.808978
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 10,
+  "parada": "Carrera 2 con Calle 51",
+  "lat": 10.935378,
+  "lng": -74.810411
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 11,
+  "parada": "Calle 51B No. 2B-16",
+  "lat": 10.93645,
+  "lng": -74.810207
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 12,
+  "parada": "Carrera 2F No. 50C-11 Lado Sur",
+  "lat": 10.936025,
+  "lng": -74.808367
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 13,
+  "parada": "Carrera 2F No. 49E-23 Ciclo Neval Lado Sur",
+  "lat": 10.935592,
+  "lng": -74.805976
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 14,
+  "parada": "Calle 49 con Carrera 2G Lado Oriental",
+  "lat": 10.935197,
+  "lng": -74.804128
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 15,
+  "parada": "Calle 49 con Carrera 3 Lado Oriental",
+  "lat": 10.935997,
+  "lng": -74.803067
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 16,
+  "parada": "Calle 49 con Carrera 3E Lado Oriental",
+  "lat": 10.938092,
+  "lng": -74.802577
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 17,
+  "parada": "Carrera 4C No. 49B-88",
+  "lat": 10.93936,
+  "lng": -74.803619
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 18,
+  "parada": "Calle 46 con Carrera 6 esq",
+  "lat": 10.941018,
+  "lng": -74.802622
+ },
+ {
+  "ruta": "A6-5",
+  "ruta_oficial": "A6-5 Carrizal",
+  "orden": 19,
+  "parada": "Calle 45 con Carrera 5B Iglesia",
+  "lat": 10.940807,
+  "lng": -74.799647
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 1,
+  "parada": "Est. Joaquin Barrios Polo",
+  "lat": 10.933248,
+  "lng": -74.799342
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 2,
+  "parada": "Tv 14 sur con calle 45",
+  "lat": 10.93025,
+  "lng": -74.799877
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 3,
+  "parada": "Av. Las Torres con Calle 45H Lado Norte",
+  "lat": 10.93041,
+  "lng": -74.801802
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 4,
+  "parada": "Carrera 6 sur con Calle 46F esq",
+  "lat": 10.93014,
+  "lng": -74.803898
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 5,
+  "parada": "Carrera 6 sur con Calle 47 esq",
+  "lat": 10.929058,
+  "lng": -74.805548
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 6,
+  "parada": "Carrera 6 sur con Calle 47B",
+  "lat": 10.927633,
+  "lng": -74.807463
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 7,
+  "parada": "Carrera 6 sur con Calle 48F",
+  "lat": 10.926347,
+  "lng": -74.810113
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 8,
+  "parada": "Calle 49 con Carrera 8B sur Lado Occidente",
+  "lat": 10.924822,
+  "lng": -74.811538
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 9,
+  "parada": "Calle 49 con Carrera 12 sur Lado Occidente",
+  "lat": 10.923305,
+  "lng": -74.812088
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 10,
+  "parada": "Av. Circunvalar con Calle 51B",
+  "lat": 10.922777,
+  "lng": -74.814132
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 11,
+  "parada": "Calle 51B con Carrera 10 sur",
+  "lat": 10.925147,
+  "lng": -74.81477
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 12,
+  "parada": "Carrera 10 sur con Calle 50A",
+  "lat": 10.924185,
+  "lng": -74.812707
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 13,
+  "parada": "Calle 49 No. 8 sur - 64 PASO Nueva Vida",
+  "lat": 10.924512,
+  "lng": -74.811633
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 14,
+  "parada": "Calle 49 con Carrera 5B sur Lado Oriente",
+  "lat": 10.927535,
+  "lng": -74.810925
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 15,
+  "parada": "Calle 49 con Carrera 3 sur Lado Oriente",
+  "lat": 10.929263,
+  "lng": -74.810445
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 16,
+  "parada": "Carrera 1 con Calle 48C",
+  "lat": 10.93091,
+  "lng": -74.809012
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 17,
+  "parada": "Carrera 1 No. 47B-03",
+  "lat": 10.930875,
+  "lng": -74.807262
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 18,
+  "parada": "Calle 47 No. 3A sur - 18",
+  "lat": 10.929378,
+  "lng": -74.805965
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 19,
+  "parada": "Calle 47 con Carrera 6D sur",
+  "lat": 10.928177,
+  "lng": -74.805123
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 20,
+  "parada": "Carrera 7 sur No. 46-29",
+  "lat": 10.927993,
+  "lng": -74.803052
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 21,
+  "parada": "Calle 46 con Carrera 1 sur esq",
+  "lat": 10.930078,
+  "lng": -74.802598
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 22,
+  "parada": "Carrera 2D con Calle 47",
+  "lat": 10.93293,
+  "lng": -74.803165
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 23,
+  "parada": "Calle 47 con Carrera 2G",
+  "lat": 10.93446,
+  "lng": -74.80134
+ },
+ {
+  "ruta": "A6-6",
+  "ruta_oficial": "A6-6 Ciudadela",
+  "orden": 24,
+  "parada": "Est. Joaquin Barrios Polo",
+  "lat": 10.933248,
+  "lng": -74.799342
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 1,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.995072,
+  "lng": -74.807644
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 2,
+  "parada": "Calle 76 No. 47-57",
+  "lat": 10.997883,
+  "lng": -74.809325
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 3,
+  "parada": "Calle 76 No. 43B - 05",
+  "lat": 10.994847,
+  "lng": -74.811178
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 4,
+  "parada": "Carrera 43 con Calle 76",
+  "lat": 10.994982,
+  "lng": -74.812923
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 5,
+  "parada": "Carrera 43 No. 79-212",
+  "lat": 10.996353,
+  "lng": -74.815472
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 6,
+  "parada": "Carrera 43 No. 80-182",
+  "lat": 10.997342,
+  "lng": -74.817303
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 7,
+  "parada": "Carrera 43 No. 82-178 Ferreteria Don Kike",
+  "lat": 10.998343,
+  "lng": -74.819477
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 8,
+  "parada": "Carrera 43 No. 84-154 Narcobollo",
+  "lat": 10.998865,
+  "lng": -74.821442
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 9,
+  "parada": "Carrera 43 No. 87-40",
+  "lat": 11.000108,
+  "lng": -74.824375
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 10,
+  "parada": "Calle 90 No. 42H-19 Edificio Tabor",
+  "lat": 11.000172,
+  "lng": -74.826065
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 11,
+  "parada": "Calle 90 No. 42E-37",
+  "lat": 10.998157,
+  "lng": -74.827503
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 12,
+  "parada": "Calle 90 No. 42B1-61",
+  "lat": 10.996272,
+  "lng": -74.828949
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 13,
+  "parada": "Carrera 42B1 No. 92-34",
+  "lat": 10.996381,
+  "lng": -74.830052
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 14,
+  "parada": "Calle 96 No. 42C-66",
+  "lat": 10.998098,
+  "lng": -74.831015
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 15,
+  "parada": "Calle 96 con Carrera 42G",
+  "lat": 10.999927,
+  "lng": -74.83129
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 16,
+  "parada": "Carrera 42F con Calle 97",
+  "lat": 11.000557,
+  "lng": -74.8322
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 17,
+  "parada": "Calle 98 con Carrera 42G2",
+  "lat": 11.002163,
+  "lng": -74.833437
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 18,
+  "parada": "Carrera 43 No. 98-86",
+  "lat": 11.003392,
+  "lng": -74.833915
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 19,
+  "parada": "Conj. Res. Balcones del Mar / Parque 100",
+  "lat": 11.000774,
+  "lng": -74.83589
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 20,
+  "parada": "Calle 100 Conj. Res. Parque 100",
+  "lat": 11.000593,
+  "lng": -74.837017
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 21,
+  "parada": "Calle 99C No. 43-150 Tarragona",
+  "lat": 11.003703,
+  "lng": -74.836297
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 22,
+  "parada": "Transversal 44 No. 99C-20 Conj. Brisas del Mar",
+  "lat": 11.005243,
+  "lng": -74.835023
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 23,
+  "parada": "Calle 100 con Carrera 44",
+  "lat": 11.006995,
+  "lng": -74.834242
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 24,
+  "parada": "Carrera 46 con Calle 96A Lado Sur",
+  "lat": 11.00587,
+  "lng": -74.829925
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 25,
+  "parada": "Carrera 46 No. 94-11 Lado Sur",
+  "lat": 11.005008,
+  "lng": -74.82777
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 26,
+  "parada": "Carrera 46 con Calle 90 Uniautonoma Lado Sur",
+  "lat": 11.003378,
+  "lng": -74.824262
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 27,
+  "parada": "Carrera 46 No. 85-163 Lado Sur",
+  "lat": 11.002598,
+  "lng": -74.822492
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 28,
+  "parada": "Carrera 46 No. 82-205 Lado Sur",
+  "lat": 11.001358,
+  "lng": -74.818477
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 29,
+  "parada": "Carrera 46 No. 80-211 Lado Sur",
+  "lat": 11.000155,
+  "lng": -74.816007
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 30,
+  "parada": "Carrera 46 No. 79-175 Perez Radiologos Lado Sur",
+  "lat": 10.998798,
+  "lng": -74.8136
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 31,
+  "parada": "Carrera 46 No. 76-109 Lado Sur",
+  "lat": 10.997287,
+  "lng": -74.810998
+ },
+ {
+  "ruta": "A7-1",
+  "ruta_oficial": "A7-1 Miramar",
+  "orden": 32,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994752,
+  "lng": -74.807818
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 1,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.995072,
+  "lng": -74.807644
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 2,
+  "parada": "Calle 76 No. 47-57",
+  "lat": 10.997883,
+  "lng": -74.809325
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 3,
+  "parada": "Calle 76 No. 43B - 05",
+  "lat": 10.994847,
+  "lng": -74.811178
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 4,
+  "parada": "Calle 76 con Carrera 42B U. Metropolitana Occident",
+  "lat": 10.993117,
+  "lng": -74.813703
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 5,
+  "parada": "Calle 76 con Carrera 39 C.C. Unico Lado Occidente",
+  "lat": 10.989677,
+  "lng": -74.814318
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 6,
+  "parada": "Calle 76 No. 38A-53 Col. Betania Lado Occidente",
+  "lat": 10.987803,
+  "lng": -74.815632
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 7,
+  "parada": "Carrera 38 con Calle 74 C.C. Americano Lado Sur",
+  "lat": 10.985972,
+  "lng": -74.814241
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 8,
+  "parada": "Carrera 38 con Calle 72 Lado Sur",
+  "lat": 10.985471,
+  "lng": -74.811784
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 9,
+  "parada": "Carrera 38 No. 70B-135 Drogueria Inglesa Lado Sur",
+  "lat": 10.985015,
+  "lng": -74.810241
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 10,
+  "parada": "Carrera 38 No. 69C-127 Lado Sur",
+  "lat": 10.984235,
+  "lng": -74.807373
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 11,
+  "parada": "Carrera 38 No. 69-121 Lado Sur",
+  "lat": 10.983861,
+  "lng": -74.805799
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 12,
+  "parada": "Carrera 38 No. 65-85 Club de Leones Lado Sur",
+  "lat": 10.983206,
+  "lng": -74.803017
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 13,
+  "parada": "Carrera 38 con Calle 63B Lado Sur",
+  "lat": 10.984046,
+  "lng": -74.800375
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 14,
+  "parada": "Carrera 38 con Calle 60 Clinica La Merced Lado Sur",
+  "lat": 10.983458,
+  "lng": -74.798707
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 15,
+  "parada": "Carrera 38 No. 57-53 Lado Sur",
+  "lat": 10.982645,
+  "lng": -74.796901
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 16,
+  "parada": "Carrera 38 No. 54-73 I.E. Elyon Yireh Lado Sur",
+  "lat": 10.981855,
+  "lng": -74.795072
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 17,
+  "parada": "Calle 52 No. 38-22",
+  "lat": 10.981462,
+  "lng": -74.792487
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 18,
+  "parada": "Carrera 41 No. 51-93 Col. Ateneo Tecnico Comercial",
+  "lat": 10.982407,
+  "lng": -74.791823
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 19,
+  "parada": "Carrera 41 No. 48-67 Distrienvases",
+  "lat": 10.981953,
+  "lng": -74.789624
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 20,
+  "parada": "Carrera 41 con Calle 45 Domesa",
+  "lat": 10.981627,
+  "lng": -74.78725
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 21,
+  "parada": "Carrera 41 con Calle 43",
+  "lat": 10.981068,
+  "lng": -74.784825
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 22,
+  "parada": "Carrera 41 con Calle 39",
+  "lat": 10.980491,
+  "lng": -74.782007
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 23,
+  "parada": "Calle 38 con Carrera 41",
+  "lat": 10.980966,
+  "lng": -74.781
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 24,
+  "parada": "Carrera 43 No. 39-26",
+  "lat": 10.98196,
+  "lng": -74.781695
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 25,
+  "parada": "Carrera 43 No. 43-16",
+  "lat": 10.982552,
+  "lng": -74.784433
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 26,
+  "parada": "Carrera 43 con Calle 45 Ara",
+  "lat": 10.983073,
+  "lng": -74.786588
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 27,
+  "parada": "Carrera 43 No. 50-12 Parque Central",
+  "lat": 10.98387,
+  "lng": -74.789823
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 28,
+  "parada": "Carrera 43 con Calle 53 Colombo",
+  "lat": 10.984443,
+  "lng": -74.791898
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 29,
+  "parada": "Calle 54 No. 41-77 Colegio Colon",
+  "lat": 10.983602,
+  "lng": -74.793173
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 30,
+  "parada": "Carrera 38 No. 54-60 I. E. Elyon Yireh Lado Norte",
+  "lat": 10.981847,
+  "lng": -74.794777
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 31,
+  "parada": "Carrera 38 No. 57-60 Unicash Lado Norte",
+  "lat": 10.982745,
+  "lng": -74.796859
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 32,
+  "parada": "Carrera 38 con Calle 60 Clinica La Merced Lado Nor",
+  "lat": 10.983574,
+  "lng": -74.798686
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 33,
+  "parada": "Carrera 38 No. 63A-30 Junior Pan Lado Norte",
+  "lat": 10.984157,
+  "lng": -74.800379
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 34,
+  "parada": "Carrera 38 No. 66-90 Club de Leones Lado Norte",
+  "lat": 10.983306,
+  "lng": -74.802905
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 35,
+  "parada": "Carrera 38 No. 69-128 Lado Norte",
+  "lat": 10.983986,
+  "lng": -74.805814
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 36,
+  "parada": "Carrera 38 con Calle 70 Lado Norte",
+  "lat": 10.98458,
+  "lng": -74.807831
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 37,
+  "parada": "Carrera 38 con Calle 71 Lado Norte",
+  "lat": 10.985193,
+  "lng": -74.810056
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 38,
+  "parada": "Carrera 38 con Calle 73 C.C. Americano Lado Norte",
+  "lat": 10.985753,
+  "lng": -74.812098
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 39,
+  "parada": "Carrera 38C con Calle 74",
+  "lat": 10.987368,
+  "lng": -74.812365
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 40,
+  "parada": "Carrera 38C con Calle 76",
+  "lat": 10.988324,
+  "lng": -74.81428
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 41,
+  "parada": "Calle 76 con Carrera 39 C.C. Unico Lado Oriente",
+  "lat": 10.990147,
+  "lng": -74.814012
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 42,
+  "parada": "Calle 76 con Carrera 42 U. Metropolitana Oriente",
+  "lat": 10.993075,
+  "lng": -74.813575
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 43,
+  "parada": "Calle 79 con Carrera 42F C.E. Litoral",
+  "lat": 10.994873,
+  "lng": -74.813843
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 44,
+  "parada": "Calle 79 con Carrera 45",
+  "lat": 10.997167,
+  "lng": -74.81255
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 45,
+  "parada": "Carrera 46 No. 76 - 109 Lado Sur",
+  "lat": 10.997237,
+  "lng": -74.810953
+ },
+ {
+  "ruta": "A7-3",
+  "ruta_oficial": "A7-3 Carrera 38",
+  "orden": 46,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994752,
+  "lng": -74.807818
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 1,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.995072,
+  "lng": -74.807644
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 2,
+  "parada": "Calle 76 No. 47-57",
+  "lat": 10.997883,
+  "lng": -74.809325
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 3,
+  "parada": "Calle 76 No. 43B - 05",
+  "lat": 10.994847,
+  "lng": -74.811178
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 4,
+  "parada": "Calle 76 con Carrera 42B U. Metropolitana Occident",
+  "lat": 10.993117,
+  "lng": -74.813703
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 5,
+  "parada": "Calle 76 con Carrera 39 C.C. Unico Lado Occidente",
+  "lat": 10.989677,
+  "lng": -74.814318
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 6,
+  "parada": "Calle 76 No. 38A-53 Col. Betania Lado Occidente",
+  "lat": 10.987803,
+  "lng": -74.815632
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 7,
+  "parada": "Carrera 38 No. 76-106",
+  "lat": 10.9869,
+  "lng": -74.81724
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 8,
+  "parada": "Calle 79A No. 35C-43 Lado Occidente",
+  "lat": 10.985725,
+  "lng": -74.818157
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 9,
+  "parada": "Calle 79A con Carrera 33 Parque Lado Occidente",
+  "lat": 10.983492,
+  "lng": -74.817963
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 10,
+  "parada": "Calle 79A con Carrera 27 Lado Occidente",
+  "lat": 10.981268,
+  "lng": -74.818585
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 11,
+  "parada": "Carrera 26C7 No. 75-77 Lado Sur",
+  "lat": 10.979563,
+  "lng": -74.816695
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 12,
+  "parada": "Calle 74B con Carrera 26C7 Lado Suroriente",
+  "lat": 10.978732,
+  "lng": -74.814478
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 13,
+  "parada": "Carrera 27 con Calle 72C Lado Sur",
+  "lat": 10.977868,
+  "lng": -74.811927
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 14,
+  "parada": "Carrera 27 No. 68 - 149 Colegio Olaya Lado Sur",
+  "lat": 10.976935,
+  "lng": -74.808147
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 15,
+  "parada": "Carrera 27 con Calle 64 Megamas Lado Sur",
+  "lat": 10.975983,
+  "lng": -74.805577
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 16,
+  "parada": "Carrera 27 con Calle 61 Parque Los Andes",
+  "lat": 10.975587,
+  "lng": -74.803722
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 17,
+  "parada": "Calle 61 No. 25-113",
+  "lat": 10.97334,
+  "lng": -74.803404
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 18,
+  "parada": "Carrera 24 No. 59-45",
+  "lat": 10.971383,
+  "lng": -74.802755
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 19,
+  "parada": "Carrera 24 con Calle 54 Seguro de los Andes",
+  "lat": 10.971312,
+  "lng": -74.800838
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 20,
+  "parada": "Carrera 24 No. 53D-29",
+  "lat": 10.971158,
+  "lng": -74.798937
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 21,
+  "parada": "Carrera 24 con Calle 53 esq",
+  "lat": 10.969612,
+  "lng": -74.797022
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 22,
+  "parada": "Carrera 24 No. 48-03",
+  "lat": 10.968147,
+  "lng": -74.794592
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 23,
+  "parada": "Carrera 26 No. 47C-01",
+  "lat": 10.968725,
+  "lng": -74.793432
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 24,
+  "parada": "Carrera 27 Con Calle 45 Exito",
+  "lat": 10.96973,
+  "lng": -74.790445
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 25,
+  "parada": "Carrera 26 con Calle 47C",
+  "lat": 10.968803,
+  "lng": -74.793522
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 26,
+  "parada": "Calle 48 No. 23-29",
+  "lat": 10.967455,
+  "lng": -74.794725
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 27,
+  "parada": "Carrera 23 No. 52-32",
+  "lat": 10.968305,
+  "lng": -74.796838
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 28,
+  "parada": "Carrera 23 con Calle 53D esq",
+  "lat": 10.969852,
+  "lng": -74.79902
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 29,
+  "parada": "Carrera 21B con Calle 53D Esq",
+  "lat": 10.96836,
+  "lng": -74.800675
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 30,
+  "parada": "Carrera 21B No. 60-28",
+  "lat": 10.968588,
+  "lng": -74.803558
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 31,
+  "parada": "Carrera 21B No. 64-26 E. Jimenez",
+  "lat": 10.968683,
+  "lng": -74.806353
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 32,
+  "parada": "Carrera 21B con Calle 65B esq",
+  "lat": 10.968805,
+  "lng": -74.808722
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 33,
+  "parada": "Carrera 21B No. 68C-14",
+  "lat": 10.968897,
+  "lng": -74.811058
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 34,
+  "parada": "Calle 70C con Carrera 22D Esq",
+  "lat": 10.97084,
+  "lng": -74.810918
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 35,
+  "parada": "Calle 70C con Carrera 24C Esq",
+  "lat": 10.97373,
+  "lng": -74.81023
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 36,
+  "parada": "Calle 70C No. 26B-44",
+  "lat": 10.976285,
+  "lng": -74.80979
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 37,
+  "parada": "Carrera 27 No. 72-10 Lado Norte",
+  "lat": 10.97793,
+  "lng": -74.811912
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 38,
+  "parada": "Calle 74B con Carrera 26C7 Lado Noroccidente",
+  "lat": 10.978673,
+  "lng": -74.814658
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 39,
+  "parada": "Carrera 26C7 No. 75B-68 Lado Norte",
+  "lat": 10.979957,
+  "lng": -74.817132
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 40,
+  "parada": "Calle 79A con Carrera 28 Lado Oriente",
+  "lat": 10.981678,
+  "lng": -74.818478
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 41,
+  "parada": "Calle 79A No. 34-22 Lado Oriente",
+  "lat": 10.983975,
+  "lng": -74.817752
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 42,
+  "parada": "Calle 79A No. 35D-50 Lado Oriente",
+  "lat": 10.986227,
+  "lng": -74.818177
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 43,
+  "parada": "Calle 76 con Carrea 38A Lado Oriente",
+  "lat": 10.987864,
+  "lng": -74.815476
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 44,
+  "parada": "Calle 76 con Carrera 39 C.C. Unico Lado Oriente",
+  "lat": 10.990147,
+  "lng": -74.814012
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 45,
+  "parada": "Calle 76 con Carrera 42 U. Metropolitana Oriente",
+  "lat": 10.993075,
+  "lng": -74.813575
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 46,
+  "parada": "Calle 79 con Carrera 42F C.E. Litoral",
+  "lat": 10.994873,
+  "lng": -74.813843
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 47,
+  "parada": "Calle 79 con Carrera 45",
+  "lat": 10.997167,
+  "lng": -74.81255
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 48,
+  "parada": "Carrera 46 No. 76 - 109 Lado Sur",
+  "lat": 10.997237,
+  "lng": -74.810953
+ },
+ {
+  "ruta": "A7-4",
+  "ruta_oficial": "A7-4 Los Andes",
+  "orden": 49,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994752,
+  "lng": -74.807818
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 1,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994909,
+  "lng": -74.807738
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 2,
+  "parada": "Carrera 46 No. 76-68 Lado Norte",
+  "lat": 10.99712,
+  "lng": -74.81069
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 3,
+  "parada": "Carrera 46 No. 79-204 Perez Radiologos Lado Norte",
+  "lat": 10.998975,
+  "lng": -74.813827
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 4,
+  "parada": "Carrera 46 No. 81-102 Lado Norte",
+  "lat": 11.000343,
+  "lng": -74.816172
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 5,
+  "parada": "Carrera 46 No. 82-100 Lado Norte",
+  "lat": 11.001234,
+  "lng": -74.817706
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 6,
+  "parada": "Calle 84 No. 47-54",
+  "lat": 11.00277,
+  "lng": -74.818557
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 7,
+  "parada": "Calle 84 No. 51-32 Macmondongo",
+  "lat": 11.005383,
+  "lng": -74.817308
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 8,
+  "parada": "Calle 84 No. 52-76",
+  "lat": 11.007004,
+  "lng": -74.816461
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 9,
+  "parada": "Calle 84 No. 55-82",
+  "lat": 11.00856,
+  "lng": -74.814133
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 10,
+  "parada": "Calle 84 con Carrera 59B Fundemabu",
+  "lat": 11.011007,
+  "lng": -74.81163
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 11,
+  "parada": "Carrera 65 No. 84-52",
+  "lat": 11.013717,
+  "lng": -74.810343
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 12,
+  "parada": "Carrera 65 con Calle 85 Villa Andalucia Ent. 1",
+  "lat": 11.015947,
+  "lng": -74.811937
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 13,
+  "parada": "Calle 86 con Carrera 70 Villa Andalucia Ent. 2",
+  "lat": 11.017378,
+  "lng": -74.812315
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 14,
+  "parada": "Calle 86 con Carrera 73 Esq",
+  "lat": 11.018875,
+  "lng": -74.810955
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 15,
+  "parada": "Calle 86 No. 73-218",
+  "lat": 11.020403,
+  "lng": -74.809663
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 16,
+  "parada": "Calle 84 No. 75C-146",
+  "lat": 11.021702,
+  "lng": -74.807692
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 17,
+  "parada": "Calle 85 con Carrera 78A Esq",
+  "lat": 11.023615,
+  "lng": -74.806923
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 18,
+  "parada": "Calle 85 No. 78D-26",
+  "lat": 11.024627,
+  "lng": -74.805728
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 19,
+  "parada": "Calle 85 No. 81-32",
+  "lat": 11.026025,
+  "lng": -74.804157
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 20,
+  "parada": "Via 40 No. 83-53",
+  "lat": 11.025298,
+  "lng": -74.802958
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 21,
+  "parada": "Via 40 con Calle 80 Lado Sur",
+  "lat": 11.023185,
+  "lng": -74.800988
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 22,
+  "parada": "Calle 80 No. 78-19",
+  "lat": 11.02025,
+  "lng": -74.803633
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 23,
+  "parada": "Calle 80 No. 75-25",
+  "lat": 11.01863,
+  "lng": -74.804693
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 24,
+  "parada": "Calle 80 No. 72-43",
+  "lat": 11.016795,
+  "lng": -74.805148
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 25,
+  "parada": "Calle 80 con Carrera 69 Esq",
+  "lat": 11.014148,
+  "lng": -74.80583
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 26,
+  "parada": "Calle 80 No. 65-45",
+  "lat": 11.01224,
+  "lng": -74.806352
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 27,
+  "parada": "Carrera 64 No. 81-92",
+  "lat": 11.011637,
+  "lng": -74.808646
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 28,
+  "parada": "Calle 82 con Carrera 59B Esq",
+  "lat": 11.011138,
+  "lng": -74.810875
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 29,
+  "parada": "Calle 82 con Carrera 56 Esq",
+  "lat": 11.00812,
+  "lng": -74.811997
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 30,
+  "parada": "Calle 82 No. 52-61",
+  "lat": 11.005705,
+  "lng": -74.813603
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 31,
+  "parada": "Calle 82 con Carrera 51 Carulla",
+  "lat": 11.00361,
+  "lng": -74.815011
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 32,
+  "parada": "Calle 82 con Carrera 47 Comfamiliar",
+  "lat": 11.000475,
+  "lng": -74.816039
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 33,
+  "parada": "Carrera 46 No. 80-211 Lado Sur",
+  "lat": 11.000155,
+  "lng": -74.816007
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 34,
+  "parada": "Carrera 46 No. 79-175 Perez Radiologos Lado Sur",
+  "lat": 10.998798,
+  "lng": -74.8136
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 35,
+  "parada": "Carrera 46 No. 76-109 Lado Sur",
+  "lat": 10.997287,
+  "lng": -74.810998
+ },
+ {
+  "ruta": "A8-1",
+  "ruta_oficial": "A8-1 Paraiso",
+  "orden": 36,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994752,
+  "lng": -74.807818
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 1,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994909,
+  "lng": -74.807738
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 2,
+  "parada": "Carrera 46 No. 76-68 Lado Norte",
+  "lat": 10.99712,
+  "lng": -74.81069
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 3,
+  "parada": "Calle 79 No. 47-10",
+  "lat": 10.99878,
+  "lng": -74.811612
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 4,
+  "parada": "Calle 79 No. 50-44",
+  "lat": 11.001413,
+  "lng": -74.810027
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 5,
+  "parada": "Calle 79 con Carrera 51B",
+  "lat": 11.002758,
+  "lng": -74.809019
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 6,
+  "parada": "Calle 79 No. 53-54",
+  "lat": 11.004785,
+  "lng": -74.807912
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 7,
+  "parada": "Calle 79 No. 55-154",
+  "lat": 11.006527,
+  "lng": -74.80679
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 8,
+  "parada": "Calle 79 No. 57-190",
+  "lat": 11.008503,
+  "lng": -74.805203
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 9,
+  "parada": "Calle 77 con Carrera 59",
+  "lat": 11.007761,
+  "lng": -74.801429
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 10,
+  "parada": "Calle 77 No. 62-40",
+  "lat": 11.008762,
+  "lng": -74.800668
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 11,
+  "parada": "Calle 77 con Carrera 68 Sutherland",
+  "lat": 11.011585,
+  "lng": -74.798637
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 12,
+  "parada": "Calle 77 con Carrera 71",
+  "lat": 11.012723,
+  "lng": -74.797825
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 13,
+  "parada": "Calle 77 con Via 40 Outlet Continente",
+  "lat": 11.015658,
+  "lng": -74.79568
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 14,
+  "parada": "Calle 76 con Via 40 Kia Motors",
+  "lat": 11.014287,
+  "lng": -74.794432
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 15,
+  "parada": "Calle 76 con Carrera 72",
+  "lat": 11.012275,
+  "lng": -74.795943
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 16,
+  "parada": "Calle 76 con Carrera 68 Zoologico de Barranquilla",
+  "lat": 11.010262,
+  "lng": -74.797417
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 17,
+  "parada": "Calle 76 No. 66-55",
+  "lat": 11.009001,
+  "lng": -74.798252
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 18,
+  "parada": "Calle 76 con Carrera 60",
+  "lat": 11.007005,
+  "lng": -74.799925
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 19,
+  "parada": "Calle 76 con Carrera 57 Combarranquilla",
+  "lat": 11.005315,
+  "lng": -74.80228
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 20,
+  "parada": "Calle 76 con Carrera 55 Country Club",
+  "lat": 11.004092,
+  "lng": -74.803937
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 21,
+  "parada": "Calle 76 con Carrera 53 Parque Karl. C. Parrish",
+  "lat": 11.002982,
+  "lng": -74.805475
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 22,
+  "parada": "Calle 76 No. 50-13",
+  "lat": 11.000677,
+  "lng": -74.808055
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 23,
+  "parada": "Calle 76 con Carrera 49B Olimpica",
+  "lat": 10.999515,
+  "lng": -74.808557
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 24,
+  "parada": "Calle 76 No. 47-57",
+  "lat": 10.997883,
+  "lng": -74.809325
+ },
+ {
+  "ruta": "A8-2",
+  "ruta_oficial": "A8-2 Zoologico",
+  "orden": 25,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994752,
+  "lng": -74.807818
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 1,
+  "parada": "Est. Parque Cultural del Caribe",
+  "lat": 10.986095,
+  "lng": -74.778673
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 2,
+  "parada": "Est. Barrio Abajo",
+  "lat": 10.987297,
+  "lng": -74.78431
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 3,
+  "parada": "Est. La Catedral",
+  "lat": 10.988595,
+  "lng": -74.78895
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 4,
+  "parada": "Calle 55 No. 46-26",
+  "lat": 10.98959,
+  "lng": -74.791674
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 5,
+  "parada": "Calle 55 con Carrera 50",
+  "lat": 10.991507,
+  "lng": -74.791169
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 6,
+  "parada": "Calle 55 con Carrera 53",
+  "lat": 10.99234,
+  "lng": -74.791164
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 7,
+  "parada": "Carrera 54 No. 58-78 Lado Norte",
+  "lat": 10.993478,
+  "lng": -74.79223
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 8,
+  "parada": "Carrera 54 No. 59-144 Lado Norte",
+  "lat": 10.995495,
+  "lng": -74.79417
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 9,
+  "parada": "Carrera 54 con Calle 64 Lado Norte",
+  "lat": 10.996074,
+  "lng": -74.795307
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 10,
+  "parada": "Carrera 54 con Calle 68 Lado Norte",
+  "lat": 10.997316,
+  "lng": -74.797818
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 11,
+  "parada": "Carrera 54 con Calle 70 Lado Norte",
+  "lat": 10.998185,
+  "lng": -74.800015
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 12,
+  "parada": "Carrera 54 con Calle 72 Lado Norte",
+  "lat": 10.999141,
+  "lng": -74.801781
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 13,
+  "parada": "Carrera 54 con Calle 74 Lado Norte",
+  "lat": 11.000539,
+  "lng": -74.802814
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 14,
+  "parada": "Calle 75 con Carrera 55",
+  "lat": 11.002751,
+  "lng": -74.802608
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 15,
+  "parada": "Calle 75 con Carrera 57",
+  "lat": 11.003521,
+  "lng": -74.801343
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 16,
+  "parada": "Carrera 58 con Calle 74 Lado Sur",
+  "lat": 11.002694,
+  "lng": -74.799738
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 17,
+  "parada": "Carrera 58 con Calle 72 Lado Sur",
+  "lat": 11.001355,
+  "lng": -74.798632
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 18,
+  "parada": "Carrera 58 con Calle 70 Lado Sur",
+  "lat": 11.000085,
+  "lng": -74.797699
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 19,
+  "parada": "Carrera 58 con Calle 68 Lado Sur",
+  "lat": 10.998633,
+  "lng": -74.796613
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 20,
+  "parada": "Carrera 58 con Calle 66 Lado Sur",
+  "lat": 10.996859,
+  "lng": -74.79524
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 21,
+  "parada": "Carrera 54 No. 59-167 Lado Sur",
+  "lat": 10.994747,
+  "lng": -74.793875
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 22,
+  "parada": "Carrera 54 No. 55-147 Lado Sur",
+  "lat": 10.99349,
+  "lng": -74.792297
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 23,
+  "parada": "Calle 54 con Carrera 53",
+  "lat": 10.992122,
+  "lng": -74.790332
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 24,
+  "parada": "Est. La Catedral",
+  "lat": 10.988238,
+  "lng": -74.788445
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 25,
+  "parada": "Est. Barrio Abajo",
+  "lat": 10.98691,
+  "lng": -74.783718
+ },
+ {
+  "ruta": "A8-3",
+  "ruta_oficial": "A8-3 Prado",
+  "orden": 26,
+  "parada": "Est. Parque Cultural del Caribe",
+  "lat": 10.985792,
+  "lng": -74.777985
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 1,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994595,
+  "lng": -74.807907
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 2,
+  "parada": "Calle 74 con Carrera 48",
+  "lat": 10.997434,
+  "lng": -74.80447
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 3,
+  "parada": "Calle 74 con Carrera 50",
+  "lat": 10.998721,
+  "lng": -74.804676
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 4,
+  "parada": "Carrera 54 con Calle 74",
+  "lat": 11.000818,
+  "lng": -74.803025
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 5,
+  "parada": "Carrera 54 No. 75-56",
+  "lat": 11.002463,
+  "lng": -74.80423
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 6,
+  "parada": "Carrera 53 con Calle 78 Villa Country",
+  "lat": 11.003743,
+  "lng": -74.806597
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 7,
+  "parada": "Carrera 53 No. 79-128",
+  "lat": 11.004786,
+  "lng": -74.80931
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 8,
+  "parada": "Carrera 53 con Calle 80 Torre Atlantica",
+  "lat": 11.005348,
+  "lng": -74.811113
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 9,
+  "parada": "Carrera 53 No. 82-86 C.C. Ocean Tower",
+  "lat": 11.006475,
+  "lng": -74.814095
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 10,
+  "parada": "Carrera 53 No. 82-268",
+  "lat": 11.00714,
+  "lng": -74.815575
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 11,
+  "parada": "Carrera 53 con Calle 85",
+  "lat": 11.008348,
+  "lng": -74.817602
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 12,
+  "parada": "Carrera 53 con Calle 89",
+  "lat": 11.010818,
+  "lng": -74.819605
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 13,
+  "parada": "Carrera 53 No. 91-60",
+  "lat": 11.012323,
+  "lng": -74.822093
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 14,
+  "parada": "Calle 94 No. 54-14",
+  "lat": 11.013379,
+  "lng": -74.822499
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 15,
+  "parada": "Carrera 57 No. 94-72",
+  "lat": 11.015238,
+  "lng": -74.821775
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 16,
+  "parada": "Carrera 57 No. 96-70",
+  "lat": 11.015894,
+  "lng": -74.823621
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 17,
+  "parada": "Calle 98 con Carrera 53 Plaza del Parque",
+  "lat": 11.014712,
+  "lng": -74.82601
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 18,
+  "parada": "Calle 98 con Carrera 52 C.C. Buenavista",
+  "lat": 11.012738,
+  "lng": -74.827418
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 19,
+  "parada": "Carrera 51B con Calle 96A",
+  "lat": 11.010689,
+  "lng": -74.828054
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 20,
+  "parada": "Carrera 51B con Calle 93",
+  "lat": 11.009642,
+  "lng": -74.825803
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 21,
+  "parada": "Carrera 51B con Calle 91",
+  "lat": 11.008648,
+  "lng": -74.823632
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 22,
+  "parada": "Carrera 51B con Calle 87 Col. Cervantes",
+  "lat": 11.007693,
+  "lng": -74.82162
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 23,
+  "parada": "Carrera 51B con Calle 86",
+  "lat": 11.006927,
+  "lng": -74.819753
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 24,
+  "parada": "Carrera 51B con Calle 84",
+  "lat": 11.005948,
+  "lng": -74.81763
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 25,
+  "parada": "Carrera 51B con Calle 82",
+  "lat": 11.004579,
+  "lng": -74.814745
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 26,
+  "parada": "Carrera 51B No. 80-35",
+  "lat": 11.004015,
+  "lng": -74.813225
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 27,
+  "parada": "Carrera 51B No. 79-105",
+  "lat": 11.003023,
+  "lng": -74.810265
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 28,
+  "parada": "Carrera 51B No. 76-85",
+  "lat": 11.002193,
+  "lng": -74.80799
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 29,
+  "parada": "Calle 76 No. 50-13",
+  "lat": 11.000677,
+  "lng": -74.808055
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 30,
+  "parada": "Calle 76 con Carrera 49B Olimpica",
+  "lat": 10.999515,
+  "lng": -74.808557
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 31,
+  "parada": "Calle 76 No. 47-57",
+  "lat": 10.997883,
+  "lng": -74.809325
+ },
+ {
+  "ruta": "A9-3",
+  "ruta_oficial": "A9-3 Buenavista",
+  "orden": 32,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994752,
+  "lng": -74.807818
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 1,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994752,
+  "lng": -74.807818
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 2,
+  "parada": "Carrera 46 No. 76-68 Lado Norte",
+  "lat": 10.99712,
+  "lng": -74.81069
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 3,
+  "parada": "Carrera 46 No. 79-204 Perez Radiologos Lado Norte",
+  "lat": 10.998975,
+  "lng": -74.813827
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 4,
+  "parada": "Carrera 46 No. 81-102 Lado Norte",
+  "lat": 11.000343,
+  "lng": -74.816172
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 5,
+  "parada": "Carrera 46 No. 82-100 Lado Norte",
+  "lat": 11.001234,
+  "lng": -74.817706
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 6,
+  "parada": "Carrera 46 No. 84-126 Lado Norte",
+  "lat": 11.002042,
+  "lng": -74.820122
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 7,
+  "parada": "Carrera 46 No. 85-86 Lado Norte",
+  "lat": 11.002486,
+  "lng": -74.821824
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 8,
+  "parada": "Carrera 46 con Calle 90 Uniautonoma Lado Norte",
+  "lat": 11.00344,
+  "lng": -74.824065
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 9,
+  "parada": "Carrera 46 No. 91-112 Lado Norte",
+  "lat": 11.004402,
+  "lng": -74.82626
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 10,
+  "parada": "Carrera 47 No. 93-86",
+  "lat": 11.00553,
+  "lng": -74.826987
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 11,
+  "parada": "Carrera 47 No. 95-82",
+  "lat": 11.006235,
+  "lng": -74.828531
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 12,
+  "parada": "Carrera 46 No. 94-11 Lado Sur",
+  "lat": 11.005008,
+  "lng": -74.82777
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 13,
+  "parada": "Carrera 46 con Calle 92 frente a Mundo Deportivo",
+  "lat": 11.004343,
+  "lng": -74.826533
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 14,
+  "parada": "Carrera 46 con Calle 90 Uniautonoma Lado Sur",
+  "lat": 11.003378,
+  "lng": -74.824262
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 15,
+  "parada": "Carrera 46 No. 85-163 Lado Sur",
+  "lat": 11.002598,
+  "lng": -74.822492
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 16,
+  "parada": "Carrera 46 No. 82-205 Lado Sur",
+  "lat": 11.001358,
+  "lng": -74.818477
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 17,
+  "parada": "Carrera 46 No. 80-211 Lado Sur",
+  "lat": 11.000155,
+  "lng": -74.816007
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 18,
+  "parada": "Carrera 46 No. 79-175 Perez Radiologos Lado Sur",
+  "lat": 10.998798,
+  "lng": -74.8136
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 19,
+  "parada": "Carrera 46 No. 76-109 Lado Sur",
+  "lat": 10.997287,
+  "lng": -74.810998
+ },
+ {
+  "ruta": "A9-4",
+  "ruta_oficial": "A9-4 Carrera 46",
+  "orden": 20,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994752,
+  "lng": -74.807818
+ },
+ {
+  "ruta": "B1",
+  "ruta_oficial": "B1 Barranquillita",
+  "orden": 1,
+  "parada": "Portal de Soledad",
+  "lat": 10.90689,
+  "lng": -74.800473
+ },
+ {
+  "ruta": "B1",
+  "ruta_oficial": "B1 Barranquillita",
+  "orden": 2,
+  "parada": "Est. Pacho Galan",
+  "lat": 10.915542,
+  "lng": -74.799025
+ },
+ {
+  "ruta": "B1",
+  "ruta_oficial": "B1 Barranquillita",
+  "orden": 3,
+  "parada": "Est. Pedro Ramaya",
+  "lat": 10.921488,
+  "lng": -74.79913
+ },
+ {
+  "ruta": "B1",
+  "ruta_oficial": "B1 Barranquillita",
+  "orden": 4,
+  "parada": "Est. Joaquin Barrios Polo",
+  "lat": 10.932948,
+  "lng": -74.79903
+ },
+ {
+  "ruta": "B1",
+  "ruta_oficial": "B1 Barranquillita",
+  "orden": 5,
+  "parada": "Est. Buenos Aires",
+  "lat": 10.941818,
+  "lng": -74.799458
+ },
+ {
+  "ruta": "B1",
+  "ruta_oficial": "B1 Barranquillita",
+  "orden": 6,
+  "parada": "Est. La Ocho",
+  "lat": 10.946887,
+  "lng": -74.799652
+ },
+ {
+  "ruta": "B1",
+  "ruta_oficial": "B1 Barranquillita",
+  "orden": 7,
+  "parada": "Est. La Catorce",
+  "lat": 10.95489,
+  "lng": -74.796328
+ },
+ {
+  "ruta": "B1",
+  "ruta_oficial": "B1 Barranquillita",
+  "orden": 8,
+  "parada": "Est. La Veintiuna",
+  "lat": 10.960433,
+  "lng": -74.793557
+ },
+ {
+  "ruta": "B1",
+  "ruta_oficial": "B1 Barranquillita",
+  "orden": 9,
+  "parada": "Est. Atlantico",
+  "lat": 10.96872,
+  "lng": -74.790163
+ },
+ {
+  "ruta": "B1",
+  "ruta_oficial": "B1 Barranquillita",
+  "orden": 10,
+  "parada": "Est. Chiquinquira",
+  "lat": 10.977185,
+  "lng": -74.787662
+ },
+ {
+  "ruta": "B1",
+  "ruta_oficial": "B1 Barranquillita",
+  "orden": 11,
+  "parada": "Est. La Arenosa",
+  "lat": 10.982117,
+  "lng": -74.786393
+ },
+ {
+  "ruta": "B1",
+  "ruta_oficial": "B1 Barranquillita",
+  "orden": 12,
+  "parada": "Est. Barrio Abajo",
+  "lat": 10.986953,
+  "lng": -74.783863
+ },
+ {
+  "ruta": "B1",
+  "ruta_oficial": "B1 Barranquillita",
+  "orden": 13,
+  "parada": "Est. Parque Cultural del Caribe",
+  "lat": 10.985827,
+  "lng": -74.778182
+ },
+ {
+  "ruta": "B10",
+  "ruta_oficial": "B10 Barranquillita",
+  "orden": 1,
+  "parada": "Portal de Soledad",
+  "lat": 10.90689,
+  "lng": -74.800473
+ },
+ {
+  "ruta": "B10",
+  "ruta_oficial": "B10 Barranquillita",
+  "orden": 2,
+  "parada": "Est. Joaquin Barrios Polo",
+  "lat": 10.933358,
+  "lng": -74.799152
+ },
+ {
+  "ruta": "B10",
+  "ruta_oficial": "B10 Barranquillita",
+  "orden": 3,
+  "parada": "Est. La Ocho",
+  "lat": 10.947358,
+  "lng": -74.799708
+ },
+ {
+  "ruta": "B10",
+  "ruta_oficial": "B10 Barranquillita",
+  "orden": 4,
+  "parada": "Est. Atlantico",
+  "lat": 10.969155,
+  "lng": -74.79004
+ },
+ {
+  "ruta": "B10",
+  "ruta_oficial": "B10 Barranquillita",
+  "orden": 5,
+  "parada": "Est. La Arenosa",
+  "lat": 10.982567,
+  "lng": -74.786267
+ },
+ {
+  "ruta": "B10",
+  "ruta_oficial": "B10 Barranquillita",
+  "orden": 6,
+  "parada": "Est. Parque Cultural del Caribe",
+  "lat": 10.985902,
+  "lng": -74.778635
+ },
+ {
+  "ruta": "B2",
+  "ruta_oficial": "B2 Barranquillita",
+  "orden": 1,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994286,
+  "lng": -74.80796
+ },
+ {
+  "ruta": "B2",
+  "ruta_oficial": "B2 Barranquillita",
+  "orden": 2,
+  "parada": "Est. Esthercita Forero",
+  "lat": 10.992468,
+  "lng": -74.802465
+ },
+ {
+  "ruta": "B2",
+  "ruta_oficial": "B2 Barranquillita",
+  "orden": 3,
+  "parada": "Est. Alfredo Correa de Andreis",
+  "lat": 10.990375,
+  "lng": -74.795923
+ },
+ {
+  "ruta": "B2",
+  "ruta_oficial": "B2 Barranquillita",
+  "orden": 4,
+  "parada": "Est. La Catedral",
+  "lat": 10.988238,
+  "lng": -74.788445
+ },
+ {
+  "ruta": "B2",
+  "ruta_oficial": "B2 Barranquillita",
+  "orden": 5,
+  "parada": "Est. Barrio Abajo",
+  "lat": 10.98691,
+  "lng": -74.783718
+ },
+ {
+  "ruta": "B2",
+  "ruta_oficial": "B2 Barranquillita",
+  "orden": 6,
+  "parada": "Est. Parque Cultural del Caribe",
+  "lat": 10.985792,
+  "lng": -74.777985
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 1,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994909,
+  "lng": -74.807738
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 2,
+  "parada": "Calle 72 con Carrera 49 Colegio Lourdes",
+  "lat": 10.996981,
+  "lng": -74.80397
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 3,
+  "parada": "Calle 72 No. 53-40 Lado Oriente",
+  "lat": 10.998508,
+  "lng": -74.802029
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 4,
+  "parada": "Calle 72 con Carrera 54 Hotel El Prado",
+  "lat": 10.999352,
+  "lng": -74.800946
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 5,
+  "parada": "Calle 72 No. 57-36 Lado Oriente",
+  "lat": 11.000781,
+  "lng": -74.798984
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 6,
+  "parada": "Calle 72 con Carrera 59 Olimpica",
+  "lat": 11.00217,
+  "lng": -74.797122
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 7,
+  "parada": "Calle 72 con Carrera 61 Parque Bellavista",
+  "lat": 11.002938,
+  "lng": -74.796024
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 8,
+  "parada": "Calle 72 con Carrera 62 Capilla El Buen Pastor",
+  "lat": 11.00416,
+  "lng": -74.794773
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 9,
+  "parada": "Calle 72 No. 65-182 Lado Oriente",
+  "lat": 11.006129,
+  "lng": -74.793316
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 10,
+  "parada": "Calle 72 No. 70-14 Lado Oriente",
+  "lat": 11.007111,
+  "lng": -74.791828
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 11,
+  "parada": "Avenida del Rio con Calle 72",
+  "lat": 11.012578,
+  "lng": -74.790145
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 12,
+  "parada": "Avenida del Rio con Calle 78",
+  "lat": 11.020228,
+  "lng": -74.792993
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 13,
+  "parada": "Centro de Convenciones Puerta de Oro",
+  "lat": 11.023228,
+  "lng": -74.800835
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 14,
+  "parada": "Via 40 con Calle 80 Lado Sur",
+  "lat": 11.023185,
+  "lng": -74.800988
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 15,
+  "parada": "Via 40 con Calle 77A Lado Sur",
+  "lat": 11.017362,
+  "lng": -74.796408
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 16,
+  "parada": "Via 40 con Calle 75 Lado Sur",
+  "lat": 11.013207,
+  "lng": -74.7931
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 17,
+  "parada": "Via 40 con Calle 71 Lado Sur",
+  "lat": 11.009161,
+  "lng": -74.791171
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 18,
+  "parada": "Calle 72 con Carrera 68A Lado Occidente",
+  "lat": 11.007184,
+  "lng": -74.791972
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 19,
+  "parada": "Calle 72 con Carrera 66 Lado Occidente",
+  "lat": 11.006129,
+  "lng": -74.793354
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 20,
+  "parada": "Calle 72 con Carrera 62 Lado Occidente",
+  "lat": 11.004104,
+  "lng": -74.794927
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 21,
+  "parada": "Calle 72 con Carrera 61 Lado Occidente",
+  "lat": 11.003061,
+  "lng": -74.796073
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 22,
+  "parada": "Calle 72 con Carrera 58 Lado Occidente",
+  "lat": 11.001608,
+  "lng": -74.798182
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 23,
+  "parada": "Calle 72 con Carrera 56 Lado Occidente",
+  "lat": 11.000393,
+  "lng": -74.799585
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 24,
+  "parada": "Calle 72 con Carrera 53 Lado Occidente",
+  "lat": 10.998813,
+  "lng": -74.80229
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 25,
+  "parada": "Calle 72 con Carrera 49 Lado Occidente",
+  "lat": 10.997121,
+  "lng": -74.803825
+ },
+ {
+  "ruta": "Gran Malecón",
+  "ruta_oficial": "Gran Malecon",
+  "orden": 26,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994752,
+  "lng": -74.807818
+ },
+ {
+  "ruta": "R1",
+  "ruta_oficial": "R1 Joe Arroyo",
+  "orden": 1,
+  "parada": "Portal de Soledad",
+  "lat": 10.907119,
+  "lng": -74.800348
+ },
+ {
+  "ruta": "R1",
+  "ruta_oficial": "R1 Joe Arroyo",
+  "orden": 2,
+  "parada": "Est. Pacho Galan",
+  "lat": 10.915362,
+  "lng": -74.79902
+ },
+ {
+  "ruta": "R1",
+  "ruta_oficial": "R1 Joe Arroyo",
+  "orden": 3,
+  "parada": "Est. Pedro Ramaya",
+  "lat": 10.921293,
+  "lng": -74.799132
+ },
+ {
+  "ruta": "R1",
+  "ruta_oficial": "R1 Joe Arroyo",
+  "orden": 4,
+  "parada": "Est. Joaquin Barrios Polo",
+  "lat": 10.93274,
+  "lng": -74.79906
+ },
+ {
+  "ruta": "R1",
+  "ruta_oficial": "R1 Joe Arroyo",
+  "orden": 5,
+  "parada": "Est. Buenos Aires",
+  "lat": 10.941627,
+  "lng": -74.799488
+ },
+ {
+  "ruta": "R1",
+  "ruta_oficial": "R1 Joe Arroyo",
+  "orden": 6,
+  "parada": "Est. La Ocho",
+  "lat": 10.94671,
+  "lng": -74.799648
+ },
+ {
+  "ruta": "R1",
+  "ruta_oficial": "R1 Joe Arroyo",
+  "orden": 7,
+  "parada": "Est. La Catorce",
+  "lat": 10.954748,
+  "lng": -74.796438
+ },
+ {
+  "ruta": "R1",
+  "ruta_oficial": "R1 Joe Arroyo",
+  "orden": 8,
+  "parada": "Est. La Veintiuna",
+  "lat": 10.960262,
+  "lng": -74.793648
+ },
+ {
+  "ruta": "R1",
+  "ruta_oficial": "R1 Joe Arroyo",
+  "orden": 9,
+  "parada": "Est. Atlantico",
+  "lat": 10.968515,
+  "lng": -74.790222
+ },
+ {
+  "ruta": "R1",
+  "ruta_oficial": "R1 Joe Arroyo",
+  "orden": 10,
+  "parada": "Est. Chiquinquira",
+  "lat": 10.977003,
+  "lng": -74.787722
+ },
+ {
+  "ruta": "R1",
+  "ruta_oficial": "R1 Joe Arroyo",
+  "orden": 11,
+  "parada": "Est. La Arenosa",
+  "lat": 10.981927,
+  "lng": -74.786448
+ },
+ {
+  "ruta": "R1",
+  "ruta_oficial": "R1 Joe Arroyo",
+  "orden": 12,
+  "parada": "Est. La Catedral",
+  "lat": 10.988467,
+  "lng": -74.78851
+ },
+ {
+  "ruta": "R1",
+  "ruta_oficial": "R1 Joe Arroyo",
+  "orden": 13,
+  "parada": "Est. Alfredo Correa de Andreis",
+  "lat": 10.990747,
+  "lng": -74.796058
+ },
+ {
+  "ruta": "R1",
+  "ruta_oficial": "R1 Joe Arroyo",
+  "orden": 14,
+  "parada": "Est. Esthercita Forero",
+  "lat": 10.992705,
+  "lng": -74.802543
+ },
+ {
+  "ruta": "R1",
+  "ruta_oficial": "R1 Joe Arroyo",
+  "orden": 15,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994752,
+  "lng": -74.807685
+ },
+ {
+  "ruta": "R10",
+  "ruta_oficial": "R10 Joe Arroyo",
+  "orden": 1,
+  "parada": "Portal de Soledad",
+  "lat": 10.907119,
+  "lng": -74.800348
+ },
+ {
+  "ruta": "R10",
+  "ruta_oficial": "R10 Joe Arroyo",
+  "orden": 2,
+  "parada": "Est. Joaquin Barrios Polo",
+  "lat": 10.933358,
+  "lng": -74.799152
+ },
+ {
+  "ruta": "R10",
+  "ruta_oficial": "R10 Joe Arroyo",
+  "orden": 3,
+  "parada": "Est. La Ocho",
+  "lat": 10.94671,
+  "lng": -74.799648
+ },
+ {
+  "ruta": "R10",
+  "ruta_oficial": "R10 Joe Arroyo",
+  "orden": 4,
+  "parada": "Est. La Catedral",
+  "lat": 10.988595,
+  "lng": -74.78895
+ },
+ {
+  "ruta": "R10",
+  "ruta_oficial": "R10 Joe Arroyo",
+  "orden": 5,
+  "parada": "Est. Alfredo Correa de Andreis",
+  "lat": 10.990747,
+  "lng": -74.796527
+ },
+ {
+  "ruta": "R10",
+  "ruta_oficial": "R10 Joe Arroyo",
+  "orden": 6,
+  "parada": "Est. Esthercita Forero",
+  "lat": 10.992947,
+  "lng": -74.802958
+ },
+ {
+  "ruta": "R10",
+  "ruta_oficial": "R10 Joe Arroyo",
+  "orden": 7,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994752,
+  "lng": -74.807685
+ },
+ {
+  "ruta": "R2",
+  "ruta_oficial": "R2 Joe Arroyo",
+  "orden": 1,
+  "parada": "Est. Parque Cultural del Caribe",
+  "lat": 10.98595,
+  "lng": -74.778028
+ },
+ {
+  "ruta": "R2",
+  "ruta_oficial": "R2 Joe Arroyo",
+  "orden": 2,
+  "parada": "Est. Barrio Abajo",
+  "lat": 10.987045,
+  "lng": -74.78369
+ },
+ {
+  "ruta": "R2",
+  "ruta_oficial": "R2 Joe Arroyo",
+  "orden": 3,
+  "parada": "Est. La Catedral",
+  "lat": 10.988385,
+  "lng": -74.788347
+ },
+ {
+  "ruta": "R2",
+  "ruta_oficial": "R2 Joe Arroyo",
+  "orden": 4,
+  "parada": "Est. Alfredo Correa de Andreis",
+  "lat": 10.990495,
+  "lng": -74.795908
+ },
+ {
+  "ruta": "R2",
+  "ruta_oficial": "R2 Joe Arroyo",
+  "orden": 5,
+  "parada": "Est. Esthercita Forero",
+  "lat": 10.99259,
+  "lng": -74.802318
+ },
+ {
+  "ruta": "R2",
+  "ruta_oficial": "R2 Joe Arroyo",
+  "orden": 6,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994286,
+  "lng": -74.80796
+ },
+ {
+  "ruta": "R40",
+  "ruta_oficial": "R40 Joe Arroyo",
+  "orden": 1,
+  "parada": "Est. Pacho Galan",
+  "lat": 10.915362,
+  "lng": -74.79902
+ },
+ {
+  "ruta": "R40",
+  "ruta_oficial": "R40 Joe Arroyo",
+  "orden": 2,
+  "parada": "Est. Pedro Ramaya",
+  "lat": 10.921293,
+  "lng": -74.799132
+ },
+ {
+  "ruta": "R40",
+  "ruta_oficial": "R40 Joe Arroyo",
+  "orden": 3,
+  "parada": "Est. Buenos Aires",
+  "lat": 10.941627,
+  "lng": -74.799488
+ },
+ {
+  "ruta": "R40",
+  "ruta_oficial": "R40 Joe Arroyo",
+  "orden": 4,
+  "parada": "Est. La Catedral",
+  "lat": 10.988595,
+  "lng": -74.78895
+ },
+ {
+  "ruta": "R40",
+  "ruta_oficial": "R40 Joe Arroyo",
+  "orden": 5,
+  "parada": "Est. Alfredo Correa de Andreis",
+  "lat": 10.990747,
+  "lng": -74.796527
+ },
+ {
+  "ruta": "R40",
+  "ruta_oficial": "R40 Joe Arroyo",
+  "orden": 6,
+  "parada": "Est. Esthercita Forero",
+  "lat": 10.992468,
+  "lng": -74.802465
+ },
+ {
+  "ruta": "R40",
+  "ruta_oficial": "R40 Joe Arroyo",
+  "orden": 7,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994752,
+  "lng": -74.807685
+ },
+ {
+  "ruta": "S1",
+  "ruta_oficial": "S1 Portal de Soledad",
+  "orden": 1,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994752,
+  "lng": -74.807685
+ },
+ {
+  "ruta": "S1",
+  "ruta_oficial": "S1 Portal de Soledad",
+  "orden": 2,
+  "parada": "Est. Esthercita Forero",
+  "lat": 10.992575,
+  "lng": -74.802642
+ },
+ {
+  "ruta": "S1",
+  "ruta_oficial": "S1 Portal de Soledad",
+  "orden": 3,
+  "parada": "Est. Alfredo Correa de Andreis",
+  "lat": 10.990423,
+  "lng": -74.796118
+ },
+ {
+  "ruta": "S1",
+  "ruta_oficial": "S1 Portal de Soledad",
+  "orden": 4,
+  "parada": "Est. La Catedral",
+  "lat": 10.988318,
+  "lng": -74.78853
+ },
+ {
+  "ruta": "S1",
+  "ruta_oficial": "S1 Portal de Soledad",
+  "orden": 5,
+  "parada": "Est. La Arenosa",
+  "lat": 10.981927,
+  "lng": -74.786448
+ },
+ {
+  "ruta": "S1",
+  "ruta_oficial": "S1 Portal de Soledad",
+  "orden": 6,
+  "parada": "Est. Chiquinquira",
+  "lat": 10.976947,
+  "lng": -74.787958
+ },
+ {
+  "ruta": "S1",
+  "ruta_oficial": "S1 Portal de Soledad",
+  "orden": 7,
+  "parada": "Est. Atlantico",
+  "lat": 10.968535,
+  "lng": -74.790495
+ },
+ {
+  "ruta": "S1",
+  "ruta_oficial": "S1 Portal de Soledad",
+  "orden": 8,
+  "parada": "Est. La Veintiuna",
+  "lat": 10.960322,
+  "lng": -74.793867
+ },
+ {
+  "ruta": "S1",
+  "ruta_oficial": "S1 Portal de Soledad",
+  "orden": 9,
+  "parada": "Est. La Catorce",
+  "lat": 10.954782,
+  "lng": -74.796685
+ },
+ {
+  "ruta": "S1",
+  "ruta_oficial": "S1 Portal de Soledad",
+  "orden": 10,
+  "parada": "Est. La Ocho",
+  "lat": 10.946562,
+  "lng": -74.799847
+ },
+ {
+  "ruta": "S1",
+  "ruta_oficial": "S1 Portal de Soledad",
+  "orden": 11,
+  "parada": "Est. Buenos Aires",
+  "lat": 10.941537,
+  "lng": -74.79964
+ },
+ {
+  "ruta": "S1",
+  "ruta_oficial": "S1 Portal de Soledad",
+  "orden": 12,
+  "parada": "Est. Joaquin Barrios Polo",
+  "lat": 10.932678,
+  "lng": -74.799372
+ },
+ {
+  "ruta": "S1",
+  "ruta_oficial": "S1 Portal de Soledad",
+  "orden": 13,
+  "parada": "Est. Pedro Ramaya",
+  "lat": 10.921185,
+  "lng": -74.799265
+ },
+ {
+  "ruta": "S1",
+  "ruta_oficial": "S1 Portal de Soledad",
+  "orden": 14,
+  "parada": "Est. Pacho Galan",
+  "lat": 10.915247,
+  "lng": -74.79922
+ },
+ {
+  "ruta": "S1",
+  "ruta_oficial": "S1 Portal de Soledad",
+  "orden": 15,
+  "parada": "Portal de Soledad",
+  "lat": 10.907119,
+  "lng": -74.800348
+ },
+ {
+  "ruta": "S10",
+  "ruta_oficial": "S10 Portal de Soledad",
+  "orden": 1,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994752,
+  "lng": -74.807685
+ },
+ {
+  "ruta": "S10",
+  "ruta_oficial": "S10 Portal de Soledad",
+  "orden": 2,
+  "parada": "Est. Esthercita Forero",
+  "lat": 10.992753,
+  "lng": -74.802992
+ },
+ {
+  "ruta": "S10",
+  "ruta_oficial": "S10 Portal de Soledad",
+  "orden": 3,
+  "parada": "Est. Alfredo Correa de Andreis",
+  "lat": 10.99058,
+  "lng": -74.796665
+ },
+ {
+  "ruta": "S10",
+  "ruta_oficial": "S10 Portal de Soledad",
+  "orden": 4,
+  "parada": "Est. La Catedral",
+  "lat": 10.988453,
+  "lng": -74.788928
+ },
+ {
+  "ruta": "S10",
+  "ruta_oficial": "S10 Portal de Soledad",
+  "orden": 5,
+  "parada": "Est. La Ocho",
+  "lat": 10.946562,
+  "lng": -74.799847
+ },
+ {
+  "ruta": "S10",
+  "ruta_oficial": "S10 Portal de Soledad",
+  "orden": 6,
+  "parada": "Est. Joaquin Barrios Polo",
+  "lat": 10.932678,
+  "lng": -74.799372
+ },
+ {
+  "ruta": "S10",
+  "ruta_oficial": "S10 Portal de Soledad",
+  "orden": 7,
+  "parada": "Portal de Soledad",
+  "lat": 10.907119,
+  "lng": -74.800348
+ },
+ {
+  "ruta": "S2",
+  "ruta_oficial": "S2 Portal de Soledad",
+  "orden": 1,
+  "parada": "Est. Parque Cultural del Caribe",
+  "lat": 10.985995,
+  "lng": -74.778213
+ },
+ {
+  "ruta": "S2",
+  "ruta_oficial": "S2 Portal de Soledad",
+  "orden": 2,
+  "parada": "Est. Barrio Abajo",
+  "lat": 10.987137,
+  "lng": -74.783875
+ },
+ {
+  "ruta": "S2",
+  "ruta_oficial": "S2 Portal de Soledad",
+  "orden": 3,
+  "parada": "Est. La Arenosa",
+  "lat": 10.981927,
+  "lng": -74.786448
+ },
+ {
+  "ruta": "S2",
+  "ruta_oficial": "S2 Portal de Soledad",
+  "orden": 4,
+  "parada": "Est. Chiquinquira",
+  "lat": 10.97718,
+  "lng": -74.787893
+ },
+ {
+  "ruta": "S2",
+  "ruta_oficial": "S2 Portal de Soledad",
+  "orden": 5,
+  "parada": "Est. Atlantico",
+  "lat": 10.968715,
+  "lng": -74.790393
+ },
+ {
+  "ruta": "S2",
+  "ruta_oficial": "S2 Portal de Soledad",
+  "orden": 6,
+  "parada": "Est. La Veintiuna",
+  "lat": 10.96048,
+  "lng": -74.793827
+ },
+ {
+  "ruta": "S2",
+  "ruta_oficial": "S2 Portal de Soledad",
+  "orden": 7,
+  "parada": "Est. La Catorce",
+  "lat": 10.954933,
+  "lng": -74.796583
+ },
+ {
+  "ruta": "S2",
+  "ruta_oficial": "S2 Portal de Soledad",
+  "orden": 8,
+  "parada": "Est. La Ocho",
+  "lat": 10.946817,
+  "lng": -74.7998
+ },
+ {
+  "ruta": "S2",
+  "ruta_oficial": "S2 Portal de Soledad",
+  "orden": 9,
+  "parada": "Est. Buenos Aires",
+  "lat": 10.941725,
+  "lng": -74.799682
+ },
+ {
+  "ruta": "S2",
+  "ruta_oficial": "S2 Portal de Soledad",
+  "orden": 10,
+  "parada": "Est. Joaquin Barrios Polo",
+  "lat": 10.932857,
+  "lng": -74.79929
+ },
+ {
+  "ruta": "S2",
+  "ruta_oficial": "S2 Portal de Soledad",
+  "orden": 11,
+  "parada": "Est. Pedro Ramaya",
+  "lat": 10.921355,
+  "lng": -74.799247
+ },
+ {
+  "ruta": "S2",
+  "ruta_oficial": "S2 Portal de Soledad",
+  "orden": 12,
+  "parada": "Est. Pacho Galan",
+  "lat": 10.915438,
+  "lng": -74.799145
+ },
+ {
+  "ruta": "S2",
+  "ruta_oficial": "S2 Portal de Soledad",
+  "orden": 13,
+  "parada": "Portal de Soledad",
+  "lat": 10.90689,
+  "lng": -74.800473
+ },
+ {
+  "ruta": "S20",
+  "ruta_oficial": "S20 Portal de Soledad",
+  "orden": 1,
+  "parada": "Est. Parque Cultural del Caribe",
+  "lat": 10.986095,
+  "lng": -74.778673
+ },
+ {
+  "ruta": "S20",
+  "ruta_oficial": "S20 Portal de Soledad",
+  "orden": 2,
+  "parada": "Est. La Arenosa",
+  "lat": 10.982467,
+  "lng": -74.786422
+ },
+ {
+  "ruta": "S20",
+  "ruta_oficial": "S20 Portal de Soledad",
+  "orden": 3,
+  "parada": "Est. Atlantico",
+  "lat": 10.969145,
+  "lng": -74.79028
+ },
+ {
+  "ruta": "S20",
+  "ruta_oficial": "S20 Portal de Soledad",
+  "orden": 4,
+  "parada": "Est. La Ocho",
+  "lat": 10.947255,
+  "lng": -74.799832
+ },
+ {
+  "ruta": "S20",
+  "ruta_oficial": "S20 Portal de Soledad",
+  "orden": 5,
+  "parada": "Est. Joaquin Barrios Polo",
+  "lat": 10.933248,
+  "lng": -74.799342
+ },
+ {
+  "ruta": "S20",
+  "ruta_oficial": "S20 Portal de Soledad",
+  "orden": 6,
+  "parada": "Portal de Soledad",
+  "lat": 10.90689,
+  "lng": -74.800473
+ },
+ {
+  "ruta": "S40",
+  "ruta_oficial": "S40 Portal de Soledad",
+  "orden": 1,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994752,
+  "lng": -74.807685
+ },
+ {
+  "ruta": "S40",
+  "ruta_oficial": "S40 Portal de Soledad",
+  "orden": 2,
+  "parada": "Est. Esthercita Forero",
+  "lat": 10.992753,
+  "lng": -74.802992
+ },
+ {
+  "ruta": "S40",
+  "ruta_oficial": "S40 Portal de Soledad",
+  "orden": 3,
+  "parada": "Est. Alfredo Correa de Andreis",
+  "lat": 10.99058,
+  "lng": -74.796665
+ },
+ {
+  "ruta": "S40",
+  "ruta_oficial": "S40 Portal de Soledad",
+  "orden": 4,
+  "parada": "Est. La Catedral",
+  "lat": 10.988453,
+  "lng": -74.788928
+ },
+ {
+  "ruta": "S40",
+  "ruta_oficial": "S40 Portal de Soledad",
+  "orden": 5,
+  "parada": "Est. Buenos Aires",
+  "lat": 10.941537,
+  "lng": -74.79964
+ },
+ {
+  "ruta": "S40",
+  "ruta_oficial": "S40 Portal de Soledad",
+  "orden": 6,
+  "parada": "Est. Pedro Ramaya",
+  "lat": 10.921185,
+  "lng": -74.799265
+ },
+ {
+  "ruta": "S40",
+  "ruta_oficial": "S40 Portal de Soledad",
+  "orden": 7,
+  "parada": "Est. Pacho Galan",
+  "lat": 10.915247,
+  "lng": -74.79922
+ },
+ {
+  "ruta": "S40",
+  "ruta_oficial": "S40 Portal de Soledad",
+  "orden": 8,
+  "parada": "Portal de Soledad",
+  "lat": 10.907119,
+  "lng": -74.800348
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 1,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994752,
+  "lng": -74.807818
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 2,
+  "parada": "Carrera 46 No. 76-68 Lado Norte",
+  "lat": 10.99712,
+  "lng": -74.81069
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 3,
+  "parada": "Carrera 46 No. 79-204 Perez Radiologos Lado Norte",
+  "lat": 10.998975,
+  "lng": -74.813827
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 4,
+  "parada": "Carrera 46 No. 81-102 Lado Norte",
+  "lat": 11.000343,
+  "lng": -74.816172
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 5,
+  "parada": "Carrera 46 No. 82-100 Lado Norte",
+  "lat": 11.001234,
+  "lng": -74.817706
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 6,
+  "parada": "Carrera 46 No. 84-126 Lado Norte",
+  "lat": 11.002042,
+  "lng": -74.820122
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 7,
+  "parada": "Carrera 46 No. 85-86 Lado Norte",
+  "lat": 11.002486,
+  "lng": -74.821824
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 8,
+  "parada": "Carrera 46 con Calle 90 Uniautonoma Lado Norte",
+  "lat": 11.00344,
+  "lng": -74.824065
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 9,
+  "parada": "Carrera 46 No. 91-112 Lado Norte",
+  "lat": 11.004402,
+  "lng": -74.82626
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 10,
+  "parada": "Carrera 46 No. 93-44 El Corral Lado Norte",
+  "lat": 11.005222,
+  "lng": -74.827978
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 11,
+  "parada": "Carrera 46 con Calle 96A Lado Norte",
+  "lat": 11.006195,
+  "lng": -74.830159
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 12,
+  "parada": "Carrera 48 con Calle 98",
+  "lat": 11.007532,
+  "lng": -74.830726
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 13,
+  "parada": "Calle 99 con Carrera 49C",
+  "lat": 11.008515,
+  "lng": -74.83165
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 14,
+  "parada": "Calle 100 con Carrera 49C Lado Oriente",
+  "lat": 11.009631,
+  "lng": -74.833067
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 15,
+  "parada": "Carrera 51B con Calle 106 Makro",
+  "lat": 11.015034,
+  "lng": -74.83685
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 16,
+  "parada": "Corredor U. Col. Karl C. Parrish Lado Norte",
+  "lat": 11.016592,
+  "lng": -74.842927
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 17,
+  "parada": "Corredor U. Col. Sagrado Corazon Lado Norte",
+  "lat": 11.016593,
+  "lng": -74.844647
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 18,
+  "parada": "Corredor U. Jardines del Recuerdo Lado Norte",
+  "lat": 11.016558,
+  "lng": -74.846957
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 19,
+  "parada": "Corredor U. Universidad del Norte Lado Norte",
+  "lat": 11.017333,
+  "lng": -74.85048
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 20,
+  "parada": "Corredor U. Club Campestre del Caribe Lado Norte",
+  "lat": 11.017588,
+  "lng": -74.852857
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 21,
+  "parada": "Corredor U. Col. Britanico Lado Norte",
+  "lat": 11.017101,
+  "lng": -74.858004
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 22,
+  "parada": "Corredor U. Col. Aleman Lado Norte",
+  "lat": 11.017895,
+  "lng": -74.860823
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 23,
+  "parada": "Corredor U. Villa Campestre Lado Norte",
+  "lat": 11.018218,
+  "lng": -74.861758
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 24,
+  "parada": "Corredor U. Carulla Villa Campestre Lado Norte",
+  "lat": 11.019047,
+  "lng": -74.864892
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 25,
+  "parada": "Corredor U. Universidad San Martin Lado Norte",
+  "lat": 11.019388,
+  "lng": -74.866568
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 26,
+  "parada": "Corredor U. Olimpica Ciudad del Mar Lado Norte",
+  "lat": 11.019798,
+  "lng": -74.868677
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 27,
+  "parada": "Corredor U. Universidad Antonio Nariño Lado Norte",
+  "lat": 11.020212,
+  "lng": -74.870723
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 28,
+  "parada": "Corredor U. Universidad Antonio Nariño Lado Sur",
+  "lat": 11.019987,
+  "lng": -74.870365
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 29,
+  "parada": "Corredor U. Olimpica Ciudad del Mar Lado Sur",
+  "lat": 11.019658,
+  "lng": -74.868687
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 30,
+  "parada": "Corredor U. Universidad San Martin Lado Sur",
+  "lat": 11.019137,
+  "lng": -74.866495
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 31,
+  "parada": "Corredor U. Villa Campestre Lado Sur",
+  "lat": 11.018168,
+  "lng": -74.861993
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 32,
+  "parada": "Corredor U. Col. Aleman Lado Sur",
+  "lat": 11.017167,
+  "lng": -74.85997
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 33,
+  "parada": "Corredor U. Col. Britanico Lado Sur",
+  "lat": 11.016952,
+  "lng": -74.858197
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 34,
+  "parada": "Corredor U. Universidad del Norte Lado Sur",
+  "lat": 11.017378,
+  "lng": -74.85142
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 35,
+  "parada": "Corredor U. Jardines del Recuerdo Lado Sur",
+  "lat": 11.016517,
+  "lng": -74.848205
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 36,
+  "parada": "Corredor U. Col. Sagrado Corazon Lado Sur",
+  "lat": 11.016475,
+  "lng": -74.844917
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 37,
+  "parada": "Corredor U. Col. Karl C. Parrish Lado Sur",
+  "lat": 11.016433,
+  "lng": -74.842783
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 38,
+  "parada": "Carrera 51B con Calle 106 C.C. Gran Boulevard",
+  "lat": 11.014531,
+  "lng": -74.836352
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 39,
+  "parada": "Carrera 51B con Calle 105",
+  "lat": 11.014019,
+  "lng": -74.835614
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 40,
+  "parada": "Carrera 51B con Calle 102",
+  "lat": 11.01318,
+  "lng": -74.834344
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 41,
+  "parada": "Carrera 51B con Calle 101",
+  "lat": 11.011464,
+  "lng": -74.832279
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 42,
+  "parada": "Calle 100 con Carrera 49C Lado Occidente",
+  "lat": 11.010419,
+  "lng": -74.832841
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 43,
+  "parada": "Calle 100 con Carrera 47 Lado Occidente",
+  "lat": 11.008723,
+  "lng": -74.833675
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 44,
+  "parada": "Carrera 46 con Calle 96A Lado Sur",
+  "lat": 11.00587,
+  "lng": -74.829925
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 45,
+  "parada": "Carrera 46 No. 94-11 Lado Sur",
+  "lat": 11.005008,
+  "lng": -74.82777
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 46,
+  "parada": "Carrera 46 con Calle 92 frente a Mundo Deportivo",
+  "lat": 11.004343,
+  "lng": -74.826533
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 47,
+  "parada": "Carrera 46 con Calle 90 Uniautonoma Lado Sur",
+  "lat": 11.003378,
+  "lng": -74.824262
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 48,
+  "parada": "Carrera 46 No. 85-163 Lado Sur",
+  "lat": 11.002598,
+  "lng": -74.822492
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 49,
+  "parada": "Carrera 46 No. 82-205 Lado Sur",
+  "lat": 11.001358,
+  "lng": -74.818477
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 50,
+  "parada": "Carrera 46 No. 80-211 Lado Sur",
+  "lat": 11.000155,
+  "lng": -74.816007
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 51,
+  "parada": "Carrera 46 No. 79-175 Perez Radiologos Lado Sur",
+  "lat": 10.998798,
+  "lng": -74.8136
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 52,
+  "parada": "Carrera 46 No. 76-109 Lado Sur",
+  "lat": 10.997287,
+  "lng": -74.810998
+ },
+ {
+  "ruta": "U30",
+  "ruta_oficial": "U30 Corredor Universitario",
+  "orden": 53,
+  "parada": "Est. Joe Arroyo",
+  "lat": 10.994752,
+  "lng": -74.807818
+ }
+]

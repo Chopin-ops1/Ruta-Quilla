@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
-import { Trophy } from 'lucide-react';
+import { Trophy, Megaphone, X } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 import { useToast } from './context/ToastContext';
 import { routesAPI, mapsAPI, reportAPI } from './services/api';
@@ -69,7 +69,24 @@ export default function App() {
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [loadingRouteId, setLoadingRouteId] = useState(null);
   const [focusedStop, setFocusedStop] = useState(null);
+  const [activeOfficialVariant, setActiveOfficialVariant] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // ---- PWA install prompt ----
+  const [installPromptEvent, setInstallPromptEvent] = useState(null);
+
+  // ---- Map extra data layers (Acciones B & C) ----
+  const [showTransmetroStops, setShowTransmetroStops] = useState(false);
+  const [transmetroStops, setTransmetroStops] = useState([]);
+  const [loadingTransmetroStops, setLoadingTransmetroStops] = useState(false);
+  const [focusedTransmetroStop, setFocusedTransmetroStop] = useState(null);
+
+  const [showRoadSafety, setShowRoadSafety] = useState(false);
+  const [roadSafetyPoints, setRoadSafetyPoints] = useState([]);
+  const [loadingRoadSafety, setLoadingRoadSafety] = useState(false);
+
+  // ---- Contextual route report trigger ----
+  const [reportTrigger, setReportTrigger] = useState(null);
 
   // ---- Navigation state ----
   const [navigationResult, setNavigationResult] = useState(null);
@@ -108,7 +125,23 @@ export default function App() {
   // ---- Capture Config state ----
   const [showCaptureConfig, setShowCaptureConfig] = useState(false);
 
-  const { isPremium, isAuthenticated, isAdmin, canNavigate, incrementUsage, remainingFreeSearches } = useAuth();
+  const {
+    isPremium,
+    isAuthenticated,
+    isAdmin,
+    loading: authLoading,
+    canNavigate,
+    incrementUsage,
+    remainingFreeSearches,
+    publicConfig,
+  } = useAuth();
+  const [bannerDismissedText, setBannerDismissedText] = useState('');
+  const activeBanner =
+    publicConfig?.banner?.enabled &&
+    publicConfig?.banner?.text &&
+    bannerDismissedText !== publicConfig.banner.text
+      ? publicConfig.banner
+      : null;
   const toast = useToast();
   const hasQuickBar = Boolean(
     !navigationResult && (previewOrigin || previewDestination || originFromMap || destFromMap)
@@ -141,6 +174,8 @@ export default function App() {
       setSelectedRoute(null);
       setLoadingRouteId(null);
       setFocusedStop(null);
+      setActiveOfficialVariant(null);
+      setReportTrigger(null);
       setSelectedOptionIdx(0);
       setIsNavigating(false);
       setGpsTrack([]);
@@ -163,6 +198,14 @@ export default function App() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
+
+  // Redirect non-admin users away from /admin once auth finishes loading
+  useEffect(() => {
+    if (!authLoading && currentPage === 'admin' && !isAdmin) {
+      window.history.replaceState({}, '', '/');
+      setCurrentPage('main');
+    }
+  }, [authLoading, currentPage, isAdmin]);
 
   // Navigate to admin panel
   const goToAdmin = useCallback(() => {
@@ -221,6 +264,94 @@ export default function App() {
     );
     return () => stopTracking(watchId);
   }, [liveNavOption, isCapturing]);
+
+  // ---- PWA install prompt listener ----
+  useEffect(() => {
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      setInstallPromptEvent(e);
+    };
+    const handleAppInstalled = () => {
+      setInstallPromptEvent(null);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', handleAppInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallPWA = useCallback(async () => {
+    if (!installPromptEvent) return;
+    try {
+      await installPromptEvent.prompt();
+      await installPromptEvent.userChoice;
+    } catch (_) {
+      // ignore dismissed prompt errors
+    } finally {
+      setInstallPromptEvent(null);
+    }
+  }, [installPromptEvent]);
+
+  const handleRequestGPS = useCallback(async () => {
+    try {
+      const pos = await getCurrentPosition();
+      setUserPosition(pos);
+      return pos;
+    } catch (err) {
+      console.log('📍 Ubicación no disponible:', err.message);
+      return null;
+    }
+  }, []);
+
+  const ensureTransmetroStopsLoaded = useCallback(async () => {
+    if (transmetroStops.length > 0 || loadingTransmetroStops) return;
+    setLoadingTransmetroStops(true);
+    try {
+      const res = await mapsAPI.getTransmetroStops();
+      setTransmetroStops(res.data || []);
+    } catch (err) {
+      console.error('Error cargando paraderos Transmetro:', err);
+      toast.error('No se pudieron cargar los paraderos de Transmetro');
+    } finally {
+      setLoadingTransmetroStops(false);
+    }
+  }, [transmetroStops.length, loadingTransmetroStops, toast]);
+
+  const handleToggleTransmetroStops = useCallback((forcedValue) => {
+    setShowTransmetroStops((prev) => {
+      const next = typeof forcedValue === 'boolean' ? forcedValue : !prev;
+      if (next) ensureTransmetroStopsLoaded();
+      return next;
+    });
+  }, [ensureTransmetroStopsLoaded]);
+
+  const ensureRoadSafetyLoaded = useCallback(async () => {
+    if (roadSafetyPoints.length > 0 || loadingRoadSafety) return;
+    setLoadingRoadSafety(true);
+    try {
+      const res = await mapsAPI.getRoadSafety();
+      const list = res.data || [];
+      setRoadSafetyPoints(list);
+      if (list.length === 0) {
+        toast.warning('No hay datos de seguridad vial disponibles en este momento');
+      }
+    } catch (err) {
+      console.error('Error cargando seguridad vial:', err);
+      toast.error('No se pudo cargar la capa de seguridad vial');
+    } finally {
+      setLoadingRoadSafety(false);
+    }
+  }, [roadSafetyPoints.length, loadingRoadSafety, toast]);
+
+  const handleToggleRoadSafety = useCallback((forcedValue) => {
+    setShowRoadSafety((prev) => {
+      const next = typeof forcedValue === 'boolean' ? forcedValue : !prev;
+      if (next) ensureRoadSafetyLoaded();
+      return next;
+    });
+  }, [ensureRoadSafetyLoaded]);
 
   /**
    * Load sponsored locations (only for free users).
@@ -345,6 +476,7 @@ export default function App() {
     setLoadingRouteId(null);
     setSelectedRoute(null);
     setFocusedStop(null);
+    setActiveOfficialVariant(null);
   }, []);
 
   /**
@@ -353,6 +485,7 @@ export default function App() {
   const handleRouteSelect = useCallback(async (route) => {
     setNavigationResult(null);
     setFocusedStop(null);
+    setActiveOfficialVariant(null);
     if (!route) {
       handleClearSelectedRoute();
       return;
@@ -363,7 +496,7 @@ export default function App() {
       return;
     }
 
-    if (route.ida?.trazado?.coordinates?.length >= 2) {
+    if (route.ida?.trazado?.coordinates?.length >= 2 && (route.sistema !== 'masivo' || route.paradasOficiales)) {
       routeSelectReqRef.current += 1;
       setLoadingRouteId(null);
       setSelectedRoute(route);
@@ -436,15 +569,62 @@ export default function App() {
     setLoginReason(null);
   }, []);
 
+  const handleSelectRouteByCode = useCallback((codigo) => {
+    if (!codigo) return;
+    const match = routes.find((r) => r.codigo === codigo || r.nombre === codigo);
+    if (match) {
+      handleRouteSelect(match);
+    } else {
+      toast.info(`La ruta ${codigo} no figura en el catálogo activo`);
+    }
+  }, [routes, handleRouteSelect, toast]);
+
+  const handleReportRouteChange = useCallback((route) => {
+    if (!route) return;
+    if (!isAuthenticated) {
+      toast.warning('Inicia sesión para reportar cambios en la ruta');
+      setLoginReason(null);
+      setShowLogin(true);
+      return;
+    }
+    setReportTrigger({ route, defaultType: 'desvio', _t: Date.now() });
+    if (!isDesktop) setMenuOpen(false);
+  }, [isAuthenticated, isDesktop, toast]);
+
   return (
     <div className="w-full h-full flex flex-col" style={{ background: 'var(--bg-dark)' }}>
-      {/* Admin Panel — separate full-screen page (lazy loaded) */}
-      {currentPage === 'admin' && isAdmin ? (
+      {/* Admin Panel — guard against flash while verifying JWT role */}
+      {currentPage === 'admin' && authLoading ? (
+        <div className="w-full h-full flex items-center justify-center p-6" style={{ background: 'var(--bg-dark)' }}>
+          <div className="rq-card animate-fade-in" style={{ width: '100%', maxWidth: 320, padding: '24px 22px', textAlign: 'center' }}>
+            <div
+              className="font-mono mx-auto mb-3 inline-flex items-center justify-center px-3 py-1.5 rounded-md font-bold"
+              style={{
+                background: 'var(--plate-bg)',
+                color: 'var(--plate-fg)',
+                border: '1px solid rgba(255, 194, 26, 0.35)',
+                borderLeft: '4px solid var(--brand)',
+                fontSize: 12,
+                letterSpacing: '0.08em',
+              }}
+            >
+              ADMIN
+            </div>
+            <p className="font-display text-base font-bold m-0" style={{ color: 'var(--text-primary)' }}>
+              Verificando permisos de administrador
+            </p>
+            <p className="text-xs mt-1 mb-0" style={{ color: 'var(--text-muted)' }}>
+              Validando sesión y credenciales
+            </p>
+          </div>
+        </div>
+      ) : currentPage === 'admin' && isAdmin ? (
         <Suspense fallback={
-          <div style={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-dark)' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>🔧</div>
-              <p style={{ color: '#94A3B8', fontSize: 14 }}>Cargando panel de administración...</p>
+          <div className="w-full h-full flex items-center justify-center p-6" style={{ background: 'var(--bg-dark)' }}>
+            <div className="rq-card animate-fade-in" style={{ width: '100%', maxWidth: 320, padding: '24px 22px', textAlign: 'center' }}>
+              <p className="font-display text-base font-bold m-0" style={{ color: 'var(--text-primary)' }}>
+                Cargando centro de control...
+              </p>
             </div>
           </div>
         }>
@@ -459,6 +639,8 @@ export default function App() {
         onShowLegal={setShowLegal}
         onAdminClick={isAdmin ? goToAdmin : undefined}
         routeCount={routes.length}
+        canInstallPWA={Boolean(installPromptEvent)}
+        onInstallPWA={handleInstallPWA}
       />
 
       <div className="flex-1 flex relative overflow-hidden" style={{ marginTop: 56 }}>
@@ -473,6 +655,22 @@ export default function App() {
             setFocusedStop({ ...stop, _t: Date.now() });
             if (!isDesktop) setMenuOpen(false);
           }}
+          activeOfficialVariant={activeOfficialVariant}
+          onSelectOfficialVariant={setActiveOfficialVariant}
+          onReportRouteChange={handleReportRouteChange}
+          userPosition={userPosition}
+          onRequestGPS={handleRequestGPS}
+          transmetroStops={transmetroStops}
+          loadingTransmetroStops={loadingTransmetroStops}
+          onEnsureTransmetroStops={ensureTransmetroStopsLoaded}
+          showTransmetroStops={showTransmetroStops}
+          onToggleTransmetroStops={handleToggleTransmetroStops}
+          onFocusTransmetroStop={(stop) => {
+            handleToggleTransmetroStops(true);
+            setFocusedTransmetroStop({ ...stop, _t: Date.now() });
+            if (!isDesktop) setMenuOpen(false);
+          }}
+          onSelectRouteByCode={handleSelectRouteByCode}
           onToggleLayer={handleToggleLayer}
           layerVisibility={layerVisibility}
           onStartCapture={handleStartCapture}
@@ -508,6 +706,54 @@ export default function App() {
         )}
 
         <main className="flex-1 min-w-0 overflow-hidden relative" style={{ marginLeft: menuOpen && isDesktop ? '22.5rem' : 0, transition: 'margin-left 0.3s ease-out' }}>
+          {activeBanner && (
+            <div
+              className="animate-fade-in"
+              style={{
+                position: 'absolute',
+                top: isDesktop ? 56 : 52,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 45,
+                maxWidth: 'min(92vw, 560px)',
+                padding: '6px 12px',
+                borderRadius: 999,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                fontSize: 11.5,
+                fontWeight: 600,
+                boxShadow: 'var(--shadow-md)',
+                background:
+                  activeBanner.type === 'carnaval'
+                    ? 'var(--carnaval)'
+                    : activeBanner.type === 'warning'
+                    ? 'var(--brand)'
+                    : 'var(--caribe)',
+                color: activeBanner.type === 'warning' ? '#14171C' : '#FFFFFF',
+              }}
+            >
+              <Megaphone size={13} style={{ flexShrink: 0 }} />
+              <span className="truncate">{activeBanner.text}</span>
+              <button
+                type="button"
+                onClick={() => setBannerDismissedText(activeBanner.text)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'inherit',
+                  cursor: 'pointer',
+                  padding: 2,
+                  display: 'flex',
+                  flexShrink: 0,
+                }}
+                aria-label="Cerrar aviso"
+              >
+                <X size={13} />
+              </button>
+            </div>
+          )}
+
           {loading ? (
             <div className="w-full h-full flex items-center justify-center p-6">
               <div className="rq-card animate-fade-in" style={{ width: '100%', maxWidth: 320, padding: '24px 22px', textAlign: 'center' }}>
@@ -552,6 +798,7 @@ export default function App() {
               selectedRoute={selectedRoute}
               loadingRouteId={loadingRouteId}
               focusedStop={focusedStop}
+              activeOfficialVariant={activeOfficialVariant}
               onClearSelectedRoute={handleClearSelectedRoute}
               onOpenSidebarRoutes={() => setMenuOpen(true)}
               selectedOptionIdx={selectedOptionIdx}
@@ -574,6 +821,16 @@ export default function App() {
               activeReports={activeReports}
               onReportClick={setSelectedReport}
               isLiveNav={Boolean(liveNavOption)}
+              showTransmetroStops={showTransmetroStops}
+              onToggleTransmetroStops={handleToggleTransmetroStops}
+              transmetroStops={transmetroStops}
+              loadingTransmetroStops={loadingTransmetroStops}
+              focusedTransmetroStop={focusedTransmetroStop}
+              onSelectRouteByCode={handleSelectRouteByCode}
+              showRoadSafety={showRoadSafety}
+              onToggleRoadSafety={handleToggleRoadSafety}
+              roadSafetyPoints={roadSafetyPoints}
+              loadingRoadSafety={loadingRoadSafety}
             />
           )}
         </main>
@@ -650,6 +907,8 @@ export default function App() {
           onReportCreated={loadActiveReports}
           bottomOffset={fabBottom}
           compact={!isDesktop}
+          reportTrigger={reportTrigger}
+          onClearReportTrigger={() => setReportTrigger(null)}
         />
       )}
 

@@ -60,6 +60,22 @@ async function verifyToken(req, res, next) {
       });
     }
 
+    if (user.isSuspended) {
+      return res.status(403).json({
+        success: false,
+        message: 'Tu cuenta ha sido suspendida.',
+        code: 'ACCOUNT_SUSPENDED',
+      });
+    }
+
+    if ((user.tokenVersion || 0) > 0 && decoded.tv !== user.tokenVersion) {
+      return res.status(401).json({
+        success: false,
+        message: 'Tu sesión expiró por seguridad. Inicia sesión nuevamente.',
+        code: 'TOKEN_REVOKED',
+      });
+    }
+
     // Adjuntar usuario al request para uso en controladores
     req.user = user;
     next();
@@ -102,7 +118,7 @@ function requirePremium(req, res, next) {
     });
   }
 
-  if (!req.user.isPremium && req.user.role !== 'premium') {
+  if (!req.user.isPremium && req.user.role !== 'premium' && req.user.role !== 'admin') {
     return res.status(403).json({
       success: false,
       message: 'Funcionalidad exclusiva para usuarios Quilla-Pass (Premium). Actualiza tu plan para acceder.',
@@ -131,7 +147,7 @@ async function optionalAuth(req, res, next) {
       const decoded = jwt.verify(token, JWT_SECRET);
       const user = await User.findById(decoded.id);
       
-      if (user) {
+      if (user && !user.isSuspended && ((user.tokenVersion || 0) === 0 || decoded.tv === user.tokenVersion)) {
         req.user = user;
       }
     }

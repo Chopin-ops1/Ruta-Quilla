@@ -6,7 +6,7 @@ const router = express.Router();
 const {
   captureRoute, getNearbyRoutes, getAllRoutes, getRouteAudit,
   getRouteById, navigateRoute, createRoute, updateRoute,
-  deleteRoute, deleteAllRoutes,
+  toggleRouteActive, deleteRoute, deleteAllRoutes,
 } = require('../controllers/routeController');
 const { verifyToken, requireAdmin, optionalAuth } = require('../middleware/authMiddleware');
 const { validateObjectId } = require('../middleware/security');
@@ -35,6 +35,9 @@ router.post('/admin/create', verifyToken, requireAdmin, createRoute);
 
 // DELETE /api/routes/admin/all - Eliminar TODAS las rutas
 router.delete('/admin/all', verifyToken, requireAdmin, deleteAllRoutes);
+
+// PATCH /api/routes/:id/toggle-active - Pausar o reactivar ruta rápidamente
+router.patch('/:id/toggle-active', validateObjectId, verifyToken, requireAdmin, toggleRouteActive);
 
 // PUT /api/routes/:id - Actualizar ruta
 router.put('/:id', validateObjectId, verifyToken, requireAdmin, updateRoute);

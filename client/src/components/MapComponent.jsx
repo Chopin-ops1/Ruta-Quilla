@@ -227,6 +227,7 @@ export default function MapComponent({
   selectedRoute,
   loadingRouteId = null,
   focusedStop = null,
+  activeOfficialVariant = null,
   onClearSelectedRoute,
   onOpenSidebarRoutes,
   selectedOptionIdx = 0,
@@ -243,17 +244,29 @@ export default function MapComponent({
   activeReports = [],
   onReportClick,
   isLiveNav = false,
+  showTransmetroStops = false,
+  onToggleTransmetroStops,
+  transmetroStops = [],
+  loadingTransmetroStops = false,
+  focusedTransmetroStop = null,
+  onSelectRouteByCode,
+  showRoadSafety = false,
+  onToggleRoadSafety,
+  roadSafetyPoints = [],
+  loadingRoadSafety = false,
 }) {
   const { isPremium } = useAuth();
   const { isDark } = useTheme();
 
   const containerRef = useRef(null);
   const mapRef = useRef(null);
+  const layersPopoverRef = useRef(null);
   const currentStyleRef = useRef(isDark ? STYLE_DARK : STYLE_LIGHT);
   const styleLoadedRef = useRef(false);
 
   const [is3D, setIs3D] = useState(false);
   const [showPOIs, setShowPOIs] = useState(true);
+  const [layersOpen, setLayersOpen] = useState(false);
   const [poiCategory, setPoiCategory] = useState('all');
   const [mapZoom, setMapZoom] = useState(DEFAULT_ZOOM);
   const [mapBearing, setMapBearing] = useState(0);
@@ -267,15 +280,18 @@ export default function MapComponent({
   const onSetOriginRef = useRef(onSetOrigin);
   const onSetDestinationRef = useRef(onSetDestination);
   const onReportClickRef = useRef(onReportClick);
+  const onSelectRouteByCodeRef = useRef(onSelectRouteByCode);
   const selectedRouteRef = useRef(selectedRoute);
   const currentOptionRef = useRef(null);
   const openPointCardPopupRef = useRef(null);
+  const openTransmetroStopPopupRef = useRef(null);
 
   pinModeRef.current = pinMode;
   onMapClickRef.current = onMapClick;
   onSetOriginRef.current = onSetOrigin;
   onSetDestinationRef.current = onSetDestination;
   onReportClickRef.current = onReportClick;
+  onSelectRouteByCodeRef.current = onSelectRouteByCode;
   selectedRouteRef.current = selectedRoute;
 
   // Marker refs for cleanup
@@ -378,6 +394,8 @@ export default function MapComponent({
     selectedVuelta: emptyFC(),
     selectedIda: emptyFC(),
     selectedStops: emptyFC(),
+    transmetroStops: emptyFC(),
+    roadSafety: emptyFC(),
     navWalk: emptyFC(),
     navBus: emptyFC(),
     navBus2: emptyFC(),
@@ -450,14 +468,32 @@ export default function MapComponent({
   const gpsTrackGeoJSON =
     gpsTrack.length > 1 ? lineFC([gpsTrack.map((p) => [p.lng, p.lat])]) : emptyFC();
 
+  const effectiveSelectedStopsInfo = (() => {
+    if (!selectedRoute) return { isOfficialStops: false, stops: [] };
+    const variants = Array.isArray(selectedRoute.variantesOficiales)
+      ? selectedRoute.variantesOficiales
+      : [];
+    if (variants.length > 1) {
+      const found = variants.find((v) => v.nombre === activeOfficialVariant) || variants[0];
+      return { isOfficialStops: true, stops: found?.paradas || [] };
+    }
+    if (Array.isArray(selectedRoute.paradasOficiales) && selectedRoute.paradasOficiales.length > 0) {
+      return { isOfficialStops: true, stops: selectedRoute.paradasOficiales };
+    }
+    return {
+      isOfficialStops: false,
+      stops: Array.isArray(selectedRoute.paradas) ? selectedRoute.paradas : [],
+    };
+  })();
+
   const selectedRouteStopsGeoJSON =
-    !navigationResult && selectedRoute?.paradas?.length > 0
+    !navigationResult && effectiveSelectedStopsInfo.stops.length > 0
       ? {
           type: 'FeatureCollection',
-          features: selectedRoute.paradas
+          features: effectiveSelectedStopsInfo.stops
             .filter((p) => {
               if (!Number.isFinite(p.lat) || !Number.isFinite(p.lng)) return false;
-              if (routeDirectionFilter === 'all') return true;
+              if (effectiveSelectedStopsInfo.isOfficialStops || routeDirectionFilter === 'all') return true;
               const dir = p.sentido === 'regreso' ? 'regreso' : 'ida';
               return dir === routeDirectionFilter;
             })
@@ -465,7 +501,13 @@ export default function MapComponent({
               type: 'Feature',
               properties: {
                 orden: p.orden || idx + 1,
-                sentido: p.sentido === 'regreso' ? 'regreso' : 'ida',
+                sentido: effectiveSelectedStopsInfo.isOfficialStops
+                  ? 'oficial'
+                  : p.sentido === 'regreso'
+                  ? 'regreso'
+                  : 'ida',
+                isOfficial: effectiveSelectedStopsInfo.isOfficialStops,
+                rutaOficial: p.rutaOficial || '',
                 nombre: p.nombre || `Parada ${p.orden || idx + 1}`,
                 lat: p.lat,
                 lng: p.lng,
@@ -475,11 +517,55 @@ export default function MapComponent({
         }
       : emptyFC();
 
+  const transmetroStopsGeoJSON =
+    showTransmetroStops && Array.isArray(transmetroStops) && transmetroStops.length > 0
+      ? {
+          type: 'FeatureCollection',
+          features: transmetroStops
+            .filter((s) => Number.isFinite(s.lat) && Number.isFinite(s.lng))
+            .map((s) => ({
+              type: 'Feature',
+              properties: {
+                id: s.id,
+                nombre: s.nombre || 'Paradero Transmetro',
+                rutasJson: JSON.stringify(s.rutas || []),
+                lat: s.lat,
+                lng: s.lng,
+              },
+              geometry: { type: 'Point', coordinates: [s.lng, s.lat] },
+            })),
+        }
+      : emptyFC();
+
+  const roadSafetyGeoJSON =
+    showRoadSafety && Array.isArray(roadSafetyPoints) && roadSafetyPoints.length > 0
+      ? {
+          type: 'FeatureCollection',
+          features: roadSafetyPoints
+            .filter((pt) => Number.isFinite(pt.lat) && Number.isFinite(pt.lng))
+            .map((pt) => ({
+              type: 'Feature',
+              properties: {
+                id: pt.id,
+                kind: pt.kind,
+                name: pt.name || 'Punto vial',
+                subtitle: pt.subtitle || '',
+                status: pt.status || '',
+                lat: pt.lat,
+                lng: pt.lng,
+              },
+              geometry: { type: 'Point', coordinates: [pt.lng, pt.lat] },
+            })),
+        }
+      : emptyFC();
+
   layerDataRef.current = {
     accuracy: accuracyGeoJSON,
     selectedVuelta: selectedVueltaGeoJSON,
     selectedIda: selectedIdaGeoJSON,
     selectedStops: selectedRouteStopsGeoJSON,
+    transmetroStops: transmetroStopsGeoJSON,
+    roadSafety: roadSafetyGeoJSON,
     navWalk: navWalkGeoJSON,
     navBus: navBusGeoJSON,
     navBus2: navBus2GeoJSON,
@@ -536,6 +622,8 @@ export default function MapComponent({
 
     upsertSource('user-accuracy', d.accuracy);
     upsertSource('pois', d.pois || emptyFC());
+    upsertSource('road-safety', d.roadSafety || emptyFC());
+    upsertSource('transmetro-stops', d.transmetroStops || emptyFC());
     upsertSource('selected-route-vuelta', d.selectedVuelta);
     upsertSource('selected-route-ida', d.selectedIda);
     upsertSource('selected-route-stops', d.selectedStops || emptyFC());
@@ -580,6 +668,84 @@ export default function MapComponent({
         }
         map.setLayoutProperty(spec.id, 'visibility', d.showPOIs ? 'visible' : 'none');
       }
+    }
+
+    const layerStrokeColor = d.isDark ? '#0D1014' : '#FFFFFF';
+    const layerTextColor = d.isDark ? '#E8EDF5' : '#14171C';
+    const layerHaloColor = d.isDark ? 'rgba(13, 16, 20, 0.92)' : 'rgba(255, 255, 255, 0.94)';
+    const beforeRouteOverlay = map.getLayer('selected-route-vuelta-casing')
+      ? 'selected-route-vuelta-casing'
+      : undefined;
+
+    // Capa opcional: Seguridad Vial (semáforos + fotodetección)
+    if (!map.getLayer('road-safety-circle')) {
+      map.addLayer(
+        {
+          id: 'road-safety-circle',
+          type: 'circle',
+          source: 'road-safety',
+          paint: {
+            'circle-color': ['match', ['get', 'kind'], 'fotodeteccion', '#E5484D', '#FFC21A'],
+            'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 3.2, 14, 5, 16, 6.5],
+            'circle-stroke-width': 1.5,
+            'circle-stroke-color': layerStrokeColor,
+            'circle-opacity': 0.9,
+          },
+        },
+        beforeRouteOverlay
+      );
+    } else {
+      map.setPaintProperty('road-safety-circle', 'circle-stroke-color', layerStrokeColor);
+    }
+
+    // Capa opcional: Paraderos oficiales Transmetro
+    if (!map.getLayer('transmetro-stops-circle')) {
+      map.addLayer(
+        {
+          id: 'transmetro-stops-circle',
+          type: 'circle',
+          source: 'transmetro-stops',
+          paint: {
+            'circle-color': '#0EA5E9',
+            'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 3.4, 14, 5.2, 16, 7],
+            'circle-stroke-width': 1.6,
+            'circle-stroke-color': layerStrokeColor,
+            'circle-opacity': 0.92,
+          },
+        },
+        beforeRouteOverlay
+      );
+    } else {
+      map.setPaintProperty('transmetro-stops-circle', 'circle-stroke-color', layerStrokeColor);
+    }
+
+    if (!map.getLayer('transmetro-stops-label')) {
+      map.addLayer(
+        {
+          id: 'transmetro-stops-label',
+          type: 'symbol',
+          source: 'transmetro-stops',
+          minzoom: 15.2,
+          layout: {
+            'text-field': ['get', 'nombre'],
+            'text-font': ['Noto Sans Regular'],
+            'text-size': 10.5,
+            'text-offset': [0, 1.15],
+            'text-anchor': 'top',
+            'text-max-width': 10,
+            'text-optional': true,
+          },
+          paint: {
+            'text-color': layerTextColor,
+            'text-halo-color': layerHaloColor,
+            'text-halo-width': 1.3,
+          },
+        },
+        beforeRouteOverlay
+      );
+    } else {
+      map.setPaintProperty('transmetro-stops-label', 'text-color', layerTextColor);
+      map.setPaintProperty('transmetro-stops-label', 'text-halo-color', layerHaloColor);
     }
 
     // Selected route: VUELTA (#E5484D)
@@ -662,7 +828,7 @@ export default function MapComponent({
         type: 'circle',
         source: 'selected-route-stops',
         paint: {
-          'circle-color': ['match', ['get', 'sentido'], 'regreso', '#E5484D', '#1F9D6B'],
+          'circle-color': ['match', ['get', 'sentido'], 'oficial', '#0EA5E9', 'regreso', '#E5484D', '#1F9D6B'],
           'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 4.5, 15, 7],
           'circle-stroke-width': 2,
           'circle-stroke-color': stopStrokeColor,
@@ -1033,6 +1199,103 @@ export default function MapComponent({
 
     openPointCardPopupRef.current = openPointCardPopup;
 
+    const openTransmetroStopPopup = ({ lng, lat, nombre, rutas = [] }) => {
+      const root = document.createElement('div');
+      root.className = 'poi-card';
+
+      const badge = document.createElement('div');
+      badge.className = 'poi-card-badge';
+      badge.style.setProperty('--poi-color', '#0EA5E9');
+      const dot = document.createElement('span');
+      dot.className = 'poi-card-dot';
+      dot.style.background = '#0EA5E9';
+      badge.appendChild(dot);
+      badge.appendChild(document.createTextNode('Paradero Transmetro'));
+      root.appendChild(badge);
+
+      const title = document.createElement('div');
+      title.className = 'poi-card-title';
+      title.textContent = nombre || 'Paradero Transmetro';
+      root.appendChild(title);
+
+      if (Array.isArray(rutas) && rutas.length > 0) {
+        const sub = document.createElement('div');
+        sub.className = 'poi-card-sub';
+        sub.style.textTransform = 'none';
+        sub.textContent =
+          rutas.length === 1 ? '1 ruta pasa por este paradero:' : `${rutas.length} rutas pasan por este paradero:`;
+        root.appendChild(sub);
+
+        const chipsWrap = document.createElement('div');
+        chipsWrap.className = 'stop-route-chips';
+
+        if (infoPopupRef.current) infoPopupRef.current.remove();
+        const popup = new maplibregl.Popup({ maxWidth: '280px', offset: 12 })
+          .setLngLat([lng, lat])
+          .setDOMContent(root)
+          .addTo(map);
+        infoPopupRef.current = popup;
+
+        rutas.forEach((r) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'stop-route-chip';
+          btn.textContent = r.codigo || r.rutaOficial || 'Ruta';
+          btn.title = r.rutaOficial ? `Ver ${r.rutaOficial}` : `Ver ${r.codigo}`;
+          btn.addEventListener('click', () => {
+            onSelectRouteByCodeRef.current?.(r.codigo);
+            popup.remove();
+          });
+          chipsWrap.appendChild(btn);
+        });
+        root.appendChild(chipsWrap);
+
+        const metaLine = document.createElement('div');
+        metaLine.className = 'poi-card-meta';
+        metaLine.textContent = 'Datos Abiertos · datos.gov.co (ref. 2020)';
+        root.appendChild(metaLine);
+
+        const actions = document.createElement('div');
+        actions.className = 'poi-card-actions';
+
+        const originBtn = document.createElement('button');
+        originBtn.type = 'button';
+        originBtn.className = 'poi-btn-origin';
+        originBtn.textContent = 'Salir desde aquí';
+
+        const destBtn = document.createElement('button');
+        destBtn.type = 'button';
+        destBtn.className = 'poi-btn-dest';
+        destBtn.textContent = 'Ir aquí';
+
+        actions.appendChild(originBtn);
+        actions.appendChild(destBtn);
+        root.appendChild(actions);
+
+        originBtn.addEventListener('click', () => {
+          onSetOriginRef.current?.({ lat, lng, name: nombre });
+          popup.remove();
+        });
+        destBtn.addEventListener('click', () => {
+          onSetDestinationRef.current?.({ lat, lng, name: nombre });
+          popup.remove();
+        });
+        return;
+      }
+
+      openPointCardPopup({
+        lng,
+        lat,
+        badgeText: 'Paradero Transmetro',
+        badgeColor: '#0EA5E9',
+        titleText: nombre || 'Paradero Transmetro',
+        subtitleText: 'Transmetro Barranquilla',
+        metaText: 'Datos Abiertos · datos.gov.co (ref. 2020)',
+      });
+    };
+
+    openTransmetroStopPopupRef.current = openTransmetroStopPopup;
+
     map.on('click', 'selected-route-stops-layer', (e) => {
       if (pinModeRef.current || e.originalEvent?._poiHandled) return;
       const feat = e.features?.[0];
@@ -1043,16 +1306,62 @@ export default function MapComponent({
       const lng = Number(props.lng ?? coords[0]);
       const lat = Number(props.lat ?? coords[1]);
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      const isOfficial = props.isOfficial === true || props.isOfficial === 'true';
       const isRegreso = props.sentido === 'regreso';
       const routeName = selectedRouteRef.current?.nombre || 'Ruta';
       openPointCardPopup({
         lng,
         lat,
-        badgeText: `Parada #${props.orden || '?'} · ${isRegreso ? 'Regreso' : 'Ida'}`,
-        badgeColor: isRegreso ? '#EF4444' : '#10B981',
+        badgeText: isOfficial
+          ? `Paradero oficial #${props.orden || '?'}`
+          : `Parada #${props.orden || '?'} · ${isRegreso ? 'Regreso' : 'Ida'}`,
+        badgeColor: isOfficial ? '#0EA5E9' : isRegreso ? '#EF4444' : '#10B981',
         titleText: props.nombre || 'Paradero',
-        subtitleText: routeName,
-        metaText: selectedRouteRef.current?.operador || 'RutaQuilla',
+        subtitleText: props.rutaOficial || routeName,
+        metaText: isOfficial
+          ? 'Transmetro · datos.gov.co (2020)'
+          : selectedRouteRef.current?.operador || 'RutaQuilla',
+      });
+    });
+
+    map.on('click', 'transmetro-stops-circle', (e) => {
+      if (pinModeRef.current || e.originalEvent?._poiHandled) return;
+      const feat = e.features?.[0];
+      if (!feat) return;
+      if (e.originalEvent) e.originalEvent._poiHandled = true;
+      const props = feat.properties || {};
+      const coords = feat.geometry?.coordinates || [e.lngLat.lng, e.lngLat.lat];
+      const lng = Number(props.lng ?? coords[0]);
+      const lat = Number(props.lat ?? coords[1]);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      let rutas = [];
+      try {
+        rutas = typeof props.rutasJson === 'string' ? JSON.parse(props.rutasJson) : (props.rutasJson || []);
+      } catch (_) {
+        rutas = [];
+      }
+      openTransmetroStopPopup({ lng, lat, nombre: props.nombre, rutas });
+    });
+
+    map.on('click', 'road-safety-circle', (e) => {
+      if (pinModeRef.current || e.originalEvent?._poiHandled) return;
+      const feat = e.features?.[0];
+      if (!feat) return;
+      if (e.originalEvent) e.originalEvent._poiHandled = true;
+      const props = feat.properties || {};
+      const coords = feat.geometry?.coordinates || [e.lngLat.lng, e.lngLat.lat];
+      const lng = Number(props.lng ?? coords[0]);
+      const lat = Number(props.lat ?? coords[1]);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      const isFoto = props.kind === 'fotodeteccion';
+      openPointCardPopup({
+        lng,
+        lat,
+        badgeText: isFoto ? 'Cámara de fotodetección' : 'Intersección semaforizada',
+        badgeColor: isFoto ? '#E5484D' : '#FFC21A',
+        titleText: props.name || 'Control vial',
+        subtitleText: [props.subtitle, props.status].filter(Boolean).join(' · '),
+        metaText: 'Datos Abiertos · datos.gov.co',
       });
     });
 
@@ -1093,7 +1402,7 @@ export default function MapComponent({
       map.on('click', layerId, handlePoiClick);
     });
 
-    ['nav-bus-line', 'nav-bus-2-line', 'selected-route-ida-line', 'selected-route-vuelta-line', 'selected-route-stops-layer', ...POI_LAYER_IDS].forEach((layerId) => {
+    ['nav-bus-line', 'nav-bus-2-line', 'selected-route-ida-line', 'selected-route-vuelta-line', 'selected-route-stops-layer', 'transmetro-stops-circle', 'road-safety-circle', ...POI_LAYER_IDS].forEach((layerId) => {
       map.on('mouseenter', layerId, () => {
         if (!pinModeRef.current) map.getCanvas().style.cursor = 'pointer';
       });
@@ -1172,6 +1481,7 @@ export default function MapComponent({
 
     return () => {
       openPointCardPopupRef.current = null;
+      openTransmetroStopPopupRef.current = null;
       resizeObserver.disconnect();
       container.removeEventListener('touchstart', onTouchStart);
       container.removeEventListener('touchmove', onTouchMove);
@@ -1255,6 +1565,11 @@ export default function MapComponent({
     isDark,
     showPOIs,
     poiCategory,
+    activeOfficialVariant,
+    showTransmetroStops,
+    transmetroStops,
+    showRoadSafety,
+    roadSafetyPoints,
   ]);
 
   // ---- Close stale line/stop popups when switching selected route ----
@@ -1564,17 +1879,62 @@ export default function MapComponent({
       duration: 750,
     });
 
+    const isOfficial = focusedStop.sentido === 'oficial' || Boolean(focusedStop.rutaOficial);
     const isRegreso = focusedStop.sentido === 'regreso';
     openPointCardPopupRef.current?.({
       lng: focusedStop.lng,
       lat: focusedStop.lat,
-      badgeText: `Parada #${focusedStop.orden || '?'} · ${isRegreso ? 'Regreso' : 'Ida'}`,
-      badgeColor: isRegreso ? '#EF4444' : '#10B981',
+      badgeText: isOfficial
+        ? `Paradero oficial #${focusedStop.orden || '?'}`
+        : `Parada #${focusedStop.orden || '?'} · ${isRegreso ? 'Regreso' : 'Ida'}`,
+      badgeColor: isOfficial ? '#0EA5E9' : isRegreso ? '#EF4444' : '#10B981',
       titleText: focusedStop.nombre || 'Paradero',
-      subtitleText: selectedRouteRef.current?.nombre || 'Ruta',
-      metaText: selectedRouteRef.current?.operador || 'RutaQuilla',
+      subtitleText: focusedStop.rutaOficial || selectedRouteRef.current?.nombre || 'Ruta',
+      metaText: isOfficial
+        ? 'Transmetro · datos.gov.co (2020)'
+        : selectedRouteRef.current?.operador || 'RutaQuilla',
     });
   }, [focusedStop]);
+
+  // ---- Focus physical Transmetro stop clicked from Sidebar Paraderos TM ----
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !focusedTransmetroStop || !Number.isFinite(focusedTransmetroStop.lat) || !Number.isFinite(focusedTransmetroStop.lng)) {
+      return;
+    }
+
+    map.flyTo({
+      center: [focusedTransmetroStop.lng, focusedTransmetroStop.lat],
+      zoom: Math.max(map.getZoom(), 16),
+      duration: 750,
+    });
+
+    openTransmetroStopPopupRef.current?.({
+      lng: focusedTransmetroStop.lng,
+      lat: focusedTransmetroStop.lat,
+      nombre: focusedTransmetroStop.nombre,
+      rutas: focusedTransmetroStop.rutas || [],
+    });
+  }, [focusedTransmetroStop]);
+
+  // ---- Close layers popover on outside click or Escape ----
+  useEffect(() => {
+    if (!layersOpen) return;
+    const handleOutside = (e) => {
+      if (layersPopoverRef.current && !layersPopoverRef.current.contains(e.target)) {
+        setLayersOpen(false);
+      }
+    };
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setLayersOpen(false);
+    };
+    document.addEventListener('mousedown', handleOutside);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleOutside);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [layersOpen]);
 
   // ---- Floating Map Controls ----
   const handleZoomIn = () => {
@@ -1663,73 +2023,152 @@ export default function MapComponent({
       )}
 
       {/* Custom map control dock (top-right) */}
-      <div className={`map-dock${isLiveNav ? ' live-nav-offset' : ''}`} role="group" aria-label="Controles del mapa">
-        <button
-          type="button"
-          className="map-dock-btn"
-          onClick={handleZoomIn}
-          title="Acercar"
-          aria-label="Acercar mapa"
-        >
-          <Plus size={16} />
-        </button>
-        <button
-          type="button"
-          className="map-dock-btn"
-          onClick={handleZoomOut}
-          title="Alejar"
-          aria-label="Alejar mapa"
-        >
-          <Minus size={16} />
-        </button>
-        <button
-          type="button"
-          className="map-dock-btn"
-          onClick={handleResetNorth}
-          title="Orientar al norte"
-          aria-label="Orientar mapa al norte"
-        >
-          <Compass
-            size={16}
-            style={{
-              transform: `rotate(${-Math.round(mapBearing)}deg)`,
-              transition: 'transform 0.15s ease-out',
-              color: Math.abs(mapBearing) > 2 || is3D ? 'var(--brand)' : undefined,
-            }}
-          />
-        </button>
+      <div ref={layersPopoverRef}>
+        <div className={`map-dock${isLiveNav ? ' live-nav-offset' : ''}`} role="group" aria-label="Controles del mapa">
+          <button
+            type="button"
+            className="map-dock-btn"
+            onClick={handleZoomIn}
+            title="Acercar"
+            aria-label="Acercar mapa"
+          >
+            <Plus size={16} />
+          </button>
+          <button
+            type="button"
+            className="map-dock-btn"
+            onClick={handleZoomOut}
+            title="Alejar"
+            aria-label="Alejar mapa"
+          >
+            <Minus size={16} />
+          </button>
+          <button
+            type="button"
+            className="map-dock-btn"
+            onClick={handleResetNorth}
+            title="Orientar al norte"
+            aria-label="Orientar mapa al norte"
+          >
+            <Compass
+              size={16}
+              style={{
+                transform: `rotate(${-Math.round(mapBearing)}deg)`,
+                transition: 'transform 0.15s ease-out',
+                color: Math.abs(mapBearing) > 2 || is3D ? 'var(--brand)' : undefined,
+              }}
+            />
+          </button>
 
-        <div className="map-dock-divider" />
+          <div className="map-dock-divider" />
 
-        <button
-          type="button"
-          className={`map-dock-btn${is3D ? ' active-amber' : ''}`}
-          onClick={handleToggle3D}
-          title={is3D ? 'Vista 2D' : 'Vista 3D'}
-          aria-label={is3D ? 'Cambiar a vista 2D' : 'Cambiar a vista 3D'}
-          style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.02em' }}
-        >
-          {is3D ? '2D' : '3D'}
-        </button>
-        <button
-          type="button"
-          className={`map-dock-btn${userPosition ? ' text-cyan' : ''}`}
-          onClick={handleRecenterGPS}
-          disabled={!userPosition}
-          title={userPosition ? 'Centrar en mi ubicación' : 'Ubicación GPS no disponible'}
-          aria-label="Centrar en mi ubicación"
-        >
-          <Crosshair size={16} />
-        </button>
-        <button
-          type="button"
-          className={`map-dock-btn${showPOIs ? ' active-cyan' : ''}`}
-          onClick={() => setShowPOIs((prev) => !prev)}
-          title={showPOIs ? 'Ocultar puntos de interés (POI)' : 'Mostrar puntos de interés (POI)'}
-          aria-label={showPOIs ? 'Ocultar puntos de interés' : 'Mostrar puntos de interés'}
-        >
-          <MapPin size={16} />
-        </button>
+          <button
+            type="button"
+            className={`map-dock-btn${is3D ? ' active-amber' : ''}`}
+            onClick={handleToggle3D}
+            title={is3D ? 'Vista 2D' : 'Vista 3D'}
+            aria-label={is3D ? 'Cambiar a vista 2D' : 'Cambiar a vista 3D'}
+            style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.02em' }}
+          >
+            {is3D ? '2D' : '3D'}
+          </button>
+          <button
+            type="button"
+            className={`map-dock-btn${userPosition ? ' text-cyan' : ''}`}
+            onClick={handleRecenterGPS}
+            disabled={!userPosition}
+            title={userPosition ? 'Centrar en mi ubicación' : 'Ubicación GPS no disponible'}
+            aria-label="Centrar en mi ubicación"
+          >
+            <Crosshair size={16} />
+          </button>
+          <button
+            type="button"
+            id="map-layers-toggle-btn"
+            className={`map-dock-btn${layersOpen || showTransmetroStops || showRoadSafety ? ' active-cyan' : ''}`}
+            onClick={() => setLayersOpen((prev) => !prev)}
+            title="Capas del mapa"
+            aria-label="Configurar capas del mapa"
+            style={{ position: 'relative' }}
+          >
+            <Layers size={16} />
+            {(showTransmetroStops || showRoadSafety) && <span className="map-dock-indicator" />}
+          </button>
+        </div>
+
+        {layersOpen && (
+          <div
+            className={`map-layers-popover animate-fade-in${isLiveNav ? ' live-nav-offset' : ''}`}
+            role="dialog"
+            aria-label="Capas del mapa"
+          >
+            <div className="map-layers-header">
+              <span className="rq-section-label">Capas del mapa</span>
+              <button
+                type="button"
+                onClick={() => setLayersOpen(false)}
+                className="rq-icon-btn"
+                style={{ width: 22, height: 22 }}
+                aria-label="Cerrar menú de capas"
+              >
+                <X size={12} />
+              </button>
+            </div>
+
+            <button
+              type="button"
+              id="layer-toggle-pois"
+              onClick={() => setShowPOIs((prev) => !prev)}
+              className="map-layer-row"
+            >
+              <div className="min-w-0 flex-1 text-left">
+                <div className="map-layer-title">Puntos de interés</div>
+                <div className="map-layer-sub">Lugares clave, comercios y salud</div>
+              </div>
+              <span className={`map-layer-switch${showPOIs ? ' active' : ''}`} />
+            </button>
+
+            <button
+              type="button"
+              id="layer-toggle-transmetro"
+              onClick={() => onToggleTransmetroStops?.()}
+              className="map-layer-row"
+            >
+              <div className="min-w-0 flex-1 text-left">
+                <div className="map-layer-title flex items-center gap-1.5">
+                  <span>Paraderos Transmetro</span>
+                  {loadingTransmetroStops && <Loader2 size={11} className="animate-spin" color="var(--caribe)" />}
+                </div>
+                <div className="map-layer-sub">
+                  {transmetroStops.length > 0
+                    ? `${transmetroStops.length} paraderos · datos.gov.co (2020)`
+                    : 'Catálogo oficial · datos.gov.co (2020)'}
+                </div>
+              </div>
+              <span className={`map-layer-switch caribe${showTransmetroStops ? ' active' : ''}`} />
+            </button>
+
+            <button
+              type="button"
+              id="layer-toggle-safety"
+              onClick={() => onToggleRoadSafety?.()}
+              className="map-layer-row"
+            >
+              <div className="min-w-0 flex-1 text-left">
+                <div className="map-layer-title flex items-center gap-1.5">
+                  <span>Seguridad vial</span>
+                  {loadingRoadSafety && <Loader2 size={11} className="animate-spin" color="var(--brand)" />}
+                </div>
+                <div className="map-layer-sub">
+                  {roadSafetyPoints.length > 0
+                    ? `${roadSafetyPoints.length} semáforos y cámaras · datos.gov.co`
+                    : 'Semáforos y fotodetección · datos.gov.co'}
+                </div>
+              </div>
+              <span className={`map-layer-switch brand${showRoadSafety ? ' active' : ''}`} />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Floating selected-route legend & quick control bar */}
@@ -1827,10 +2266,11 @@ export default function MapComponent({
                 </span>
               )}
 
-              {selectedRoute.paradas?.length > 0 && loadingRouteId !== selectedRoute._id && (
+              {effectiveSelectedStopsInfo.stops.length > 0 && loadingRouteId !== selectedRoute._id && (
                 <span className="selected-route-stops-badge tabular-nums">
                   <MapPin size={11} />
-                  {selectedRoute.paradas.length} paradas
+                  {effectiveSelectedStopsInfo.stops.length}{' '}
+                  {effectiveSelectedStopsInfo.isOfficialStops ? 'paraderos' : 'paradas'}
                 </span>
               )}
             </div>

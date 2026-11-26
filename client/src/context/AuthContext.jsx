@@ -12,17 +12,47 @@
  */
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { usersAPI, setToken, removeToken } from '../services/api';
+import { usersAPI, mapsAPI, setToken, removeToken } from '../services/api';
 
 const AuthContext = createContext(null);
 
-const MAX_FREE_SEARCHES = 3;
+const DEFAULT_FREE_SEARCHES = 3;
 const USAGE_KEY = 'rutaquilla_usage_count';
+
+const DEFAULT_PUBLIC_CONFIG = {
+  registrationEnabled: true,
+  botShieldEnabled: true,
+  strictEmailValidation: true,
+  requireEmailVerification: true,
+  turnstileEnabled: false,
+  turnstileSiteKey: '',
+  reportsEnabled: true,
+  capturesEnabled: true,
+  maxFreeSearches: DEFAULT_FREE_SEARCHES,
+  banner: { enabled: false, type: 'info', text: '' },
+  formToken: '',
+};
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [publicConfig, setPublicConfig] = useState(DEFAULT_PUBLIC_CONFIG);
+
+  const refreshPublicConfig = useCallback(async () => {
+    try {
+      const res = await mapsAPI.getPublicConfig();
+      if (res?.data) {
+        setPublicConfig((prev) => ({ ...prev, ...res.data }));
+      }
+    } catch (_) {
+      // Fallback silencioso a valores por defecto
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshPublicConfig();
+  }, [refreshPublicConfig]);
 
   // Freemium: usage counter (persisted in localStorage)
   const [usageCount, setUsageCount] = useState(() => {
@@ -60,10 +90,10 @@ export function AuthProvider({ children }) {
   /**
    * Registrar nuevo usuario.
    */
-  const register = useCallback(async (name, email, password) => {
+  const register = useCallback(async (name, email, password, antiBotMeta = {}) => {
     setError(null);
     try {
-      const response = await usersAPI.register({ name, email, password });
+      const response = await usersAPI.register({ name, email, password, ...antiBotMeta });
       // If server requires verification, don't log in yet
       if (response.data?.requiresVerification) {
         return response;
@@ -113,10 +143,13 @@ export function AuthProvider({ children }) {
   /**
    * Iniciar sesión.
    */
-  const login = useCallback(async (email, password) => {
+  const login = useCallback(async (email, password, antiBotMeta = {}) => {
     setError(null);
     try {
-      const response = await usersAPI.login({ email, password });
+      const response = await usersAPI.login({ email, password, ...antiBotMeta });
+      if (response.data?.requiresTwoFactor) {
+        return { requiresTwoFactor: true, email: response.data.email };
+      }
       setToken(response.data.token);
       setUser(response.data.user);
       return response;
@@ -126,6 +159,24 @@ export function AuthProvider({ children }) {
         return { notVerified: true, email: err.data?.email };
       }
       setError(err.message || 'Credenciales incorrectas');
+      throw err;
+    }
+  }, []);
+
+  /**
+   * Verificar segundo factor 2FA de acceso Administrador.
+   */
+  const verifyTwoFactor = useCallback(async (email, code) => {
+    setError(null);
+    try {
+      const response = await usersAPI.verify2FA(email, code);
+      if (response.data?.token) {
+        setToken(response.data.token);
+        setUser(response.data.user);
+      }
+      return response;
+    } catch (err) {
+      setError(err.message || 'Código 2FA incorrecto');
       throw err;
     }
   }, []);
@@ -156,15 +207,20 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const maxFreeSearches = Number.isFinite(Number(publicConfig?.maxFreeSearches))
+    ? Number(publicConfig.maxFreeSearches)
+    : DEFAULT_FREE_SEARCHES;
+
   /**
    * Freemium: ¿Puede el usuario navegar?
    * - Autenticado: siempre puede
-   * - No autenticado: solo si tiene usos restantes
+   * - No autenticado: solo si tiene usos restantes (999 = ilimitado)
    */
   const canNavigate = useCallback(() => {
     if (user) return true;
-    return usageCount < MAX_FREE_SEARCHES;
-  }, [user, usageCount]);
+    if (maxFreeSearches >= 999) return true;
+    return usageCount < maxFreeSearches;
+  }, [user, usageCount, maxFreeSearches]);
 
   /**
    * Freemium: Incrementar el contador de uso.
@@ -177,7 +233,7 @@ export function AuthProvider({ children }) {
     localStorage.setItem(USAGE_KEY, newCount.toString());
   }, [user, usageCount]);
 
-  const remainingFreeSearches = Math.max(0, MAX_FREE_SEARCHES - usageCount);
+  const remainingFreeSearches = maxFreeSearches >= 999 ? 999 : Math.max(0, maxFreeSearches - usageCount);
 
   const value = {
     user,
@@ -186,8 +242,11 @@ export function AuthProvider({ children }) {
     isAuthenticated: !!user,
     isPremium: user?.isPremium || user?.role === 'premium' || user?.role === 'admin',
     isAdmin: user?.role === 'admin',
+    publicConfig,
+    refreshPublicConfig,
     register,
     verifyEmail,
+    verifyTwoFactor,
     resendCode,
     login,
     logout,
@@ -198,7 +257,7 @@ export function AuthProvider({ children }) {
     incrementUsage,
     usageCount,
     remainingFreeSearches,
-    maxFreeSearches: MAX_FREE_SEARCHES,
+    maxFreeSearches,
   };
 
   return (

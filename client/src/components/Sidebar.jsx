@@ -35,9 +35,11 @@ import {
   Crosshair,
   GitMerge,
   AlertTriangle,
+  Flag,
+  RefreshCw,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { mapsAPI } from '../services/api';
+import { mapsAPI, routesAPI } from '../services/api';
 import { getRouteLength } from '../utils/geoUtils';
 import { safeColor } from '../utils/sanitize';
 import RouteNavigator from './RouteNavigator';
@@ -196,6 +198,19 @@ function RoutePassCard({
                 {km.toFixed(1)} km
               </span>
             )}
+            {route.distance != null && (
+              <span
+                className="inline-flex items-center gap-0.5 text-[10px] font-semibold tabular-nums px-1.5 py-0.5 rounded"
+                style={{
+                  background: 'var(--caribe-soft)',
+                  color: 'var(--caribe)',
+                  border: '1px solid color-mix(in srgb, var(--caribe) 28%, transparent)',
+                }}
+              >
+                <Crosshair size={9} />
+                a {route.distance} m
+              </span>
+            )}
             <span
               className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium"
               style={{
@@ -276,8 +291,13 @@ function RoutePassCard({
 function SelectedRouteFicha({
   route,
   isLoading,
+  isFav,
+  onToggleFavorite,
+  onReportRouteChange,
   onClose,
   onFocusStop,
+  activeOfficialVariant,
+  onSelectOfficialVariant,
 }) {
   const [showStopsList, setShowStopsList] = useState(false);
   const [stopDirFilter, setStopDirFilter] = useState('all');
@@ -287,14 +307,29 @@ function SelectedRouteFicha({
 
   const routeColor = safeColor(route.color, '#FFC21A');
   const { hasCode, title, showSubtitle, km, hasReturn } = getRouteDisplay(route);
-  const stops = Array.isArray(route.paradas) ? route.paradas : [];
-  const hasIdaStops = stops.some((p) => p.sentido !== 'regreso');
-  const hasRegStops = stops.some((p) => p.sentido === 'regreso');
-  const filteredStops = stops.filter((p) => {
-    if (stopDirFilter === 'all') return true;
-    const dir = p.sentido === 'regreso' ? 'regreso' : 'ida';
-    return dir === stopDirFilter;
-  });
+  const officialVariants = Array.isArray(route.variantesOficiales) ? route.variantesOficiales : [];
+  const hasOfficialStops = Array.isArray(route.paradasOficiales) && route.paradasOficiales.length > 0;
+  const selectedVariantObj =
+    officialVariants.length > 1
+      ? officialVariants.find((v) => v.nombre === activeOfficialVariant) || officialVariants[0]
+      : null;
+  const stops = selectedVariantObj
+    ? selectedVariantObj.paradas
+    : hasOfficialStops
+    ? route.paradasOficiales
+    : Array.isArray(route.paradas)
+    ? route.paradas
+    : [];
+  const isOfficialStops = Boolean(selectedVariantObj || hasOfficialStops);
+  const hasIdaStops = !isOfficialStops && stops.some((p) => p.sentido !== 'regreso');
+  const hasRegStops = !isOfficialStops && stops.some((p) => p.sentido === 'regreso');
+  const filteredStops = isOfficialStops
+    ? stops
+    : stops.filter((p) => {
+        if (stopDirFilter === 'all') return true;
+        const dir = p.sentido === 'regreso' ? 'regreso' : 'ida';
+        return dir === stopDirFilter;
+      });
   const zones = Array.isArray(route.barriosCubiertos) ? route.barriosCubiertos : [];
   const visibleZones = showAllZones ? zones : zones.slice(0, 8);
 
@@ -357,16 +392,36 @@ function SelectedRouteFicha({
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={() => onClose?.()}
-            aria-label="Cerrar ficha de ruta"
-            title="Cerrar ruta"
-            className="rq-icon-btn"
-            style={{ width: 28, height: 28 }}
-          >
-            <X size={14} />
-          </button>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => onToggleFavorite?.(route._id)}
+              aria-label={isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+              title={isFav ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+              className="rq-icon-btn"
+              style={{
+                width: 28,
+                height: 28,
+                borderColor: isFav ? 'color-mix(in srgb, var(--brand) 50%, var(--border-color))' : undefined,
+              }}
+            >
+              <Star
+                size={14}
+                fill={isFav ? 'var(--brand)' : 'none'}
+                color={isFav ? 'var(--brand)' : 'var(--text-secondary)'}
+              />
+            </button>
+            <button
+              type="button"
+              onClick={() => onClose?.()}
+              aria-label="Cerrar ficha de ruta"
+              title="Cerrar ruta"
+              className="rq-icon-btn"
+              style={{ width: 28, height: 28 }}
+            >
+              <X size={14} />
+            </button>
+          </div>
         </div>
 
         {/* Matriz 3 datos clave */}
@@ -445,13 +500,15 @@ function SelectedRouteFicha({
                   <span
                     className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold px-2 py-1 rounded-md"
                     style={{
-                      background: 'var(--mangle-soft)',
-                      color: 'var(--mangle)',
-                      border: '1px solid color-mix(in srgb, var(--mangle) 28%, transparent)',
+                      background: isOfficialStops ? 'var(--caribe-soft)' : 'var(--mangle-soft)',
+                      color: isOfficialStops ? 'var(--caribe)' : 'var(--mangle)',
+                      border: `1px solid color-mix(in srgb, ${isOfficialStops ? 'var(--caribe)' : 'var(--mangle)'} 28%, transparent)`,
                     }}
                   >
                     <MapPin size={11} />
-                    <span className="tabular-nums">{stops.length} paradas nombradas</span>
+                    <span className="tabular-nums">
+                      {stops.length} {isOfficialStops ? 'paraderos oficiales' : 'paradas nombradas'}
+                    </span>
                   </span>
                   <button
                     type="button"
@@ -471,6 +528,26 @@ function SelectedRouteFicha({
 
                 {showStopsList && (
                   <div className="mt-2 space-y-1.5 animate-fade-in">
+                    {officialVariants.length > 1 && (
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {officialVariants.map((variant) => {
+                          const activeVar = (selectedVariantObj?.nombre || officialVariants[0].nombre) === variant.nombre;
+                          const shortLabel = variant.nombre.replace(/^A5-3\s+/i, '').trim() || variant.nombre;
+                          return (
+                            <button
+                              key={variant.nombre}
+                              type="button"
+                              onClick={() => onSelectOfficialVariant?.(variant.nombre)}
+                              className={`rq-chip${activeVar ? ' active' : ''}`}
+                              style={{ padding: '3px 8px', fontSize: 10 }}
+                            >
+                              {shortLabel} ({variant.paradas.length})
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
                     {hasIdaStops && hasRegStops && (
                       <div className="flex items-center gap-1">
                         {[
@@ -497,9 +574,14 @@ function SelectedRouteFicha({
                     >
                       {filteredStops.map((stop, idx) => {
                         const isReg = stop.sentido === 'regreso';
+                        const dotColor = isOfficialStops
+                          ? 'var(--caribe)'
+                          : isReg
+                          ? 'var(--carnaval)'
+                          : 'var(--mangle)';
                         return (
                           <button
-                            key={`${stop.sentido}-${stop.orden}-${idx}`}
+                            key={`${stop.sentido || 'of'}-${stop.orden}-${idx}`}
                             type="button"
                             onClick={() => onFocusStop?.(stop)}
                             className="w-full flex items-center gap-2 text-left px-2 py-1.5 rounded-md cursor-pointer transition-colors"
@@ -514,11 +596,11 @@ function SelectedRouteFicha({
                           >
                             <span
                               className="w-2 h-2 rounded-full flex-shrink-0"
-                              style={{ background: isReg ? 'var(--carnaval)' : 'var(--mangle)' }}
+                              style={{ background: dotColor }}
                             />
                             <span
                               className="text-[10px] font-bold tabular-nums flex-shrink-0"
-                              style={{ color: 'var(--text-muted)', minWidth: 22 }}
+                              style={{ color: 'var(--text-muted)', minWidth: 24 }}
                             >
                               #{stop.orden || idx + 1}
                             </span>
@@ -529,6 +611,12 @@ function SelectedRouteFicha({
                         );
                       })}
                     </div>
+
+                    {isOfficialStops && (
+                      <p className="text-[10px] m-0 px-0.5" style={{ color: 'var(--text-muted)' }}>
+                        Secuencia oficial · {route.fuenteParadas || 'datos.gov.co (hxy3-94yh · 2020)'}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -572,6 +660,19 @@ function SelectedRouteFicha({
             </div>
           </div>
         )}
+
+        {/* Reportar cambio o desvío en la ruta */}
+        <div className="mt-2.5 pt-2.5" style={{ borderTop: '1px solid var(--border-color)' }}>
+          <button
+            type="button"
+            onClick={() => onReportRouteChange?.(route)}
+            className="rq-btn-ghost w-full text-[11.5px]"
+            style={{ padding: '7px 10px', justifyContent: 'center' }}
+          >
+            <Flag size={12} color="var(--brand)" />
+            <span>Reportar cambio o desvío en esta ruta</span>
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -585,6 +686,18 @@ export default function Sidebar({
   loadingRouteId = null,
   onClearSelectedRoute,
   onFocusStop,
+  activeOfficialVariant = null,
+  onSelectOfficialVariant,
+  onReportRouteChange,
+  userPosition = null,
+  onRequestGPS,
+  transmetroStops = [],
+  loadingTransmetroStops = false,
+  onEnsureTransmetroStops,
+  showTransmetroStops = false,
+  onToggleTransmetroStops,
+  onFocusTransmetroStop,
+  onSelectRouteByCode,
   onToggleLayer,
   layerVisibility,
   onStartCapture,
@@ -614,9 +727,22 @@ export default function Sidebar({
   const [downloadingOffline, setDownloadingOffline] = useState(false);
   const [offlineError, setOfflineError] = useState('');
 
+  // ---- Modos de exploración en tab Rutas (Catálogo | Cerca de mí | Paraderos TM) ----
+  const [routeListMode, setRouteListMode] = useState('catalog'); // 'catalog' | 'nearby' | 'stops'
+  const [nearbyRadius, setNearbyRadius] = useState(500);
+  const [nearbyRoutes, setNearbyRoutes] = useState([]);
+  const [loadingNearby, setLoadingNearby] = useState(false);
+  const [nearbyError, setNearbyError] = useState('');
+  const [stopsLimit, setStopsLimit] = useState(40);
+
   const affectedRouteIds = useMemo(
     () => new Set(activeReports.map((r) => r.routeId).filter(Boolean)),
     [activeReports]
+  );
+
+  const activeRouteCodes = useMemo(
+    () => new Set(routes.flatMap((r) => [r.codigo, r.nombre].filter(Boolean))),
+    [routes]
   );
 
   const [favorites, setFavorites] = useState(() => {
@@ -720,6 +846,64 @@ export default function Sidebar({
     setFilterCompany('all');
     setSearchText('');
   };
+
+  const fetchNearby = async (radiusToUse = nearbyRadius) => {
+    setLoadingNearby(true);
+    setNearbyError('');
+    try {
+      let pos = userPosition;
+      if (!pos && onRequestGPS) {
+        pos = await onRequestGPS();
+      }
+      if (!pos) {
+        setNearbyRoutes([]);
+        setNearbyError('Activa o autoriza tu ubicación GPS para ver rutas cercanas.');
+        return;
+      }
+      const res = await routesAPI.getNearby(pos.lat, pos.lng, radiusToUse, {
+        limit: 25,
+        includeGeometry: false,
+      });
+      setNearbyRoutes(res.data || []);
+    } catch (err) {
+      console.error('Error buscando rutas cercanas:', err);
+      setNearbyError('No pudimos consultar las rutas cercanas. Intenta nuevamente.');
+    } finally {
+      setLoadingNearby(false);
+    }
+  };
+
+  const handleToggleNearbyMode = () => {
+    if (routeListMode === 'nearby') {
+      setRouteListMode('catalog');
+      return;
+    }
+    setRouteListMode('nearby');
+    fetchNearby(nearbyRadius);
+  };
+
+  const handleToggleStopsMode = () => {
+    if (routeListMode === 'stops') {
+      setRouteListMode('catalog');
+      return;
+    }
+    setRouteListMode('stops');
+    setStopsLimit(40);
+    onEnsureTransmetroStops?.();
+  };
+
+  const filteredTransmetroStops = useMemo(() => {
+    const q = searchText.trim().toLowerCase();
+    if (!q) return transmetroStops;
+    return transmetroStops.filter((stop) => {
+      if ((stop.nombre || '').toLowerCase().includes(q)) return true;
+      return (stop.rutas || []).some(
+        (r) =>
+          (r.codigo || '').toLowerCase().includes(q) ||
+          (r.rutaOficial || '').toLowerCase().includes(q)
+      );
+    });
+  }, [transmetroStops, searchText]);
 
   const handleUpgrade = () => {
     setShowPremiumInfo((prev) => !prev);
@@ -935,7 +1119,11 @@ export default function Sidebar({
                   <Search size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                   <input
                     type="text"
-                    placeholder="Buscar código, ruta, empresa o zona..."
+                    placeholder={
+                      routeListMode === 'stops'
+                        ? 'Buscar paradero o ruta Transmetro...'
+                        : 'Buscar código, ruta, empresa o zona...'
+                    }
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                     className="flex-1 bg-transparent outline-none"
@@ -1027,7 +1215,7 @@ export default function Sidebar({
                 )}
 
                 {/* Toggles Oficial / Comunidad */}
-                <div style={{ display: 'flex', gap: 6 }}>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
                   <button
                     type="button"
                     onClick={() => onToggleLayer?.('official')}
@@ -1065,6 +1253,44 @@ export default function Sidebar({
                     Comunidad
                   </button>
                 </div>
+
+                {/* Modos rápidos: Cerca de mí + Paraderos Transmetro */}
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    type="button"
+                    id="nearby-routes-btn"
+                    onClick={handleToggleNearbyMode}
+                    className={`rq-chip${routeListMode === 'nearby' ? ' active' : ''}`}
+                    style={{
+                      flex: 1,
+                      justifyContent: 'center',
+                      padding: '6px 8px',
+                    }}
+                  >
+                    <Crosshair size={12} />
+                    <span>Cerca de mí</span>
+                  </button>
+                  <button
+                    type="button"
+                    id="transmetro-stops-tab-btn"
+                    onClick={handleToggleStopsMode}
+                    className="rq-chip"
+                    style={{
+                      flex: 1,
+                      justifyContent: 'center',
+                      padding: '6px 8px',
+                      background: routeListMode === 'stops' ? 'var(--caribe-soft)' : 'var(--bg-card)',
+                      color: routeListMode === 'stops' ? 'var(--caribe)' : 'var(--text-secondary)',
+                      borderColor:
+                        routeListMode === 'stops'
+                          ? 'color-mix(in srgb, var(--caribe) 45%, transparent)'
+                          : 'var(--border-color)',
+                    }}
+                  >
+                    <MapPin size={12} />
+                    <span>Paraderos TM</span>
+                  </button>
+                </div>
               </div>
 
               {/* Ficha de ruta seleccionada */}
@@ -1073,12 +1299,231 @@ export default function Sidebar({
                   key={selectedRoute._id}
                   route={selectedRoute}
                   isLoading={loadingRouteId === selectedRoute._id}
+                  isFav={isFavorite(selectedRoute._id)}
+                  onToggleFavorite={toggleFavorite}
+                  onReportRouteChange={onReportRouteChange}
                   onClose={() => onClearSelectedRoute?.()}
                   onFocusStop={onFocusStop}
+                  activeOfficialVariant={activeOfficialVariant}
+                  onSelectOfficialVariant={onSelectOfficialVariant}
                 />
               )}
 
-              {/* Lista agrupada por empresa */}
+              {/* Vista condicional: Cerca de mí | Paraderos TM | Catálogo */}
+              {routeListMode === 'nearby' ? (
+                <div className="p-2.5 space-y-2 animate-fade-in">
+                  <div className="flex items-center justify-between gap-2 px-1">
+                    <div className="flex items-center gap-1">
+                      {[300, 500, 1000].map((rad) => (
+                        <button
+                          key={rad}
+                          type="button"
+                          onClick={() => {
+                            setNearbyRadius(rad);
+                            fetchNearby(rad);
+                          }}
+                          className={`rq-chip${nearbyRadius === rad ? ' active' : ''}`}
+                          style={{ padding: '3px 8px', fontSize: 10.5 }}
+                        >
+                          {rad >= 1000 ? '1 km' : `${rad} m`}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => fetchNearby(nearbyRadius)}
+                      className="rq-icon-btn"
+                      style={{ width: 26, height: 26 }}
+                      title="Actualizar ubicación"
+                      aria-label="Actualizar rutas cercanas"
+                    >
+                      <RefreshCw size={12} className={loadingNearby ? 'animate-spin' : ''} />
+                    </button>
+                  </div>
+
+                  {loadingNearby ? (
+                    <div className="text-center py-8 px-4">
+                      <Loader2 size={24} className="animate-spin mx-auto" color="var(--brand)" />
+                      <p className="text-xs font-medium mt-2" style={{ color: 'var(--text-secondary)' }}>
+                        Buscando rutas a menos de {nearbyRadius >= 1000 ? '1 km' : `${nearbyRadius} m`}...
+                      </p>
+                    </div>
+                  ) : nearbyError ? (
+                    <div className="rq-card p-4 text-center space-y-2">
+                      <Crosshair size={22} style={{ color: 'var(--brand)', margin: '0 auto' }} />
+                      <p className="text-xs m-0" style={{ color: 'var(--text-secondary)' }}>
+                        {nearbyError}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => fetchNearby(nearbyRadius)}
+                        className="rq-btn-primary text-xs"
+                        style={{ padding: '6px 12px', margin: '0 auto' }}
+                      >
+                        Reintentar GPS
+                      </button>
+                    </div>
+                  ) : nearbyRoutes.length === 0 ? (
+                    <div className="text-center py-8 px-4">
+                      <Bus size={28} style={{ color: 'var(--text-muted)', margin: '0 auto', opacity: 0.55 }} />
+                      <p className="text-xs font-semibold mt-2" style={{ color: 'var(--text-secondary)' }}>
+                        No hay rutas activas dentro de {nearbyRadius >= 1000 ? '1 km' : `${nearbyRadius} m`}
+                      </p>
+                      {nearbyRadius < 1000 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNearbyRadius(1000);
+                            fetchNearby(1000);
+                          }}
+                          className="rq-btn-ghost mt-2 text-xs"
+                          style={{ padding: '5px 11px' }}
+                        >
+                          Ampliar a 1 km
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <div className="rq-section-label px-1">
+                        {nearbyRoutes.length} {nearbyRoutes.length === 1 ? 'ruta cercana' : 'rutas cercanas'}
+                      </div>
+                      {nearbyRoutes.map((route) => (
+                        <RoutePassCard
+                          key={route._id}
+                          route={route}
+                          isSelected={selectedRoute?._id === route._id}
+                          isLoading={loadingRouteId === route._id}
+                          isFav={isFavorite(route._id)}
+                          isAffected={affectedRouteIds.has(route._id)}
+                          showOperator={true}
+                          onSelect={onRouteSelect}
+                          onToggleFavorite={toggleFavorite}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : routeListMode === 'stops' ? (
+                <div className="p-2.5 space-y-2 animate-fade-in">
+                  <div className="flex items-center justify-between gap-2 px-1">
+                    <span className="text-[11px] font-semibold tabular-nums" style={{ color: 'var(--text-secondary)' }}>
+                      {loadingTransmetroStops
+                        ? 'Cargando catálogo...'
+                        : `${filteredTransmetroStops.length} paraderos Transmetro`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onToggleTransmetroStops?.(!showTransmetroStops)}
+                      className="rq-chip"
+                      style={{
+                        padding: '3px 8px',
+                        fontSize: 10.5,
+                        background: showTransmetroStops ? 'var(--caribe-soft)' : undefined,
+                        color: showTransmetroStops ? 'var(--caribe)' : undefined,
+                        borderColor: showTransmetroStops
+                          ? 'color-mix(in srgb, var(--caribe) 40%, transparent)'
+                          : undefined,
+                      }}
+                    >
+                      {showTransmetroStops ? <Eye size={11} /> : <EyeOff size={11} />}
+                      <span>{showTransmetroStops ? 'En mapa' : 'Ver en mapa'}</span>
+                    </button>
+                  </div>
+
+                  {loadingTransmetroStops ? (
+                    <div className="text-center py-8 px-4">
+                      <Loader2 size={24} className="animate-spin mx-auto" color="var(--caribe)" />
+                      <p className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
+                        Cargando paraderos oficiales...
+                      </p>
+                    </div>
+                  ) : filteredTransmetroStops.length === 0 ? (
+                    <div className="text-center py-8 px-4">
+                      <MapPin size={26} style={{ color: 'var(--text-muted)', margin: '0 auto', opacity: 0.55 }} />
+                      <p className="text-xs font-semibold mt-2" style={{ color: 'var(--text-secondary)' }}>
+                        Sin paraderos que coincidan con "{searchText}"
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {filteredTransmetroStops.slice(0, stopsLimit).map((stop) => (
+                        <div
+                          key={stop.id}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => onFocusTransmetroStop?.(stop)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              onFocusTransmetroStop?.(stop);
+                            }
+                          }}
+                          className="route-pass-card"
+                          style={{ '--route-color': 'var(--caribe)', padding: '9px 11px 9px 13px' }}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <p
+                              className="font-display text-[12.5px] font-bold m-0 leading-snug"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {stop.nombre}
+                            </p>
+                            <MapPin size={13} color="var(--caribe)" className="flex-shrink-0 mt-0.5" />
+                          </div>
+                          <div className="flex items-center gap-1 flex-wrap mt-2">
+                            {(stop.rutas || []).map((r) => {
+                              const isActiveRoute = activeRouteCodes.has(r.codigo);
+                              return (
+                                <button
+                                  key={`${stop.id}-${r.codigo}-${r.rutaOficial}`}
+                                  type="button"
+                                  disabled={!isActiveRoute}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (isActiveRoute) onSelectRouteByCode?.(r.codigo);
+                                  }}
+                                  className="transit-code"
+                                  style={{
+                                    cursor: isActiveRoute ? 'pointer' : 'default',
+                                    opacity: isActiveRoute ? 1 : 0.45,
+                                    borderColor: isActiveRoute ? 'rgba(14, 165, 233, 0.45)' : undefined,
+                                    fontSize: 10,
+                                    padding: '2px 6px',
+                                  }}
+                                  title={
+                                    isActiveRoute
+                                      ? `Ver ruta ${r.rutaOficial}`
+                                      : `${r.rutaOficial} (no activa en catálogo)`
+                                  }
+                                >
+                                  {r.codigo}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+
+                      {filteredTransmetroStops.length > stopsLimit && (
+                        <button
+                          type="button"
+                          onClick={() => setStopsLimit((n) => n + 40)}
+                          className="rq-btn-ghost w-full text-xs"
+                          style={{ padding: '7px 10px' }}
+                        >
+                          Ver más paraderos ({filteredTransmetroStops.length - stopsLimit} restantes)
+                        </button>
+                      )}
+
+                      <p className="text-[10px] text-center m-0 pt-1" style={{ color: 'var(--text-muted)' }}>
+                        Catálogo oficial Datos Abiertos Colombia · datos.gov.co (2020)
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+              /* Lista agrupada por empresa */
               <div className="p-2.5 space-y-1.5">
                 {groupedOperators.length === 0 ? (
                   <div className="text-center py-8 px-4">
@@ -1185,6 +1630,7 @@ export default function Sidebar({
                   })
                 )}
               </div>
+              )}
             </div>
           )}
 

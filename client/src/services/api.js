@@ -163,8 +163,10 @@ export const routesAPI = {
   getById: (id) => apiRequest(`/routes/${id}`),
 
   /** Búsqueda radial de rutas cercanas */
-  getNearby: (lat, lng, radius = 500) =>
-    apiRequest(`/routes/nearby?lat=${lat}&lng=${lng}&radius=${radius}`),
+  getNearby: (lat, lng, radius = 500, { limit = 25, includeGeometry = false } = {}) =>
+    apiRequest(
+      `/routes/nearby?lat=${lat}&lng=${lng}&radius=${radius}&limit=${limit}&includeGeometry=${includeGeometry}`
+    ),
 
   /** Capturar nueva ruta GPS */
   capture: (routeData) =>
@@ -197,6 +199,16 @@ export const adminRoutesAPI = {
       body: JSON.stringify(updates),
     }),
 
+  /** Alternar estado activa / pausada */
+  toggleActive: (id, activa) =>
+    apiRequest(`/routes/${id}/toggle-active`, {
+      method: 'PATCH',
+      body: JSON.stringify(activa !== undefined ? { activa } : {}),
+    }),
+
+  /** Obtener rutas pendientes de auditoría */
+  getAudit: () => apiRequest('/routes/auditoria'),
+
   /** Eliminar ruta */
   delete: (id) =>
     apiRequest(`/routes/${id}`, {
@@ -204,14 +216,18 @@ export const adminRoutesAPI = {
     }),
 
   /** Eliminar TODAS las rutas */
-  deleteAll: () =>
+  deleteAll: (confirmPhrase) =>
     apiRequest('/routes/admin/all', {
       method: 'DELETE',
+      body: JSON.stringify({ confirmPhrase }),
     }),
 };
 
 // ---- Usuarios ----
 export const usersAPI = {
+  /** Obtener token temporal HMAC anti-bots para el formulario */
+  getFormToken: () => apiRequest('/users/form-token', {}, 1),
+
   /** Registrar nuevo usuario */
   register: (userData) =>
     apiRequest('/users/register', {
@@ -222,6 +238,13 @@ export const usersAPI = {
   /** Verificar email con código */
   verify: (email, code) =>
     apiRequest('/users/verify', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    }),
+
+  /** Verificar código OTP 2FA de acceso Admin */
+  verify2FA: (email, code) =>
+    apiRequest('/users/verify-2fa', {
       method: 'POST',
       body: JSON.stringify({ email, code }),
     }),
@@ -282,6 +305,15 @@ export const mapsAPI = {
   /** Puntos de interés (POIs) en vivo de OpenStreetMap via proxy del backend */
   getPOIs: ({ south, west, north, east }) =>
     apiRequest(`/maps/pois?south=${south}&west=${west}&north=${north}&east=${east}`, {}, 1),
+
+  /** Catálogo oficial de paraderos de Transmetro (datos.gov.co) */
+  getTransmetroStops: () => apiRequest('/maps/transmetro-stops', {}, 2),
+
+  /** Capa opcional de seguridad vial: semáforos y fotodetección (datos.gov.co) */
+  getRoadSafety: () => apiRequest('/maps/road-safety', {}, 1),
+
+  /** Configuración pública en vivo (banner, límites freemium, flags anti-bot/registro) */
+  getPublicConfig: () => apiRequest('/maps/public-config', {}, 1),
 };
 
 // ---- Health ----
@@ -297,8 +329,68 @@ export const adminAPI = {
   /** Traffic data (last 24h) */
   getTraffic: () => apiRequest('/admin/traffic'),
 
-  /** List users */
-  getUsers: () => apiRequest('/admin/users'),
+  /** List users with optional search, role filter and pagination */
+  getUsers: (filters = {}) => {
+    const params = new URLSearchParams(filters).toString();
+    return apiRequest(`/admin/users${params ? `?${params}` : ''}`);
+  },
+
+  /** Update user plan, verification, suspension or revoke active sessions */
+  updateUser: (id, data) =>
+    apiRequest(`/admin/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  /** User authenticity & MX forensic audit */
+  getUsersAudit: () => apiRequest('/admin/users/audit'),
+
+  /** Resend OTP verification email to user (surfacing real SMTP status) */
+  resendUserVerification: (id) =>
+    apiRequest(`/admin/users/${id}/resend-verification`, {
+      method: 'POST',
+    }),
+
+  /** Delete invalid, demo or spam user account */
+  deleteUser: (id) =>
+    apiRequest(`/admin/users/${id}`, {
+      method: 'DELETE',
+    }),
+
+  /** System health, DB latency & security posture */
+  getSystemHealth: () => apiRequest('/admin/system-health'),
+
+  /** Get dynamic security & site configuration */
+  getSecurityConfig: () => apiRequest('/admin/security-config'),
+
+  /** Update dynamic security & site configuration */
+  updateSecurityConfig: (data) =>
+    apiRequest('/admin/security-config', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  /** Preview or purge stale unverified accounts with 0 contributions */
+  purgeUnverifiedUsers: (data = {}) =>
+    apiRequest('/admin/security-actions/purge-unverified', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  /** Revoke active JWT sessions for all non-admin users */
+  revokeAllSessions: () => apiRequest('/admin/security-actions/revoke-all-sessions', { method: 'POST' }),
+
+  /** Clear temporary lockouts across user accounts */
+  unlockAccounts: () => apiRequest('/admin/security-actions/unlock-accounts', { method: 'POST' }),
+
+  /** Clear in-memory map & external API caches */
+  clearCaches: () => apiRequest('/admin/cache/clear', { method: 'POST' }),
+
+  /** Paginated admin & security audit logs */
+  getAuditLogs: (filters = {}) => {
+    const params = new URLSearchParams(filters).toString();
+    return apiRequest(`/admin/audit-logs${params ? `?${params}` : ''}`);
+  },
 
   /** List captured routes with optional filters */
   getCaptures: (filters = {}) => {
@@ -316,6 +408,12 @@ export const adminAPI = {
       body: JSON.stringify(data),
     }),
 
+  /** Delete a capture permanently */
+  deleteCapture: (id) =>
+    apiRequest(`/admin/captures/${id}`, {
+      method: 'DELETE',
+    }),
+
   /** Compare captures of the same route */
   compareCaptures: (routeName, company) => {
     const params = new URLSearchParams({ routeName, ...(company ? { company } : {}) }).toString();
@@ -330,6 +428,12 @@ export const adminAPI = {
 
   /** Get composite route detail */
   getCompositeById: (id) => apiRequest(`/admin/composites/${id}`),
+
+  /** Delete a composite route */
+  deleteComposite: (id) =>
+    apiRequest(`/admin/composites/${id}`, {
+      method: 'DELETE',
+    }),
 
   /** Promote composite route to official */
   promoteComposite: (id, data = {}) =>

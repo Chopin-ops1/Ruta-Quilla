@@ -16,16 +16,35 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const User = require('../models/UserModel');
-const { generateVerificationCode, sendVerificationEmail, sendPasswordResetEmail, verifyConnection } = require('../services/emailService');
+const { getSystemConfig } = require('../models/SystemConfigModel');
+const { logAdminAction } = require('../models/AdminLogModel');
+const { generateVerificationCode, sendVerificationEmail, sendPasswordResetEmail, sendAdminLoginOtpEmail, verifyConnection } = require('../services/emailService');
+const {
+  issueFormToken,
+  verifyFormToken,
+  verifyTurnstileToken,
+  validateRegistrationEmail,
+} = require('../services/emailSecurityService');
 const { logAuthEvent, isValidObjectId } = require('../middleware/security');
 
 const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/jwt');
 
 const smtpConfigured = Boolean(process.env.ZOHO_EMAIL && process.env.ZOHO_PASSWORD);
-const verificationRequired = smtpConfigured || process.env.NODE_ENV === 'production';
 
 // Check SMTP on startup (for diagnostic logging)
 verifyConnection();
+
+/**
+ * GET /api/users/form-token
+ * Genera un token HMAC temporal anti-bots al abrir el formulario de autenticación.
+ */
+function getFormToken(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({
+    success: true,
+    formToken: issueFormToken(),
+  });
+}
 
 /**
  * Hashea el código de verificación con SHA-256 antes de persistirlo en BD.
@@ -47,10 +66,12 @@ function compareVerificationCode(inputCode, storedHash) {
 }
 
 /**
- * Genera un token JWT firmado con el ID del usuario.
+ * Genera un token JWT firmado con el ID del usuario y tokenVersion para revocación.
  */
-function generateToken(userId) {
-  return jwt.sign({ id: userId }, JWT_SECRET, {
+function generateToken(userOrId, tokenVersion = 0) {
+  const id = typeof userOrId === 'object' && userOrId !== null ? userOrId._id : userOrId;
+  const tv = typeof userOrId === 'object' && userOrId !== null ? (userOrId.tokenVersion || 0) : tokenVersion;
+  return jwt.sign({ id, tv }, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN,
   });
 }
@@ -63,7 +84,66 @@ function generateToken(userId) {
  */
 async function register(req, res) {
   try {
-    const { name, email, password } = req.body || {};
+    const sysConfig = await getSystemConfig();
+
+    if (!sysConfig.registrationEnabled) {
+      return res.status(403).json({
+        success: false,
+        code: 'REGISTRATION_DISABLED',
+        message: 'El registro de nuevas cuentas está pausado temporalmente por mantenimiento.',
+      });
+    }
+
+    const { name, email, password, website, formToken, turnstileToken } = req.body || {};
+
+    if (sysConfig.botShieldEnabled) {
+      if (typeof website === 'string' && website.trim().length > 0) {
+        logAuthEvent('BOT_HONEYPOT_BLOCKED', String(email || 'unknown'), req.ip, false);
+        await logAdminAction({
+          req,
+          action: 'BOT_HONEYPOT_BLOCKED',
+          category: 'security',
+          summary: `Registro bot bloqueado por honeypot (${String(email || 'sin-email').slice(0, 60)})`,
+          adminEmailOverride: 'bot-shield',
+        });
+        return res.status(403).json({
+          success: false,
+          code: 'BOT_BLOCKED',
+          message: 'Solicitud bloqueada por el filtro anti-bots.',
+        });
+      }
+
+      const tokenCheck = verifyFormToken(formToken);
+      if (!tokenCheck.ok) {
+        logAuthEvent(`BOT_TOKEN_${tokenCheck.reason}`, String(email || 'unknown'), req.ip, false);
+        await logAdminAction({
+          req,
+          action: 'BOT_TOKEN_BLOCKED',
+          category: 'security',
+          summary: `Registro bloqueado por filtro anti-bot (${tokenCheck.reason})`,
+          adminEmailOverride: 'bot-shield',
+        });
+        return res.status(403).json({
+          success: false,
+          code: 'BOT_BLOCKED',
+          message:
+            tokenCheck.reason === 'TOO_FAST'
+              ? 'Envío demasiado rápido detectado. Espera unos segundos e intenta nuevamente.'
+              : 'Token de seguridad expirado o inválido. Recarga el formulario e intenta de nuevo.',
+        });
+      }
+    }
+
+    if (sysConfig.turnstileEnabled && process.env.TURNSTILE_SECRET_KEY) {
+      const tsCheck = await verifyTurnstileToken(turnstileToken, req.ip);
+      if (!tsCheck.ok) {
+        return res.status(403).json({
+          success: false,
+          code: 'CAPTCHA_FAILED',
+          message: 'Completa la verificación humana (Turnstile) antes de registrarte.',
+        });
+      }
+    }
 
     // Validar tipos y campos requeridos
     if (typeof name !== 'string' || typeof email !== 'string' || typeof password !== 'string' ||
@@ -83,6 +163,34 @@ async function register(req, res) {
 
     const cleanName = name.trim();
     const normalizedEmail = email.trim().toLowerCase();
+
+    if (sysConfig.strictEmailValidation) {
+      const emailCheck = await validateRegistrationEmail(
+        normalizedEmail,
+        cleanName,
+        sysConfig.blockedEmailDomains
+      );
+      if (!emailCheck.valid) {
+        return res.status(400).json({
+          success: false,
+          code: emailCheck.code,
+          suggestedEmail: emailCheck.suggestedEmail || null,
+          message: emailCheck.message,
+        });
+      }
+    }
+
+    const mustVerify = Boolean(
+      sysConfig.requireEmailVerification && (smtpConfigured || process.env.NODE_ENV === 'production')
+    );
+
+    if (mustVerify && !smtpConfigured) {
+      return res.status(503).json({
+        success: false,
+        code: 'SMTP_UNAVAILABLE',
+        message: 'El servicio de verificación por correo no está disponible en este momento. Intenta más tarde.',
+      });
+    }
 
     // Verificar si el email ya existe
     const existingUser = await User.findOne({ email: normalizedEmail })
@@ -132,16 +240,16 @@ async function register(req, res) {
       password,
       role: 'free',
       isPremium: false,
-      isVerified: !verificationRequired, // Solo auto-verifica en dev si SMTP no está configurado
-      verificationCode: verificationRequired ? hashVerificationCode(code) : undefined,
-      verificationCodeExpiry: verificationRequired ? new Date(Date.now() + 15 * 60 * 1000) : undefined,
+      isVerified: !mustVerify,
+      verificationCode: mustVerify ? hashVerificationCode(code) : undefined,
+      verificationCodeExpiry: mustVerify ? new Date(Date.now() + 15 * 60 * 1000) : undefined,
       verificationAttempts: 0,
     });
 
     await user.save();
 
     // Enviar email de verificación si verificación requerida
-    if (verificationRequired) {
+    if (mustVerify) {
       if (smtpConfigured) {
         try {
           await sendVerificationEmail(normalizedEmail, cleanName, code);
@@ -149,8 +257,6 @@ async function register(req, res) {
           console.error('Error enviando email:', emailErr);
           // Still return success — user can request resend
         }
-      } else {
-        console.error('⚠️ Verificación requerida pero SMTP no está configurado.');
       }
 
       return res.status(201).json({
@@ -161,7 +267,7 @@ async function register(req, res) {
     }
 
     // Solo en desarrollo cuando SMTP no está configurado: auto-verify and return token
-    const token = generateToken(user._id);
+    const token = generateToken(user);
     res.status(201).json({
       success: true,
       message: 'Usuario registrado exitosamente',
@@ -271,7 +377,7 @@ async function verifyEmail(req, res) {
     await user.save();
 
     // Generate JWT
-    const token = generateToken(user._id);
+    const token = generateToken(user);
 
     res.json({
       success: true,
@@ -355,7 +461,28 @@ async function resendCode(req, res) {
  */
 async function login(req, res) {
   try {
-    const { email, password } = req.body || {};
+    const sysConfig = await getSystemConfig();
+    const { email, password, website, turnstileToken } = req.body || {};
+
+    if (sysConfig.botShieldEnabled && typeof website === 'string' && website.trim().length > 0) {
+      logAuthEvent('BOT_LOGIN_HONEYPOT_BLOCKED', String(email || 'unknown'), req.ip, false);
+      return res.status(403).json({
+        success: false,
+        code: 'BOT_BLOCKED',
+        message: 'Solicitud bloqueada por el filtro anti-bots.',
+      });
+    }
+
+    if (sysConfig.turnstileEnabled && process.env.TURNSTILE_SECRET_KEY) {
+      const tsCheck = await verifyTurnstileToken(turnstileToken, req.ip);
+      if (!tsCheck.ok) {
+        return res.status(403).json({
+          success: false,
+          code: 'CAPTCHA_FAILED',
+          message: 'Completa la verificación humana (Turnstile) antes de iniciar sesión.',
+        });
+      }
+    }
 
     if (typeof email !== 'string' || typeof password !== 'string' || !email.trim() || !password) {
       return res.status(400).json({
@@ -378,10 +505,45 @@ async function login(req, res) {
       });
     }
 
+    // Bloqueo temporal tras 5 intentos fallidos
+    if (user.lockUntil && user.lockUntil > new Date()) {
+      logAuthEvent('LOGIN_BLOCKED_LOCKOUT', normalizedEmail, req.ip, false);
+      return res.status(429).json({
+        success: false,
+        message: 'Cuenta bloqueada temporalmente por intentos fallidos. Intenta de nuevo en unos minutos.',
+        code: 'ACCOUNT_LOCKED',
+      });
+    }
+
     // Comparar contraseña ANTES de verificar isVerified para evitar enumeración de cuentas
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
+      const nextAttempts = (user.failedLoginAttempts || 0) + 1;
+      if (nextAttempts >= 5) {
+        const lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+        await User.updateOne(
+          { _id: user._id },
+          { $set: { failedLoginAttempts: 0, lockUntil } }
+        );
+        logAuthEvent('LOGIN_LOCKOUT_TRIGGERED', normalizedEmail, req.ip, false);
+        if (user.role === 'admin') {
+          await logAdminAction({
+            req,
+            action: 'ADMIN_LOGIN_LOCKOUT',
+            category: 'security',
+            targetType: 'User',
+            targetId: user._id,
+            summary: `Bloqueo temporal por intentos fallidos en cuenta admin (${normalizedEmail})`,
+            adminEmailOverride: normalizedEmail,
+          });
+        }
+      } else {
+        await User.updateOne(
+          { _id: user._id },
+          { $set: { failedLoginAttempts: nextAttempts } }
+        );
+      }
       logAuthEvent('LOGIN_FAIL_BAD_PASSWORD', normalizedEmail, req.ip, false);
       return res.status(401).json({
         success: false,
@@ -390,8 +552,27 @@ async function login(req, res) {
       });
     }
 
+    if ((user.failedLoginAttempts || 0) > 0 || user.lockUntil) {
+      await User.updateOne(
+        { _id: user._id },
+        { $set: { failedLoginAttempts: 0, lockUntil: null } }
+      );
+    }
+
+    if (user.isSuspended) {
+      logAuthEvent('LOGIN_FAIL_SUSPENDED', normalizedEmail, req.ip, false);
+      return res.status(403).json({
+        success: false,
+        message: 'Tu cuenta ha sido suspendida. Contacta al administrador.',
+        code: 'ACCOUNT_SUSPENDED',
+      });
+    }
+
     // Check if verified (después de validar la contraseña)
-    if (!user.isVerified && verificationRequired) {
+    const enforceVerified = Boolean(
+      sysConfig.requireEmailVerification && (smtpConfigured || process.env.NODE_ENV === 'production')
+    );
+    if (!user.isVerified && enforceVerified && user.role !== 'admin') {
       return res.status(403).json({
         success: false,
         message: 'Tu email no está verificado. Revisa tu bandeja de entrada.',
@@ -400,8 +581,35 @@ async function login(req, res) {
       });
     }
 
+    // Si 2FA por email para Administradores está habilitado, exigir código OTP antes de emitir JWT
+    if (user.role === 'admin' && sysConfig.adminLogin2FA && smtpConfigured) {
+      const code = generateVerificationCode();
+      await User.updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            loginOtpCode: hashVerificationCode(code),
+            loginOtpExpiry: new Date(Date.now() + 10 * 60 * 1000),
+            loginOtpAttempts: 0,
+          },
+        }
+      );
+
+      await sendAdminLoginOtpEmail(user.email, user.name, code);
+      logAuthEvent('ADMIN_2FA_CHALLENGE_SENT', normalizedEmail, req.ip, true);
+
+      return res.json({
+        success: true,
+        message: 'Código de seguridad 2FA enviado a tu correo',
+        data: {
+          requiresTwoFactor: true,
+          email: user.email,
+        },
+      });
+    }
+
     // Generar token JWT
-    const token = generateToken(user._id);
+    const token = generateToken(user);
     
     logAuthEvent('LOGIN_SUCCESS', normalizedEmail, req.ip, true);
 
@@ -499,6 +707,16 @@ async function upgradeToPremium(req, res) {
     targetUser.role = role;
     targetUser.isPremium = role === 'premium';
     await targetUser.save();
+
+    await logAdminAction({
+      req,
+      action: 'USER_ROLE_CHANGE',
+      category: 'user',
+      targetType: 'User',
+      targetId: targetUser._id,
+      summary: `Plan de ${targetUser.email} cambiado a ${role}`,
+      metadata: { role },
+    });
 
     res.json({
       success: true,
@@ -637,6 +855,9 @@ async function resetPassword(req, res) {
     user.resetCode = undefined;
     user.resetCodeExpiry = undefined;
     user.resetAttempts = 0;
+    user.failedLoginAttempts = 0;
+    user.lockUntil = null;
+    user.tokenVersion = (user.tokenVersion || 0) + 1;
     user.isVerified = true;
     await user.save();
 
@@ -655,9 +876,108 @@ async function resetPassword(req, res) {
   }
 }
 
+/**
+ * POST /api/users/verify-2fa
+ * Verifica el código OTP 2FA para inicio de sesión de administrador.
+ */
+async function verifyLogin2FA(req, res) {
+  try {
+    const { email, code } = req.body || {};
+
+    if (typeof email !== 'string' || typeof code !== 'string' || !email.trim() || !code.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email y código 2FA son requeridos',
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail })
+      .select('+loginOtpCode +loginOtpExpiry +loginOtpAttempts');
+
+    if (!user || user.role !== 'admin') {
+      return res.status(400).json({
+        success: false,
+        message: 'Código inválido o expirado',
+        code: 'INVALID_2FA_CODE',
+      });
+    }
+
+    if ((user.loginOtpAttempts || 0) >= 5) {
+      user.loginOtpCode = undefined;
+      user.loginOtpExpiry = undefined;
+      await user.save();
+      return res.status(429).json({
+        success: false,
+        message: 'Demasiados intentos fallidos. Inicia sesión nuevamente.',
+        code: 'TOO_MANY_ATTEMPTS',
+      });
+    }
+
+    if (!user.loginOtpCode || !user.loginOtpExpiry || user.loginOtpExpiry < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: 'El código 2FA ha expirado. Inicia sesión nuevamente.',
+        code: 'CODE_EXPIRED',
+      });
+    }
+
+    if (!compareVerificationCode(code.trim(), user.loginOtpCode)) {
+      user.loginOtpAttempts = (user.loginOtpAttempts || 0) + 1;
+      await user.save();
+      return res.status(400).json({
+        success: false,
+        message: 'Código 2FA incorrecto',
+        code: 'INVALID_2FA_CODE',
+      });
+    }
+
+    user.loginOtpCode = undefined;
+    user.loginOtpExpiry = undefined;
+    user.loginOtpAttempts = 0;
+    await user.save();
+
+    const token = generateToken(user);
+    logAuthEvent('ADMIN_2FA_LOGIN_SUCCESS', normalizedEmail, req.ip, true);
+    await logAdminAction({
+      req,
+      action: 'ADMIN_2FA_LOGIN',
+      category: 'security',
+      targetType: 'User',
+      targetId: user._id,
+      summary: `Acceso administrativo verificado por 2FA (${normalizedEmail})`,
+      adminEmailOverride: normalizedEmail,
+    });
+
+    res.json({
+      success: true,
+      message: 'Inicio de sesión verificado',
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isPremium: user.isPremium,
+          contributions: user.contributions,
+        },
+        token,
+      },
+    });
+  } catch (error) {
+    console.error('Error en verifyLogin2FA:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno al validar código 2FA',
+    });
+  }
+}
+
 module.exports = {
+  getFormToken,
   register,
   verifyEmail,
+  verifyLogin2FA,
   resendCode,
   login,
   getProfile,

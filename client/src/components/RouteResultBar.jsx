@@ -250,6 +250,43 @@ function RouteResultBarContent({
           </span>
         </div>
 
+        {(selectedOpt.boardPoint?.nearestStop || selectedOpt.alightPoint?.nearestStop) && (
+          <div
+            style={{
+              marginTop: 6,
+              padding: '5px 9px',
+              borderRadius: 7,
+              background: 'var(--caribe-soft)',
+              border: '1px solid color-mix(in srgb, var(--caribe) 28%, transparent)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 8,
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0, flex: 1 }}>
+              <MapPin size={11} color="var(--caribe)" style={{ flexShrink: 0 }} />
+              <span
+                style={{
+                  fontSize: 10.5,
+                  color: 'var(--text-primary)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {selectedOpt.boardPoint?.nearestStop
+                  ? `Paradero: ${selectedOpt.boardPoint.nearestStop.nombre} (#${selectedOpt.boardPoint.nearestStop.orden} · ${selectedOpt.boardPoint.nearestStop.distance} m)`
+                  : `Bajar en: ${selectedOpt.alightPoint.nearestStop.nombre} (#${selectedOpt.alightPoint.nearestStop.orden})`}
+              </span>
+            </div>
+            <span className="font-mono" style={{ fontSize: 9, color: 'var(--caribe)', fontWeight: 700, flexShrink: 0 }}>
+              TM ref. 2020
+            </span>
+          </div>
+        )}
+
         {/* Botón CTA Iniciar navegación */}
         {onStartLiveNav && (
           <button

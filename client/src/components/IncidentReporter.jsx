@@ -44,12 +44,21 @@ const REPORT_TYPES = [
   { id: 'otro',       icon: Flag,         label: 'Otro',            color: '#6E7581' },
 ];
 
-export default function IncidentReporter({ routes: propRoutes, userPosition, onReportCreated, bottomOffset = 28, compact = false }) {
+export default function IncidentReporter({
+  routes: propRoutes,
+  userPosition,
+  onReportCreated,
+  bottomOffset = 28,
+  compact = false,
+  reportTrigger = null,
+  onClearReportTrigger,
+}) {
   const { isAuthenticated } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [selectedType, setSelectedType] = useState(null);
   const [description, setDescription] = useState('');
   const [selectedRoute, setSelectedRoute] = useState(null); // { _id, nombre, codigo }
+  const [fallbackLocation, setFallbackLocation] = useState(null);
   const [sending, setSending] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [fetchedRoutes, setFetchedRoutes] = useState([]);
@@ -81,6 +90,43 @@ export default function IncidentReporter({ routes: propRoutes, userPosition, onR
       || r.operador.toLowerCase().includes(q);
   });
 
+  // Contextual trigger from SelectedRouteFicha ("Reportar cambio o desvío")
+  useEffect(() => {
+    if (!reportTrigger?.route || !isAuthenticated) return;
+    const r = reportTrigger.route;
+    setSelectedRoute({
+      _id: r._id,
+      nombre: r.nombre || r.name || 'Ruta',
+      codigo: r.codigo || '',
+      operador: r.operador || '',
+    });
+    setSelectedType(reportTrigger.defaultType || 'desvio');
+    setDescription('');
+    setRouteSearch('');
+    setShowRouteDropdown(false);
+    const coords = r.ida?.trazado?.coordinates;
+    if (Array.isArray(coords) && coords.length > 0) {
+      const mid = coords[Math.floor(coords.length / 2)];
+      if (Array.isArray(mid) && Number.isFinite(mid[1]) && Number.isFinite(mid[0])) {
+        setFallbackLocation({ lat: mid[1], lng: mid[0] });
+      } else {
+        setFallbackLocation({ lat: 10.9685, lng: -74.7813 });
+      }
+    } else {
+      setFallbackLocation({ lat: 10.9685, lng: -74.7813 });
+    }
+    setShowModal(true);
+  }, [reportTrigger, isAuthenticated]);
+
+  const effectiveLocation = userPosition || fallbackLocation;
+  const usingFallbackLocation = !userPosition && Boolean(fallbackLocation);
+
+  const handleCloseModal = useCallback(() => {
+    setShowModal(false);
+    setFallbackLocation(null);
+    onClearReportTrigger?.();
+  }, [onClearReportTrigger]);
+
   const handleOpen = useCallback(() => {
     if (!isAuthenticated) {
       setFeedback({ type: 'error', msg: 'Inicia sesión para reportar' });
@@ -92,6 +138,7 @@ export default function IncidentReporter({ routes: propRoutes, userPosition, onR
       setTimeout(() => setFeedback(null), 3000);
       return;
     }
+    setFallbackLocation(null);
     setShowModal(true);
     setSelectedType(null);
     setDescription('');
@@ -101,7 +148,7 @@ export default function IncidentReporter({ routes: propRoutes, userPosition, onR
   }, [isAuthenticated, userPosition]);
 
   const handleSubmit = useCallback(async () => {
-    if (!selectedType || !userPosition || !selectedRoute) return;
+    if (!selectedType || !effectiveLocation || !selectedRoute) return;
     setSending(true);
     try {
       const res = await reportAPI.create({
@@ -110,10 +157,10 @@ export default function IncidentReporter({ routes: propRoutes, userPosition, onR
         routeId: selectedRoute._id,
         routeName: selectedRoute.nombre,
         routeCodigo: selectedRoute.codigo,
-        location: { lat: userPosition.lat, lng: userPosition.lng },
+        location: { lat: effectiveLocation.lat, lng: effectiveLocation.lng },
       });
       setFeedback({ type: 'success', msg: res.message || '¡Reporte enviado!' });
-      setShowModal(false);
+      handleCloseModal();
       onReportCreated?.();
     } catch (err) {
       setFeedback({ type: 'error', msg: err.message || 'Error al enviar' });
@@ -121,7 +168,7 @@ export default function IncidentReporter({ routes: propRoutes, userPosition, onR
       setSending(false);
       setTimeout(() => setFeedback(null), 4000);
     }
-  }, [selectedType, description, selectedRoute, userPosition, onReportCreated]);
+  }, [selectedType, description, selectedRoute, effectiveLocation, onReportCreated, handleCloseModal]);
 
   const canSubmit = selectedType && selectedRoute && !sending;
 
@@ -170,7 +217,7 @@ export default function IncidentReporter({ routes: propRoutes, userPosition, onR
       {/* Modal / Bottom Sheet */}
       {showModal && (
         <div
-          onClick={() => setShowModal(false)}
+          onClick={handleCloseModal}
           style={{
             position: 'fixed', inset: 0, zIndex: 1300,
             background: 'rgba(13, 16, 20, 0.65)',
@@ -208,7 +255,7 @@ export default function IncidentReporter({ routes: propRoutes, userPosition, onR
               </div>
               <button
                 type="button"
-                onClick={() => setShowModal(false)}
+                onClick={handleCloseModal}
                 className="rq-icon-btn"
                 style={{ width: 30, height: 30 }}
                 aria-label="Cerrar"
@@ -220,11 +267,17 @@ export default function IncidentReporter({ routes: propRoutes, userPosition, onR
             {/* GPS indicator */}
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 10,
-              background: 'rgba(31, 157, 107, 0.1)', border: '1px solid rgba(31, 157, 107, 0.25)',
-              marginBottom: 14, fontSize: 11.5, fontWeight: 500, color: 'var(--mangle)',
+              background: usingFallbackLocation ? 'var(--brand-soft)' : 'rgba(31, 157, 107, 0.1)',
+              border: `1px solid ${usingFallbackLocation ? 'color-mix(in srgb, var(--brand) 32%, transparent)' : 'rgba(31, 157, 107, 0.25)'}`,
+              marginBottom: 14, fontSize: 11.5, fontWeight: 500,
+              color: usingFallbackLocation ? 'var(--brand)' : 'var(--mangle)',
             }}>
               <MapPin size={13} style={{ flexShrink: 0 }} />
-              <span>Tu ubicación actual será usada para el reporte</span>
+              <span>
+                {usingFallbackLocation
+                  ? 'Sin GPS activo: se usará el punto medio de esta ruta'
+                  : 'Tu ubicación actual será usada para el reporte'}
+              </span>
             </div>
 
             {/* ---- ROUTE SELECTOR (OBLIGATORIO) ---- */}

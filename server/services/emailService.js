@@ -307,10 +307,99 @@ async function sendPasswordResetEmail(to, userName, code) {
   }
 }
 
+/**
+ * Envía el código OTP de segundo factor (2FA) al iniciar sesión como Administrador.
+ */
+async function sendAdminLoginOtpEmail(to, userName, code) {
+  const safeName = escapeHtml(userName);
+  const safeCode = escapeHtml(code);
+  const safeSubjectCode = sanitizeEmailHeader(code);
+  const safeSubjectName = sanitizeEmailHeader(userName);
+
+  const mailOptions = {
+    from: `"RutaQuilla" <${process.env.ZOHO_EMAIL}>`,
+    to,
+    subject: `🛡️ Código de acceso Admin: ${safeSubjectCode} — RutaQuilla`,
+    html: `
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#0B1120;font-family:'Segoe UI',Tahoma,Geneva,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0B1120;min-height:100vh;">
+    <tr><td align="center" style="padding:40px 16px;">
+      <table role="presentation" width="100%" style="max-width:480px;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+        <tr><td style="height:4px;background:linear-gradient(90deg,#FFC21A,#E5484D);"></td></tr>
+        <tr><td style="background:#14171C;padding:36px 32px;">
+          <h1 style="margin:0 0 8px;text-align:center;font-size:21px;font-weight:700;color:#F8FAFC;">Acceso de Administrador (2FA)</h1>
+          <p style="margin:0 0 24px;text-align:center;font-size:13.5px;color:#94A3B8;line-height:1.55;">
+            Hola <strong style="color:#F8FAFC;">${safeName}</strong>, ingresa este código de seguridad para completar tu inicio de sesión en el Centro de Control de RutaQuilla.
+          </p>
+          <div style="background:rgba(255,194,26,0.08);border:2px solid rgba(255,194,26,0.3);border-radius:14px;padding:20px;text-align:center;margin-bottom:20px;">
+            <p style="margin:0 0 6px;font-size:11px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.14em;font-weight:600;">Código 2FA</p>
+            <div style="font-size:34px;font-weight:800;color:#FFC21A;letter-spacing:8px;font-family:'Courier New',monospace;">${safeCode}</div>
+            <p style="margin:10px 0 0;font-size:12px;color:#94A3B8;">Válido durante <strong style="color:#FFC21A;">10 minutos</strong></p>
+          </div>
+          <p style="margin:0;font-size:11px;color:#64748B;text-align:center;line-height:1.5;">
+            Si no fuiste tú quien intentó ingresar, cambia tu contraseña de inmediato.
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+    text: `Hola ${safeSubjectName}, tu código 2FA de acceso administrativo en RutaQuilla es: ${safeSubjectCode}. Expira en 10 minutos.`,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`🛡️ Código 2FA Admin enviado a ${to} (${info.messageId})`);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Error enviando email 2FA Admin:', error.message);
+    throw new Error('No se pudo enviar el código de seguridad 2FA');
+  }
+}
+
+/**
+ * Verifica conexión SMTP con caché breve de 60s y timeout de 4s para diagnósticos en vivo.
+ */
+let smtpStatusCache = { checkedAt: 0, result: null };
+async function verifySmtpStatus({ force = false } = {}) {
+  const configured = Boolean(process.env.ZOHO_EMAIL && process.env.ZOHO_PASSWORD);
+  if (!configured) {
+    return { configured: false, connected: false, error: 'ZOHO_EMAIL / ZOHO_PASSWORD no configurados' };
+  }
+  if (!force && smtpStatusCache.result && Date.now() - smtpStatusCache.checkedAt < 60 * 1000) {
+    return smtpStatusCache.result;
+  }
+
+  let timer = null;
+  try {
+    await Promise.race([
+      transporter.verify(),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error('SMTP timeout (4s)')), 4000);
+      }),
+    ]);
+    clearTimeout(timer);
+    const result = { configured: true, connected: true, error: null };
+    smtpStatusCache = { checkedAt: Date.now(), result };
+    return result;
+  } catch (err) {
+    clearTimeout(timer);
+    const result = { configured: true, connected: false, error: err?.message || 'Error conectando a Zoho SMTP' };
+    smtpStatusCache = { checkedAt: Date.now(), result };
+    return result;
+  }
+}
+
 module.exports = {
   generateVerificationCode,
   sendVerificationEmail,
   sendQuillaBuilderEmail,
   sendPasswordResetEmail,
+  sendAdminLoginOtpEmail,
   verifyConnection,
+  verifySmtpStatus,
 };

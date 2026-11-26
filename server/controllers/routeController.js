@@ -14,8 +14,14 @@
 
 const Route = require('../models/RouteModel');
 const CapturedRoute = require('../models/CapturedRouteModel');
+const { getSystemConfig } = require('../models/SystemConfigModel');
+const { logAdminAction } = require('../models/AdminLogModel');
 const { mergeSegment } = require('../services/mergeService');
 const { isValidCoord } = require('../middleware/security');
+const {
+  getOfficialStopsForRoute,
+  findNearestOfficialStop,
+} = require('../services/transmetroStopsService');
 
 function getDefaultFare() {
   const colombiaNow = new Date(Date.now() - 5 * 60 * 60 * 1000);
@@ -48,6 +54,15 @@ async function captureRoute(req, res) {
       return res.status(401).json({
         success: false,
         message: 'Debes iniciar sesión para capturar rutas',
+      });
+    }
+
+    const sysConfig = await getSystemConfig();
+    if (!sysConfig.capturesEnabled && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        code: 'CAPTURES_DISABLED',
+        message: 'La captura comunitaria GPS está pausada temporalmente por el administrador.',
       });
     }
 
@@ -200,7 +215,7 @@ async function captureRoute(req, res) {
  */
 async function getNearbyRoutes(req, res) {
   try {
-    const { lat, lng, radius = 500, limit = 10 } = req.query;
+    const { lat, lng, radius = 500, limit = 10, includeGeometry = 'true' } = req.query;
 
     // Validar parámetros requeridos
     if (lat === undefined || lng === undefined) {
@@ -224,18 +239,30 @@ async function getNearbyRoutes(req, res) {
     }
 
     const projectFields = {
+      externalId: 1,
       nombre: 1,
       codigo: 1,
+      descripcion: 1,
       operador: 1,
+      sistema: 1,
+      esIntermunicipal: 1,
+      distanciaKm: 1,
+      tieneRegreso: 1,
+      tieneParadas: 1,
       origen: 1,
       destino: 1,
+      horarios: 1,
+      metodosPago: 1,
       color: 1,
       type: 1,
       fare: 1,
-      ida: 1,
-      regreso: 1,
       distance: { $round: ['$distance', 0] },
     };
+
+    if (includeGeometry !== 'false') {
+      projectFields.ida = 1;
+      projectFields.regreso = 1;
+    }
 
     const [nearIda, nearRegreso] = await Promise.all([
       Route.aggregate([
@@ -420,6 +447,17 @@ async function getRouteById(req, res) {
       });
     }
 
+    if (route.sistema === 'masivo') {
+      const official = getOfficialStopsForRoute(route);
+      if (official) {
+        route.paradasOficiales = official.paradasOficiales;
+        if (official.variantesOficiales.length > 1) {
+          route.variantesOficiales = official.variantesOficiales;
+        }
+        route.fuenteParadas = official.fuenteParadas;
+      }
+    }
+
     res.json({
       success: true,
       data: route,
@@ -544,6 +582,15 @@ async function navigateRoute(req, res) {
       const busDist = lineStringLength(busSegCoords);
       const busMinutes = Math.ceil(busDist / 250);
 
+      const boardStop =
+        route.sistema === 'masivo'
+          ? findNearestOfficialStop(route, boardProj.point[0], boardProj.point[1], 350)
+          : null;
+      const alightStop =
+        route.sistema === 'masivo'
+          ? findNearestOfficialStop(route, alightProj.point[0], alightProj.point[1], 350)
+          : null;
+
       options.push({
         route: {
           _id: route._id,
@@ -564,11 +611,13 @@ async function navigateRoute(req, res) {
           coordinates: boardProj.point,
           walkDistance: Math.round(boardDist),
           walkMinutes: Math.ceil(boardDist / 80),
+          ...(boardStop ? { nearestStop: boardStop } : {}),
         },
         alightPoint: {
           coordinates: alightProj.point,
           walkDistance: Math.round(alightDist),
           walkMinutes: Math.ceil(alightDist / 80),
+          ...(alightStop ? { nearestStop: alightStop } : {}),
         },
         busSegment: busSegCoords,
         totalWalkDistance: Math.round(totalWalk),
@@ -694,6 +743,14 @@ async function navigateRoute(req, res) {
           const fareB = legB.routeB.fare || defaultFare;
           const combinedFare = fareA + fareB;
           const sistemasNoIntegrados = (legA.routeA.sistema || 'urbano') !== (legB.routeB.sistema || 'urbano');
+          const transferBoardStop =
+            legA.routeA.sistema === 'masivo'
+              ? findNearestOfficialStop(legA.routeA, legA.boardProj.point[0], legA.boardProj.point[1], 350)
+              : null;
+          const transferAlightStop =
+            legB.routeB.sistema === 'masivo'
+              ? findNearestOfficialStop(legB.routeB, legB.alightProj.point[0], legB.alightProj.point[1], 350)
+              : null;
 
           transferCandidates.push({
             isTransfer: true,
@@ -716,11 +773,13 @@ async function navigateRoute(req, res) {
               coordinates: legA.boardProj.point,
               walkDistance: Math.round(boardDist),
               walkMinutes: Math.ceil(boardDist / 80),
+              ...(transferBoardStop ? { nearestStop: transferBoardStop } : {}),
             },
             alightPoint: {
               coordinates: legB.alightProj.point,
               walkDistance: Math.round(alightDist),
               walkMinutes: Math.ceil(alightDist / 80),
+              ...(transferAlightStop ? { nearestStop: transferAlightStop } : {}),
             },
             busSegment: busSeg1,
             totalWalkDistance: Math.round(totalWalk),
@@ -951,105 +1010,136 @@ function getCompanyColor(company) {
   return colors[company] || colors['Otra'];
 }
 
+const HEX_COLOR_RE = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+
+function filterValidLineCoords(coords) {
+  if (!Array.isArray(coords)) return [];
+  return coords
+    .filter((c) => Array.isArray(c) && c.length >= 2 && isValidCoord(Number(c[1]), Number(c[0])))
+    .map((c) => [Number(c[0]), Number(c[1])]);
+}
+
 /**
  * POST /api/routes/admin/create
  * Create a new official route (admin only).
  */
 async function createRoute(req, res) {
   try {
-    const { nombre, operador, color, ida, regreso, fare, codigo, origen, destino, codigoAMBQ, resolucionPdf } = req.body;
+    const {
+      nombre, operador, color, ida, regreso, fare, codigo, origen, destino,
+      codigoAMBQ, resolucionPdf, sistema, esIntermunicipal, tipoRecorrido, descripcion, activa,
+    } = req.body || {};
 
-    if (!nombre || !operador || !ida?.trazado?.coordinates?.length) {
+    const cleanNombre = typeof nombre === 'string' ? nombre.trim() : '';
+    const cleanOperador = typeof operador === 'string' ? operador.trim() : '';
+    const idaCoords = filterValidLineCoords(ida?.trazado?.coordinates);
+
+    if (!cleanNombre || !cleanOperador || idaCoords.length < 2) {
       return res.status(400).json({
         success: false,
-        message: 'Campos requeridos: nombre, operador, ida.trazado.coordinates',
+        message: 'Campos requeridos: nombre, operador y al menos 2 coordenadas válidas en ida',
       });
     }
 
+    const regCoords = filterValidLineCoords(regreso?.trazado?.coordinates);
+    const safeRecorrido = ['circular', 'lineal'].includes(tipoRecorrido)
+      ? tipoRecorrido
+      : (regCoords.length >= 2 ? 'circular' : 'lineal');
+    const safeColorHex = typeof color === 'string' && HEX_COLOR_RE.test(color.trim())
+      ? color.trim()
+      : getCompanyColor(cleanOperador);
+    const safeFare = Number.isFinite(Number(fare)) && Number(fare) >= 0 && Number(fare) <= 50000
+      ? Math.round(Number(fare))
+      : getDefaultFare();
+
+    const cleanOrigen = typeof origen === 'string' ? origen.trim().slice(0, 120) : '';
+    const cleanDestino = typeof destino === 'string' ? destino.trim().slice(0, 120) : '';
+    const distanciaKm = Math.round((lineStringLength(idaCoords) / 1000) * 100) / 100;
+
     // Build route object
     const routeData = {
-      nombre,
-      operador,
-      color: color || getCompanyColor(operador),
+      nombre: cleanNombre.slice(0, 100),
+      operador: cleanOperador.slice(0, 100),
+      color: safeColorHex,
+      sistema: ['urbano', 'masivo'].includes(sistema) ? sistema : 'urbano',
+      esIntermunicipal: Boolean(esIntermunicipal),
+      tipoRecorrido: safeRecorrido,
+      descripcion: typeof descripcion === 'string' ? descripcion.trim().slice(0, 300) : '',
+      distanciaKm,
+      tieneRegreso: regCoords.length >= 2,
       type: 'official',
-      fare: fare || getDefaultFare(),
+      fare: safeFare,
       fuente: 'manual',
-      activa: true,
+      activa: activa !== undefined ? Boolean(activa) : true,
       trazadoIncompleto: false,
       geometriaOSM: false,
       audit: { revisadoManualmente: true, observaciones: `Creada por admin ${req.user.email}` },
       ida: {
         puntoPartida: {
-          nombre: origen || 'Inicio Ida',
+          nombre: cleanOrigen || 'Inicio Ida',
           coordenadas: {
             type: 'Point',
-            coordinates: ida.trazado.coordinates[0],
+            coordinates: idaCoords[0],
           },
         },
         puntoFinal: {
-          nombre: destino || 'Fin Ida',
+          nombre: cleanDestino || 'Fin Ida',
           coordenadas: {
             type: 'Point',
-            coordinates: ida.trazado.coordinates[ida.trazado.coordinates.length - 1],
+            coordinates: idaCoords[idaCoords.length - 1],
           },
         },
         trazado: {
           type: 'LineString',
-          coordinates: ida.trazado.coordinates,
+          coordinates: idaCoords,
         },
       },
-      regreso: regreso?.trazado?.coordinates?.length >= 2
-        ? {
-            puntoPartida: {
-              nombre: destino || 'Inicio Vuelta',
-              coordenadas: {
-                type: 'Point',
-                coordinates: regreso.trazado.coordinates[0],
-              },
-            },
-            puntoFinal: {
-              nombre: origen || 'Fin Vuelta',
-              coordenadas: {
-                type: 'Point',
-                coordinates: regreso.trazado.coordinates[regreso.trazado.coordinates.length - 1],
-              },
-            },
-            trazado: {
-              type: 'LineString',
-              coordinates: regreso.trazado.coordinates,
-            },
-          }
-        : {
-            // Mirror ida as regreso if not provided
-            puntoPartida: {
-              nombre: destino || 'Inicio Vuelta',
-              coordenadas: {
-                type: 'Point',
-                coordinates: ida.trazado.coordinates[ida.trazado.coordinates.length - 1],
-              },
-            },
-            puntoFinal: {
-              nombre: origen || 'Fin Vuelta',
-              coordenadas: {
-                type: 'Point',
-                coordinates: ida.trazado.coordinates[0],
-              },
-            },
-            trazado: {
-              type: 'LineString',
-              coordinates: [...ida.trazado.coordinates].reverse(),
-            },
-          },
     };
 
-    if (codigo) routeData.codigo = codigo;
-    if (origen) routeData.origen = origen;
-    if (destino) routeData.destino = destino;
-    if (codigoAMBQ) routeData.codigoAMBQ = codigoAMBQ;
-    if (resolucionPdf) routeData.resolucionPdf = resolucionPdf;
+    if (regCoords.length >= 2) {
+      routeData.regreso = {
+        puntoPartida: {
+          nombre: cleanDestino || 'Inicio Vuelta',
+          coordenadas: { type: 'Point', coordinates: regCoords[0] },
+        },
+        puntoFinal: {
+          nombre: cleanOrigen || 'Fin Vuelta',
+          coordenadas: { type: 'Point', coordinates: regCoords[regCoords.length - 1] },
+        },
+        trazado: { type: 'LineString', coordinates: regCoords },
+      };
+    } else if (safeRecorrido === 'circular') {
+      routeData.tieneRegreso = true;
+      routeData.regreso = {
+        puntoPartida: {
+          nombre: cleanDestino || 'Inicio Vuelta',
+          coordenadas: { type: 'Point', coordinates: idaCoords[idaCoords.length - 1] },
+        },
+        puntoFinal: {
+          nombre: cleanOrigen || 'Fin Vuelta',
+          coordenadas: { type: 'Point', coordinates: idaCoords[0] },
+        },
+        trazado: { type: 'LineString', coordinates: [...idaCoords].reverse() },
+      };
+    }
+
+    if (typeof codigo === 'string' && codigo.trim()) routeData.codigo = codigo.trim().slice(0, 30);
+    if (cleanOrigen) routeData.origen = cleanOrigen;
+    if (cleanDestino) routeData.destino = cleanDestino;
+    if (typeof codigoAMBQ === 'string' && codigoAMBQ.trim()) routeData.codigoAMBQ = codigoAMBQ.trim().slice(0, 40);
+    if (typeof resolucionPdf === 'string' && resolucionPdf.trim()) routeData.resolucionPdf = resolucionPdf.trim().slice(0, 120);
 
     const route = new Route(routeData);
     await route.save();
+
+    await logAdminAction({
+      req,
+      action: 'ROUTE_CREATE',
+      category: 'route',
+      targetType: 'Route',
+      targetId: route._id,
+      summary: `Ruta creada: ${route.codigo ? `${route.codigo} — ` : ''}${route.nombre} (${route.operador})`,
+    });
 
     res.status(201).json({
       success: true,
@@ -1077,53 +1167,105 @@ async function updateRoute(req, res) {
       return res.status(404).json({ success: false, message: 'Ruta no encontrada' });
     }
 
-    const updates = req.body;
+    const updates = req.body || {};
 
-    // Update simple fields
-    const simpleFields = ['nombre', 'operador', 'color', 'fare', 'codigo', 'origen', 'destino', 'activa', 'codigoAMBQ', 'resolucionPdf', 'trazadoIncompleto'];
-    for (const field of simpleFields) {
-      if (updates[field] !== undefined) {
-        route[field] = updates[field];
-      }
+    if (typeof updates.nombre === 'string' && updates.nombre.trim()) {
+      route.nombre = updates.nombre.trim().slice(0, 100);
     }
+    if (typeof updates.operador === 'string' && updates.operador.trim()) {
+      route.operador = updates.operador.trim().slice(0, 100);
+    }
+    if (typeof updates.color === 'string' && HEX_COLOR_RE.test(updates.color.trim())) {
+      route.color = updates.color.trim();
+    }
+    if (updates.fare !== undefined) {
+      const f = Number(updates.fare);
+      if (Number.isFinite(f) && f >= 0 && f <= 50000) route.fare = Math.round(f);
+    }
+    if (typeof updates.codigo === 'string') route.codigo = updates.codigo.trim().slice(0, 30);
+    if (typeof updates.descripcion === 'string') route.descripcion = updates.descripcion.trim().slice(0, 300);
+    if (typeof updates.sistema === 'string' && ['urbano', 'masivo'].includes(updates.sistema)) {
+      route.sistema = updates.sistema;
+    }
+    if (updates.esIntermunicipal !== undefined) route.esIntermunicipal = Boolean(updates.esIntermunicipal);
+    if (typeof updates.tipoRecorrido === 'string' && ['circular', 'lineal'].includes(updates.tipoRecorrido)) {
+      route.tipoRecorrido = updates.tipoRecorrido;
+    }
+    if (typeof updates.origen === 'string') route.origen = updates.origen.trim().slice(0, 120);
+    if (typeof updates.destino === 'string') route.destino = updates.destino.trim().slice(0, 120);
+    if (updates.activa !== undefined) route.activa = Boolean(updates.activa);
+    if (typeof updates.codigoAMBQ === 'string') route.codigoAMBQ = updates.codigoAMBQ.trim().slice(0, 40);
+    if (typeof updates.resolucionPdf === 'string') route.resolucionPdf = updates.resolucionPdf.trim().slice(0, 120);
+    if (updates.trazadoIncompleto !== undefined) route.trazadoIncompleto = Boolean(updates.trazadoIncompleto);
 
-    // Update ida — auto-generate puntoPartida/puntoFinal from coordinates
-    if (updates.ida?.trazado?.coordinates?.length >= 2) {
-      const coords = updates.ida.trazado.coordinates;
+    // Update ida — auto-generate puntoPartida/puntoFinal from validated coordinates
+    if (updates.ida?.trazado?.coordinates !== undefined) {
+      const coords = filterValidLineCoords(updates.ida.trazado.coordinates);
+      if (coords.length < 2) {
+        return res.status(400).json({
+          success: false,
+          message: 'El trazado de ida requiere al menos 2 coordenadas válidas',
+        });
+      }
       route.ida = {
         puntoPartida: {
-          nombre: updates.origen || route.origen || 'Inicio Ida',
+          nombre: route.origen || 'Inicio Ida',
           coordenadas: { type: 'Point', coordinates: coords[0] },
         },
         puntoFinal: {
-          nombre: updates.destino || route.destino || 'Fin Ida',
+          nombre: route.destino || 'Fin Ida',
           coordenadas: { type: 'Point', coordinates: coords[coords.length - 1] },
         },
         trazado: { type: 'LineString', coordinates: coords },
       };
+      route.distanciaKm = Math.round((lineStringLength(coords) / 1000) * 100) / 100;
     }
 
-    // Update regreso — auto-generate puntoPartida/puntoFinal from coordinates
-    if (updates.regreso?.trazado?.coordinates?.length >= 2) {
-      const coords = updates.regreso.trazado.coordinates;
+    // Update or clear regreso
+    if (updates.clearRegreso === true) {
+      route.regreso = undefined;
+      route.tieneRegreso = false;
+    } else if (updates.regreso?.trazado?.coordinates !== undefined) {
+      const coords = filterValidLineCoords(updates.regreso.trazado.coordinates);
+      if (coords.length < 2) {
+        return res.status(400).json({
+          success: false,
+          message: 'El trazado de regreso requiere al menos 2 coordenadas válidas',
+        });
+      }
       route.regreso = {
         puntoPartida: {
-          nombre: updates.destino || route.destino || 'Inicio Vuelta',
+          nombre: route.destino || 'Inicio Vuelta',
           coordenadas: { type: 'Point', coordinates: coords[0] },
         },
         puntoFinal: {
-          nombre: updates.origen || route.origen || 'Fin Vuelta',
+          nombre: route.origen || 'Fin Vuelta',
           coordenadas: { type: 'Point', coordinates: coords[coords.length - 1] },
         },
         trazado: { type: 'LineString', coordinates: coords },
       };
+      route.tieneRegreso = true;
     }
 
-    route.audit.revisadoManualmente = true;
-    route.audit.observaciones = `Actualizada por admin ${req.user.email} el ${new Date().toISOString()}`;
+    if (!route.audit) route.audit = {};
+    route.audit.revisadoManualmente =
+      updates.revisadoManualmente !== undefined ? Boolean(updates.revisadoManualmente) : true;
+    route.audit.observaciones =
+      typeof updates.auditObservaciones === 'string' && updates.auditObservaciones.trim()
+        ? updates.auditObservaciones.trim().slice(0, 300)
+        : `Actualizada por admin ${req.user.email} el ${new Date().toISOString()}`;
     route.updatedAt = new Date();
 
     await route.save();
+
+    await logAdminAction({
+      req,
+      action: 'ROUTE_UPDATE',
+      category: 'route',
+      targetType: 'Route',
+      targetId: route._id,
+      summary: `Ruta actualizada: ${route.codigo ? `${route.codigo} — ` : ''}${route.nombre}`,
+    });
 
     res.json({
       success: true,
@@ -1141,6 +1283,48 @@ async function updateRoute(req, res) {
 }
 
 /**
+ * PATCH /api/routes/:id/toggle-active
+ * Alterna o establece rápidamente si una ruta está activa (admin only).
+ */
+async function toggleRouteActive(req, res) {
+  try {
+    const route = await Route.findById(req.params.id);
+    if (!route) {
+      return res.status(404).json({ success: false, message: 'Ruta no encontrada' });
+    }
+
+    const nextActive = req.body?.activa !== undefined ? Boolean(req.body.activa) : !route.activa;
+    route.activa = nextActive;
+    route.updatedAt = new Date();
+    await route.save();
+
+    await logAdminAction({
+      req,
+      action: 'ROUTE_TOGGLE',
+      category: 'route',
+      targetType: 'Route',
+      targetId: route._id,
+      summary: `Ruta ${nextActive ? 'activada' : 'pausada'}: ${route.codigo ? `${route.codigo} — ` : ''}${route.nombre}`,
+      metadata: { activa: nextActive },
+    });
+
+    res.json({
+      success: true,
+      message: nextActive ? `Ruta "${route.nombre}" activada` : `Ruta "${route.nombre}" pausada`,
+      data: {
+        _id: route._id,
+        nombre: route.nombre,
+        codigo: route.codigo,
+        activa: route.activa,
+      },
+    });
+  } catch (error) {
+    console.error('Error al cambiar estado de ruta:', error);
+    res.status(500).json({ success: false, message: 'Error al cambiar el estado de la ruta' });
+  }
+}
+
+/**
  * DELETE /api/routes/:id
  * Delete a route (admin only).
  */
@@ -1150,6 +1334,15 @@ async function deleteRoute(req, res) {
     if (!route) {
       return res.status(404).json({ success: false, message: 'Ruta no encontrada' });
     }
+
+    await logAdminAction({
+      req,
+      action: 'ROUTE_DELETE',
+      category: 'route',
+      targetType: 'Route',
+      targetId: route._id,
+      summary: `Ruta eliminada: ${route.codigo ? `${route.codigo} — ` : ''}${route.nombre} (${route.operador})`,
+    });
 
     res.json({
       success: true,
@@ -1166,11 +1359,37 @@ async function deleteRoute(req, res) {
 
 /**
  * DELETE /api/routes/admin/all
- * Delete ALL routes (admin only — use with caution).
+ * Delete ALL routes (bloqueado en producción salvo ALLOW_BULK_ROUTE_WIPE=true + confirmación textual).
  */
 async function deleteAllRoutes(req, res) {
   try {
+    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_BULK_ROUTE_WIPE !== 'true') {
+      return res.status(403).json({
+        success: false,
+        message: 'El borrado masivo de rutas está deshabilitado en producción por seguridad.',
+        code: 'BULK_WIPE_DISABLED',
+      });
+    }
+
+    if (req.body?.confirmPhrase !== 'ELIMINAR TODAS LAS RUTAS') {
+      return res.status(400).json({
+        success: false,
+        message: 'Se requiere frase de confirmación exacta: ELIMINAR TODAS LAS RUTAS',
+        code: 'CONFIRMATION_REQUIRED',
+      });
+    }
+
     const result = await Route.deleteMany({});
+
+    await logAdminAction({
+      req,
+      action: 'ROUTE_DELETE_ALL',
+      category: 'security',
+      targetType: 'Route',
+      summary: `Borrado masivo ejecutado (${result.deletedCount} rutas)`,
+      metadata: { deletedCount: result.deletedCount },
+    });
+
     res.json({
       success: true,
       message: `${result.deletedCount} rutas eliminadas`,
@@ -1194,6 +1413,7 @@ module.exports = {
   navigateRoute,
   createRoute,
   updateRoute,
+  toggleRouteActive,
   deleteRoute,
   deleteAllRoutes,
 };

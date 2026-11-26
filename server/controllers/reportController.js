@@ -17,6 +17,8 @@
 const Report = require('../models/ReportModel');
 const User = require('../models/UserModel');
 const Route = require('../models/RouteModel');
+const { getSystemConfig } = require('../models/SystemConfigModel');
+const { logAdminAction } = require('../models/AdminLogModel');
 const { isValidObjectId, isValidCoord } = require('../middleware/security');
 
 const TYPE_META = {
@@ -41,6 +43,15 @@ const DISMISS_LABELS = {
  */
 async function createReport(req, res) {
   try {
+    const sysConfig = await getSystemConfig();
+    if (!sysConfig.reportsEnabled && req.user?.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        code: 'REPORTS_DISABLED',
+        message: 'Los reportes en vivo están pausados temporalmente por el administrador.',
+      });
+    }
+
     const { type, description, location, routeId, locationName } = req.body || {};
 
     const lat = parseFloat(location?.lat);
@@ -381,8 +392,12 @@ async function adminGetReports(req, res) {
     const skip = (safePage - 1) * limit;
 
     const filter = {};
-    if (status && status !== 'all') filter.status = status;
-    if (type && type !== 'all') filter.type = type;
+    if (typeof status === 'string' && ['active', 'dismissed', 'admin_removed'].includes(status)) {
+      filter.status = status;
+    }
+    if (typeof type === 'string' && Report.REPORT_TYPES.includes(type)) {
+      filter.type = type;
+    }
 
     const [reports, total] = await Promise.all([
       Report.find(filter)
@@ -426,17 +441,31 @@ async function adminGetReports(req, res) {
  */
 async function adminDeleteReport(req, res) {
   try {
-    const { reason } = req.body;
+    const { reason } = req.body || {};
 
     const report = await Report.findById(req.params.id);
     if (!report) {
       return res.status(404).json({ success: false, message: 'Reporte no encontrado' });
     }
 
+    const cleanReason =
+      typeof reason === 'string' && reason.trim()
+        ? reason.trim().slice(0, 200)
+        : 'Removido por administrador';
+
     report.status = 'admin_removed';
     report.removedBy = req.user._id;
-    report.removeReason = reason || 'Removido por administrador';
+    report.removeReason = cleanReason;
     await report.save();
+
+    await logAdminAction({
+      req,
+      action: 'REPORT_DELETE',
+      category: 'report',
+      targetType: 'Report',
+      targetId: report._id,
+      summary: `Reporte (${report.type}) eliminado en ruta ${report.routeName || ''}: ${cleanReason}`,
+    });
 
     res.json({
       success: true,

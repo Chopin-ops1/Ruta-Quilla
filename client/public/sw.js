@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'rutaquilla-shell-v2';
-const API_CACHE = 'rutaquilla-api-v2';
+const SHELL_CACHE = 'rutaquilla-shell-v3';
+const API_CACHE = 'rutaquilla-api-v3';
 const SHELL_ASSETS = ['/', '/logo.png', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
@@ -31,8 +31,8 @@ self.addEventListener('fetch', (event) => {
   // Only handle same-origin requests; pass through external tile/routing/geocoding hosts
   if (url.origin !== self.location.origin) return;
 
-  // Network-first with cache fallback ONLY for public GET /api/routes
-  if (url.pathname === '/api/routes') {
+  // Network-first with cache fallback ONLY for public GET /api/routes and /api/maps/transmetro-stops
+  if (url.pathname === '/api/routes' || url.pathname === '/api/maps/transmetro-stops') {
     event.respondWith(
       fetch(request)
         .then((res) => {

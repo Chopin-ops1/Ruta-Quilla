@@ -10,7 +10,10 @@
 
 const axios = require('axios');
 const Route = require('../models/RouteModel');
+const { getSystemConfig } = require('../models/SystemConfigModel');
+const { issueFormToken } = require('../services/emailSecurityService');
 const { isValidCoord } = require('../middleware/security');
+const { getAllPhysicalStops } = require('../services/transmetroStopsService');
 
 const BQ_CENTER = { lat: 10.9685, lng: -74.7813 };
 const BQ_BBOX = { west: -75.15, south: 10.78, east: -74.68, north: 11.12 };
@@ -28,6 +31,7 @@ const OVERPASS_MIRRORS = [
 const geocodeCache = new Map();
 const reverseCache = new Map();
 const poiCache = new Map();
+const roadSafetyCache = new Map();
 
 function getCachedValue(cache, key, ttlMs = CACHE_TTL_MS) {
   const entry = cache.get(key);
@@ -663,11 +667,215 @@ async function getMapPOIs(req, res) {
   }
 }
 
+/**
+ * GET /api/maps/transmetro-stops
+ * Retorna el catálogo deduplicado de paraderos oficiales de Transmetro (datos.gov.co hxy3-94yh).
+ */
+function getTransmetroStops(req, res) {
+  try {
+    const payload = getAllPhysicalStops();
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.json({
+      success: true,
+      count: payload.total,
+      source: payload.source,
+      data: payload.data,
+    });
+  } catch (error) {
+    console.error('Error en getTransmetroStops:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener paraderos oficiales de Transmetro',
+    });
+  }
+}
+
+/**
+ * GET /api/maps/road-safety
+ * Capa opcional de seguridad vial (semaforización svyb-d6ts y fotodetección cpp6-je64 de datos.gov.co)
+ * con caché en memoria de 24 horas.
+ */
+async function getRoadSafetyLayer(req, res) {
+  try {
+    const cached = getCachedValue(roadSafetyCache, 'road_safety_v1', CACHE_TTL_MS);
+    if (cached) {
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      return res.json({
+        success: true,
+        cached: true,
+        count: cached.data.length,
+        counts: cached.counts,
+        source: 'Datos Abiertos Colombia (datos.gov.co · svyb-d6ts & cpp6-je64)',
+        data: cached.data,
+      });
+    }
+
+    const headers = { 'User-Agent': 'RutaQuilla/2.0 (https://rutaquilla.me)' };
+    const [semRes, fotoRes] = await Promise.allSettled([
+      axios.get('https://www.datos.gov.co/resource/svyb-d6ts.json', {
+        params: { $limit: 1000 },
+        timeout: 7000,
+        headers,
+      }),
+      axios.get('https://www.datos.gov.co/resource/cpp6-je64.json', {
+        params: { $limit: 200 },
+        timeout: 7000,
+        headers,
+      }),
+    ]);
+
+    const items = [];
+    let semaforosCount = 0;
+    let fotodeteccionCount = 0;
+
+    if (semRes.status === 'fulfilled' && Array.isArray(semRes.value?.data)) {
+      semRes.value.data.forEach((row, idx) => {
+        const lat = parseFloat(row?.latitud);
+        const lng = parseFloat(row?.longitud);
+        if (!isValidCoord(lat, lng, true)) return;
+        const code = String(row?.codigo || '').trim();
+        const loc = String(row?.location || '').trim();
+        semaforosCount += 1;
+        items.push({
+          id: `sem-${idx + 1}`,
+          kind: 'semaforo',
+          name: loc || (code ? `Semáforo ${code}` : 'Intersección semaforizada'),
+          subtitle: code ? `Código ${code}` : 'Intersección semaforizada',
+          status: String(row?.estado || 'Registrado').trim(),
+          lat,
+          lng,
+        });
+      });
+    } else if (semRes.status === 'rejected') {
+      console.warn('Semaforización datos.gov.co fallback:', semRes.reason?.message);
+    }
+
+    if (fotoRes.status === 'fulfilled' && Array.isArray(fotoRes.value?.data)) {
+      fotoRes.value.data.forEach((row, idx) => {
+        const pt = row?.point?.coordinates || row?.geocoded_column?.coordinates;
+        const lat = parseFloat(row?.latitud ?? pt?.[1]);
+        const lng = parseFloat(row?.longitud ?? pt?.[0]);
+        if (!isValidCoord(lat, lng, true)) return;
+        fotodeteccionCount += 1;
+        items.push({
+          id: `foto-${idx + 1}`,
+          kind: 'fotodeteccion',
+          name: String(row?.name || 'Cámara de fotodetección').trim(),
+          subtitle: String(row?.tipo_de_infracci_n || 'Control vial').trim(),
+          status: 'Activa (ref. datos.gov.co)',
+          lat,
+          lng,
+        });
+      });
+    } else if (fotoRes.status === 'rejected') {
+      console.warn('Fotodetección datos.gov.co fallback:', fotoRes.reason?.message);
+    }
+
+    if (items.length === 0) {
+      return res.json({
+        success: true,
+        cached: false,
+        fallback: true,
+        count: 0,
+        counts: { semaforos: 0, fotodeteccion: 0 },
+        source: 'Datos Abiertos Colombia (datos.gov.co · svyb-d6ts & cpp6-je64)',
+        data: [],
+      });
+    }
+
+    const payload = {
+      counts: { semaforos: semaforosCount, fotodeteccion: fotodeteccionCount },
+      data: items,
+    };
+    setCachedValue(roadSafetyCache, 'road_safety_v1', payload, 4);
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    return res.json({
+      success: true,
+      cached: false,
+      count: items.length,
+      counts: payload.counts,
+      source: 'Datos Abiertos Colombia (datos.gov.co · svyb-d6ts & cpp6-je64)',
+      data: items,
+    });
+  } catch (error) {
+    console.error('Error en getRoadSafetyLayer:', error);
+    return res.json({
+      success: true,
+      cached: false,
+      fallback: true,
+      count: 0,
+      counts: { semaforos: 0, fotodeteccion: 0 },
+      data: [],
+    });
+  }
+}
+
+function getMapCacheStats() {
+  return {
+    geocode: geocodeCache.size,
+    reverse: reverseCache.size,
+    pois: poiCache.size,
+    roadSafety: roadSafetyCache.size,
+  };
+}
+
+function clearMapCaches() {
+  const cleared = getMapCacheStats();
+  geocodeCache.clear();
+  reverseCache.clear();
+  poiCache.clear();
+  roadSafetyCache.clear();
+  return cleared;
+}
+
+/**
+ * GET /api/maps/public-config
+ * Retorna configuración pública en vivo (freemium, banner, flags de registro/reportes) y un formToken anti-bot.
+ */
+async function getPublicConfig(req, res) {
+  try {
+    const cfg = await getSystemConfig();
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({
+      success: true,
+      data: {
+        registrationEnabled: cfg.registrationEnabled,
+        botShieldEnabled: cfg.botShieldEnabled,
+        strictEmailValidation: cfg.strictEmailValidation,
+        requireEmailVerification: cfg.requireEmailVerification,
+        adminLogin2FA: cfg.adminLogin2FA,
+        turnstileEnabled: cfg.turnstileEnabled,
+        turnstileSiteKey: cfg.turnstileSiteKey || (process.env.TURNSTILE_SITE_KEY || '').trim(),
+        reportsEnabled: cfg.reportsEnabled,
+        capturesEnabled: cfg.capturesEnabled,
+        maxFreeSearches: cfg.maxFreeSearches,
+        banner: {
+          enabled: cfg.bannerEnabled,
+          type: cfg.bannerType,
+          text: cfg.bannerText,
+        },
+        formToken: issueFormToken(),
+      },
+    });
+  } catch (error) {
+    console.error('Error en getPublicConfig:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener configuración pública',
+    });
+  }
+}
+
 module.exports = {
   downloadOfflineMap,
   getSponsoredLocations,
   geocodePlaces,
   reverseGeocodePoint,
   getMapPOIs,
+  getTransmetroStops,
+  getRoadSafetyLayer,
+  getMapCacheStats,
+  clearMapCaches,
+  getPublicConfig,
   normalizeBarranquillaQuery,
 };

@@ -65,6 +65,32 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  // ---- Moderación y Control de Sesiones ----
+  isSuspended: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
+  suspendedReason: {
+    type: String,
+    default: '',
+    trim: true,
+    maxlength: 200,
+  },
+  tokenVersion: {
+    type: Number,
+    default: 0,
+  },
+  failedLoginAttempts: {
+    type: Number,
+    default: 0,
+    select: false,
+  },
+  lockUntil: {
+    type: Date,
+    default: null,
+    select: false,
+  },
   // Contador de rutas contribuidas por el usuario
   contributions: {
     type: Number,
@@ -104,6 +130,20 @@ const userSchema = new mongoose.Schema({
     select: false,
   },
   resetAttempts: {
+    type: Number,
+    default: 0,
+    select: false,
+  },
+  // ---- Admin 2FA Login OTP ----
+  loginOtpCode: {
+    type: String,
+    select: false,
+  },
+  loginOtpExpiry: {
+    type: Date,
+    select: false,
+  },
+  loginOtpAttempts: {
     type: Number,
     default: 0,
     select: false,
@@ -151,6 +191,17 @@ const userSchema = new mongoose.Schema({
     transform: function(doc, ret) {
       ret.id = ret._id;
       delete ret.password; // Nunca exponer la contraseña en JSON
+      delete ret.verificationCode;
+      delete ret.verificationCodeExpiry;
+      delete ret.verificationAttempts;
+      delete ret.resetCode;
+      delete ret.resetCodeExpiry;
+      delete ret.resetAttempts;
+      delete ret.loginOtpCode;
+      delete ret.loginOtpExpiry;
+      delete ret.loginOtpAttempts;
+      delete ret.failedLoginAttempts;
+      delete ret.lockUntil;
       delete ret.__v;
       return ret;
     },
@@ -279,7 +330,7 @@ userSchema.methods.awardXP = async function(amount) {
  * (necesario para el login, ya que password tiene select: false).
  */
 userSchema.statics.findByCredentials = async function(email) {
-  return this.findOne({ email }).select('+password');
+  return this.findOne({ email }).select('+password +failedLoginAttempts +lockUntil');
 };
 
 const User = mongoose.model('User', userSchema);

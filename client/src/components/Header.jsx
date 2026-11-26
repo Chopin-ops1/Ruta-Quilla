@@ -5,11 +5,20 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { User, Crown, LogOut, Menu, X, ChevronDown, Shield, Sun, Moon, Search, Layers } from 'lucide-react';
+import { User, Crown, LogOut, Menu, X, ChevronDown, Shield, Sun, Moon, Search, Layers, Download } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
-export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLegal, onAdminClick, routeCount = 0 }) {
+export default function Header({
+  onLoginClick,
+  onMenuToggle,
+  menuOpen,
+  onShowLegal,
+  onAdminClick,
+  routeCount = 0,
+  canInstallPWA = false,
+  onInstallPWA,
+}) {
   const { user, isAuthenticated, isPremium, logout, remainingFreeSearches, maxFreeSearches } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -82,9 +91,8 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
 
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           <div
+            className="w-[24px] h-[24px] sm:w-[28px] sm:h-[28px]"
             style={{
-              width: 28,
-              height: 28,
               borderRadius: 7,
               flexShrink: 0,
               overflow: 'hidden',
@@ -98,11 +106,10 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <h1
-              className="font-display"
+              className="font-display text-[13.5px] sm:text-[15.5px]"
               style={{
-                fontSize: 15.5,
                 fontWeight: 800,
                 color: 'var(--text-primary)',
                 lineHeight: 1.05,
@@ -110,16 +117,17 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
                 display: 'flex',
                 alignItems: 'center',
                 gap: 3,
+                whiteSpace: 'nowrap',
               }}
             >
               <span>Ruta</span>
               <span
+                className="text-[12px] sm:text-[14px]"
                 style={{
                   background: 'var(--plate-bg)',
                   color: 'var(--plate-fg)',
-                  padding: '1px 6px',
+                  padding: '1px 5px',
                   borderRadius: 5,
-                  fontSize: 14,
                   border: '1px solid rgba(255, 194, 26, 0.28)',
                 }}
               >
@@ -209,6 +217,26 @@ export default function Header({ onLoginClick, onMenuToggle, menuOpen, onShowLeg
 
       {/* Right: Acciones + Cuenta */}
       <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+        {canInstallPWA && (
+          <button
+            type="button"
+            onClick={onInstallPWA}
+            id="install-pwa-btn"
+            aria-label="Instalar RutaQuilla como app"
+            title="Instalar RutaQuilla"
+            className="rq-chip"
+            style={{
+              height: 30,
+              padding: '0 8px',
+              borderColor: 'color-mix(in srgb, var(--brand) 45%, var(--border-color))',
+              color: 'var(--brand)',
+            }}
+          >
+            <Download size={13} />
+            <span className="hidden sm:inline" style={{ fontSize: 11, fontWeight: 700 }}>App</span>
+          </button>
+        )}
+
         <a
           href="https://instagram.com/ruta.quilla"
           target="_blank"

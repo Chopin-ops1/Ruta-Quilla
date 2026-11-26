@@ -60,7 +60,9 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: isProduction ? ["'self'"] : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      scriptSrc: isProduction
+        ? ["'self'", 'https://challenges.cloudflare.com']
+        : ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://challenges.cloudflare.com'],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       imgSrc: [
         "'self'", 'data:', 'blob:',
@@ -80,6 +82,7 @@ app.use(helmet({
         "'self'",
         'blob:',
         'data:',
+        'https://challenges.cloudflare.com',
         'https://tiles.openfreemap.org',
         'https://photon.komoot.io',
         'https://nominatim.openstreetmap.org',
@@ -90,7 +93,7 @@ app.use(helmet({
         'https://roads.googleapis.com',
         'https://places.googleapis.com',
       ],
-      frameSrc: ["'none'"],
+      frameSrc: ['https://challenges.cloudflare.com'],
       objectSrc: ["'none'"],
     },
   },
@@ -137,7 +140,7 @@ app.use(cors({
  */
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === 'production' ? 60 : 300,
+  max: process.env.NODE_ENV === 'production' ? 240 : 400,
   message: {
     success: false,
     message: 'Demasiadas solicitudes. Intenta de nuevo en 15 minutos.',
@@ -152,9 +155,20 @@ const limiter = rateLimit({
       urlPath === '/api/ping' ||
       urlPath === '/api/maps/geocode' ||
       urlPath === '/api/maps/reverse' ||
-      urlPath === '/api/maps/pois'
+      urlPath === '/api/maps/pois' ||
+      urlPath === '/api/maps/transmetro-stops' ||
+      urlPath === '/api/maps/road-safety'
     );
   },
+});
+
+// Rate limit dedicado para escrituras administrativas (POST/PUT/PATCH/DELETE)
+const adminWriteLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 80,
+  skip: (req) => req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS',
+  message: { success: false, message: 'Límite de cambios administrativos alcanzado. Espera unos minutos.', code: 'ADMIN_RATE_LIMIT' },
+  standardHeaders: true, legacyHeaders: false,
 });
 
 // Rate limit dedicado para geocoding/autocompletado en vivo
@@ -192,6 +206,7 @@ const captureLimiter = rateLimit({
 app.use('/api/users/login', authLimiter);
 app.use('/api/users/register', authLimiter);
 app.use('/api/users/verify', authLimiter);
+app.use('/api/users/verify-2fa', authLimiter);
 app.use('/api/users/reset-password', authLimiter);
 app.use('/api/users/resend-code', resendLimiter);
 app.use('/api/users/forgot-password', resendLimiter);
@@ -199,6 +214,10 @@ app.use('/api/routes/capture', captureLimiter);
 app.use('/api/maps/geocode', geocodeLimiter);
 app.use('/api/maps/reverse', geocodeLimiter);
 app.use('/api/maps/pois', geocodeLimiter);
+app.use('/api/maps/transmetro-stops', geocodeLimiter);
+app.use('/api/maps/road-safety', geocodeLimiter);
+app.use('/api/admin', adminWriteLimiter);
+app.use('/api/routes', adminWriteLimiter);
 app.use('/api/', limiter);
 
 // Parsear JSON con límite de tamaño
@@ -244,13 +263,12 @@ app.get('/api/ping', (req, res) => {
   res.status(200).send('pong');
 });
 
-// Endpoint de salud del servidor
+// Endpoint de salud del servidor (sin exponer detalles internos)
 app.get('/api/health', (req, res) => {
   res.json({
     success: true,
     message: 'RutaQuilla API funcionando correctamente 🚌',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
   });
 });
 
@@ -357,10 +375,8 @@ async function seedDatabase() {
       console.log(`  ✅ ${routesList.length} rutas insertadas en DB`);
     }
 
-    // Crear usuarios de demo (solo si no existen por email)
-    // Esto es crucial: si re-creamos usuarios, sus _id cambian y todos
-    // los tokens JWT activos quedan inválidos → se cierra sesión a todos.
-    if (seedData.users && seedData.users.length > 0) {
+    // Crear usuarios de demo solo fuera de producción
+    if (!isProduction && seedData.users && seedData.users.length > 0) {
       let created = 0;
       for (const userData of seedData.users) {
         const exists = await User.findOne({ email: userData.email.toLowerCase() });

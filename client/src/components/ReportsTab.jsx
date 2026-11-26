@@ -1,36 +1,46 @@
 /**
  * ============================================
- * RutaQuilla - Admin Reports Tab
+ * RutaQuilla - Admin Reports Tab v4
  * ============================================
- *
- * Panel de gestión de reportes para administradores:
- * - Lista con filtros (status, tipo)
- * - Estadísticas (activos, removidos, etc.)
- * - Eliminar reportes con razón
- * - Mobile-friendly con scroll
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { AlertTriangle, Trash2, RefreshCw, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  AlertTriangle,
+  Trash2,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  GitBranch,
+  Ban,
+  Car,
+  ShieldAlert,
+  CloudRain,
+  AlertOctagon,
+  Flag,
+  Loader2,
+} from 'lucide-react';
 import { reportAPI } from '../services/api';
+import { useToast } from '../context/ToastContext';
 
 const TYPE_META = {
-  desvio:     { emoji: '🔀', label: 'Desvío',       color: '#F59E0B' },
-  cancelada:  { emoji: '🚫', label: 'Cancelada',    color: '#EF4444' },
-  trafico:    { emoji: '🚗', label: 'Tráfico',      color: '#F97316' },
-  peligro:    { emoji: '⚠️', label: 'Peligro',      color: '#DC2626' },
-  inundacion: { emoji: '🌊', label: 'Inundación',   color: '#3B82F6' },
-  accidente:  { emoji: '💥', label: 'Accidente',    color: '#A855F7' },
-  otro:       { emoji: '📌', label: 'Otro',         color: '#64748B' },
+  desvio:     { icon: GitBranch,    label: 'Desvío',      color: '#D99B00' },
+  cancelada:  { icon: Ban,          label: 'Cancelada',   color: '#E5484D' },
+  trafico:    { icon: Car,          label: 'Tráfico',     color: '#E0701D' },
+  peligro:    { icon: ShieldAlert,  label: 'Peligro',     color: '#C83232' },
+  inundacion: { icon: CloudRain,    label: 'Inundación',  color: '#3B8BF0' },
+  accidente:  { icon: AlertOctagon, label: 'Accidente',   color: '#8F52D9' },
+  otro:       { icon: Flag,         label: 'Otro',        color: '#6E7581' },
 };
 
 const STATUS_LABELS = {
-  active:        { label: 'Activo',         color: '#10B981', bg: 'rgba(16,185,129,0.12)' },
-  dismissed:     { label: 'Removido',       color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
-  admin_removed: { label: 'Admin removió',  color: '#EF4444', bg: 'rgba(239,68,68,0.12)' },
+  active:        { label: 'Activo',         color: 'var(--mangle)',   bg: 'var(--mangle-soft)' },
+  dismissed:     { label: 'Comunidad',      color: 'var(--brand)',    bg: 'var(--brand-soft)' },
+  admin_removed: { label: 'Admin removió',  color: 'var(--carnaval)', bg: 'var(--carnaval-soft)' },
 };
 
-export default function ReportsTab() {
+export default function ReportsTab({ refreshTick = 0, onReportsMutated }) {
+  const toast = useToast();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -38,229 +48,259 @@ export default function ReportsTab() {
   const [stats, setStats] = useState({});
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterType, setFilterType] = useState('all');
-  const [deleteConfirm, setDeleteConfirm] = useState(null); // report._id
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deleteReason, setDeleteReason] = useState('');
-  const [message, setMessage] = useState(null);
 
   const loadReports = useCallback(async () => {
     setLoading(true);
     try {
       const res = await reportAPI.adminGetAll({
-        status: filterStatus, type: filterType, page,
+        status: filterStatus,
+        type: filterType,
+        page,
       });
       setReports(res.data || []);
       setTotalPages(res.totalPages || 1);
       setStats(res.stats || {});
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
-  }, [page, filterStatus, filterType]);
-
-  useEffect(() => { loadReports(); }, [loadReports]);
-
-  const handleDelete = useCallback(async (id) => {
-    try {
-      await reportAPI.adminDelete(id, deleteReason || 'Removido por administrador');
-      setMessage({ type: 'success', text: 'Reporte eliminado' });
-      setDeleteConfirm(null);
-      setDeleteReason('');
-      loadReports();
     } catch (e) {
-      setMessage({ type: 'error', text: e.message || 'Error' });
+      console.error(e);
+      toast.error('Error al cargar reportes');
+    } finally {
+      setLoading(false);
     }
-    setTimeout(() => setMessage(null), 3000);
-  }, [deleteReason, loadReports]);
+  }, [page, filterStatus, filterType, toast]);
+
+  useEffect(() => {
+    loadReports();
+  }, [loadReports, refreshTick]);
+
+  const handleDelete = useCallback(
+    async (id) => {
+      try {
+        await reportAPI.adminDelete(id, deleteReason || 'Removido por administrador');
+        toast.success('Reporte eliminado');
+        setDeleteConfirm(null);
+        setDeleteReason('');
+        loadReports();
+        onReportsMutated?.();
+      } catch (e) {
+        toast.error(e.message || 'No se pudo eliminar');
+      }
+    },
+    [deleteReason, loadReports, onReportsMutated, toast]
+  );
 
   const totalActive = stats.active || 0;
   const totalDismissed = (stats.dismissed || 0) + (stats.admin_removed || 0);
+  const totalAll = totalActive + totalDismissed;
 
   const formatTime = (mins) => {
+    if (!Number.isFinite(mins)) return '—';
     if (mins < 60) return `${mins} min`;
     const h = Math.floor(mins / 60);
     return `${h}h ${mins % 60}m`;
   };
 
   return (
-    <div style={{ padding: 16, fontFamily: 'Inter, sans-serif' }}>
-      {/* Stats cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 10, marginBottom: 16 }}>
+    <div className="animate-fade-in p-3 sm:p-4 space-y-3.5 max-w-[1000px] mx-auto">
+      {/* KPI cards */}
+      <div className="grid grid-cols-3 gap-2.5">
         {[
-          { label: 'Activos', value: totalActive, color: '#10B981' },
-          { label: 'Removidos', value: totalDismissed, color: '#F59E0B' },
-          { label: 'Total', value: (stats.active || 0) + (stats.dismissed || 0) + (stats.admin_removed || 0), color: '#06B6D4' },
-        ].map(s => (
-          <div key={s.label} style={{
-            padding: '12px 14px', borderRadius: 12,
-            background: `${s.color}08`, border: `1px solid ${s.color}20`,
-          }}>
-            <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: s.color }}>{s.value}</p>
-            <p style={{ margin: '2px 0 0', fontSize: 10, color: '#64748B' }}>{s.label}</p>
+          { label: 'Activos', value: totalActive, color: 'var(--mangle)' },
+          { label: 'Removidos', value: totalDismissed, color: 'var(--brand)' },
+          { label: 'Total', value: totalAll, color: 'var(--caribe)' },
+        ].map((s) => (
+          <div
+            key={s.label}
+            className="rq-card p-3"
+            style={{ borderLeft: `3px solid ${s.color}` }}
+          >
+            <div className="rq-section-label">{s.label}</div>
+            <p className="font-mono text-xl sm:text-2xl font-bold tabular-nums m-0 mt-1" style={{ color: s.color }}>
+              {s.value}
+            </p>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+      <div className="flex items-center gap-2 flex-wrap">
         <select
           value={filterStatus}
-          onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
-          style={{
-            padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)',
-            background: 'rgba(255,255,255,0.04)', color: '#E2E8F0', fontSize: 11,
-            cursor: 'pointer', outline: 'none',
+          onChange={(e) => {
+            setFilterStatus(e.target.value);
+            setPage(1);
           }}
+          className="rq-input px-2.5 py-1.5 text-xs flex-1 sm:flex-none"
         >
           <option value="all">Todos los estados</option>
           <option value="active">Activos</option>
           <option value="dismissed">Removidos (comunidad)</option>
           <option value="admin_removed">Removidos (admin)</option>
         </select>
+
         <select
           value={filterType}
-          onChange={(e) => { setFilterType(e.target.value); setPage(1); }}
-          style={{
-            padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)',
-            background: 'rgba(255,255,255,0.04)', color: '#E2E8F0', fontSize: 11,
-            cursor: 'pointer', outline: 'none',
+          onChange={(e) => {
+            setFilterType(e.target.value);
+            setPage(1);
           }}
+          className="rq-input px-2.5 py-1.5 text-xs flex-1 sm:flex-none"
         >
           <option value="all">Todos los tipos</option>
           {Object.entries(TYPE_META).map(([k, v]) => (
-            <option key={k} value={k}>{v.emoji} {v.label}</option>
+            <option key={k} value={k}>
+              {v.label}
+            </option>
           ))}
         </select>
-        <button onClick={() => loadReports()} style={{
-          padding: '6px 10px', borderRadius: 8, border: 'none',
-          background: 'rgba(245,158,11,0.12)', color: '#F59E0B',
-          fontSize: 11, fontWeight: 600, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', gap: 4,
-        }}>
-          <RefreshCw size={11} /> Refrescar
+
+        <button
+          type="button"
+          onClick={loadReports}
+          className="rq-chip"
+          style={{ padding: '6px 10px', fontSize: 11.5 }}
+        >
+          <RefreshCw size={12} />
+          <span>Refrescar</span>
         </button>
       </div>
 
-      {/* Message */}
-      {message && (
-        <div style={{
-          padding: '8px 14px', borderRadius: 10, marginBottom: 12,
-          background: message.type === 'error' ? 'rgba(239,68,68,0.12)' : 'rgba(16,185,129,0.12)',
-          color: message.type === 'error' ? '#EF4444' : '#10B981',
-          fontSize: 12, fontWeight: 600,
-        }}>{message.text}</div>
-      )}
-
       {/* Reports list */}
       {loading ? (
-        <p style={{ color: '#475569', fontSize: 12, textAlign: 'center', padding: 30 }}>Cargando reportes...</p>
+        <div className="py-10 flex items-center justify-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+          <Loader2 size={14} className="animate-spin" color="var(--brand)" />
+          <span>Cargando reportes...</span>
+        </div>
       ) : reports.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 40 }}>
-          <AlertTriangle size={28} color="#334155" style={{ marginBottom: 8 }} />
-          <p style={{ fontSize: 13, color: '#475569', margin: 0 }}>No hay reportes</p>
+        <div className="rq-card text-center py-10 px-4">
+          <AlertTriangle size={28} style={{ color: 'var(--text-muted)', margin: '0 auto 8px', opacity: 0.45 }} />
+          <p className="text-xs m-0" style={{ color: 'var(--text-muted)' }}>
+            No hay reportes con estos filtros.
+          </p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {reports.map(r => {
+        <div className="space-y-2">
+          {reports.map((r) => {
             const meta = TYPE_META[r.type] || TYPE_META.otro;
+            const TypeIcon = meta.icon;
             const statusInfo = STATUS_LABELS[r.status] || STATUS_LABELS.active;
 
             return (
-              <div key={r._id} style={{
-                padding: '12px 14px', borderRadius: 12,
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.06)',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                  <span style={{ fontSize: 22, flexShrink: 0, lineHeight: 1 }}>{meta.emoji}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: meta.color }}>{meta.label}</span>
-                      <span style={{
-                        fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
-                        background: statusInfo.bg, color: statusInfo.color,
-                      }}>{statusInfo.label}</span>
+              <div
+                key={r._id}
+                className="rq-card p-3"
+                style={{ borderLeft: `3px solid ${meta.color}` }}
+              >
+                <div className="flex items-start gap-2.5">
+                  <div
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
+                      background: `color-mix(in srgb, ${meta.color} 15%, transparent)`,
+                      color: meta.color,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <TypeIcon size={16} />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                      <span className="font-display text-[13px] font-bold" style={{ color: meta.color }}>
+                        {meta.label}
+                      </span>
+                      <span
+                        className="font-mono text-[9.5px] font-bold px-1.5 py-0.5 rounded uppercase"
+                        style={{ background: statusInfo.bg, color: statusInfo.color }}
+                      >
+                        {statusInfo.label}
+                      </span>
                       {r.isExpired && (
-                        <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4, background: 'rgba(239,68,68,0.12)', color: '#EF4444', fontWeight: 700 }}>
+                        <span
+                          className="font-mono text-[9.5px] font-bold px-1.5 py-0.5 rounded uppercase"
+                          style={{ background: 'var(--carnaval-soft)', color: 'var(--carnaval)' }}
+                        >
                           Expirado
                         </span>
                       )}
                     </div>
 
-                    <p style={{ margin: '0 0 4px', fontSize: 12, color: '#E2E8F0' }}>
-                      🚌 <strong>{r.routeCodigo ? r.routeCodigo + ' — ' : ''}{r.routeName}</strong>
-                    </p>
+                    <div className="flex items-center gap-1.5 flex-wrap text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      {r.routeCodigo && <span className="transit-code">{r.routeCodigo}</span>}
+                      <span>{r.routeName}</span>
+                    </div>
 
                     {r.description && (
-                      <p style={{ margin: '0 0 4px', fontSize: 11, color: '#94A3B8' }}>{r.description}</p>
+                      <p className="text-[11.5px] m-0 mt-1" style={{ color: 'var(--text-secondary)' }}>
+                        {r.description}
+                      </p>
                     )}
 
-                    <div style={{ display: 'flex', gap: 12, fontSize: 10, color: '#475569', flexWrap: 'wrap' }}>
-                      <span>👤 {r.userName}</span>
-                      <span>⏰ hace {formatTime(r.minutesAgo)}</span>
-                      <span>✅ {r.confirmations} conf.</span>
-                      <span>👎 {r.dismissals} dismiss</span>
+                    <div className="flex items-center gap-3 text-[10.5px] font-mono mt-1.5 flex-wrap" style={{ color: 'var(--text-muted)' }}>
+                      <span>{r.userName}</span>
+                      <span>· hace {formatTime(r.minutesAgo)}</span>
+                      <span>· {r.confirmations || 0} conf.</span>
+                      <span>· {r.dismissals || 0} desc.</span>
                     </div>
 
                     {r.removeReason && (
-                      <p style={{ margin: '4px 0 0', fontSize: 10, color: '#F59E0B' }}>
-                        Razón: {r.removeReason}
+                      <p className="text-[11px] m-0 mt-1 font-medium" style={{ color: 'var(--brand)' }}>
+                        Motivo: {r.removeReason}
                       </p>
                     )}
                   </div>
 
-                  {/* Delete button */}
                   {r.status === 'active' && (
                     <button
-                      onClick={() => { setDeleteConfirm(r._id); setDeleteReason(''); }}
-                      style={{
-                        width: 32, height: 32, borderRadius: 8, border: 'none', flexShrink: 0,
-                        background: 'rgba(239,68,68,0.08)', color: '#EF4444',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer',
+                      type="button"
+                      onClick={() => {
+                        setDeleteConfirm(deleteConfirm === r._id ? null : r._id);
+                        setDeleteReason('');
                       }}
+                      className="rq-icon-btn flex-shrink-0"
+                      style={{ width: 30, height: 30, color: 'var(--carnaval)' }}
                       title="Eliminar reporte"
+                      aria-label="Eliminar reporte"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={13} />
                     </button>
                   )}
                 </div>
 
-                {/* Delete confirmation inline */}
                 {deleteConfirm === r._id && (
-                  <div style={{
-                    marginTop: 10, padding: '10px 12px', borderRadius: 10,
-                    background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)',
-                  }}>
-                    <p style={{ margin: '0 0 6px', fontSize: 11, color: '#EF4444', fontWeight: 600 }}>
-                      ¿Eliminar este reporte?
-                    </p>
+                  <div
+                    className="mt-2.5 p-2.5 rounded-lg space-y-2"
+                    style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)' }}
+                  >
                     <input
                       type="text"
-                      placeholder="Razón (opcional)"
+                      placeholder="Motivo de eliminación (opcional)"
                       value={deleteReason}
                       onChange={(e) => setDeleteReason(e.target.value)}
-                      style={{
-                        width: '100%', padding: '6px 10px', borderRadius: 6, boxSizing: 'border-box',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        background: 'rgba(255,255,255,0.04)',
-                        color: '#E2E8F0', fontSize: 11, marginBottom: 6, outline: 'none',
-                      }}
+                      className="rq-input w-full px-2.5 py-1.5 text-xs"
                     />
-                    <div style={{ display: 'flex', gap: 6 }}>
+                    <div className="flex gap-2">
                       <button
+                        type="button"
                         onClick={() => handleDelete(r._id)}
-                        style={{
-                          flex: 1, padding: '6px 0', borderRadius: 6, border: 'none',
-                          background: '#EF4444', color: '#fff', fontSize: 11, fontWeight: 600,
-                          cursor: 'pointer',
-                        }}
-                      >Eliminar</button>
+                        className="flex-1 py-1.5 rounded-md font-bold text-xs cursor-pointer"
+                        style={{ background: 'var(--carnaval)', color: '#FFFFFF', border: 'none' }}
+                      >
+                        Confirmar eliminación
+                      </button>
                       <button
+                        type="button"
                         onClick={() => setDeleteConfirm(null)}
-                        style={{
-                          flex: 1, padding: '6px 0', borderRadius: 6, border: 'none',
-                          background: 'rgba(255,255,255,0.06)', color: '#94A3B8', fontSize: 11,
-                          cursor: 'pointer',
-                        }}
-                      >Cancelar</button>
+                        className="rq-chip flex-1 justify-center"
+                        style={{ padding: '6px 0' }}
+                      >
+                        Cancelar
+                      </button>
                     </div>
                   </div>
                 )}
@@ -270,32 +310,29 @@ export default function ReportsTab() {
         </div>
       )}
 
-      {/* Pagination */}
       {totalPages > 1 && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 16 }}>
+        <div className="flex items-center justify-center gap-3 pt-2">
           <button
-            onClick={() => setPage(p => Math.max(1, p - 1))}
+            type="button"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}
-            style={{
-              padding: '6px 10px', borderRadius: 8, border: 'none',
-              background: 'rgba(255,255,255,0.06)', color: page <= 1 ? '#334155' : '#94A3B8',
-              cursor: page <= 1 ? 'not-allowed' : 'pointer',
-              display: 'flex', alignItems: 'center',
-            }}
-          ><ChevronLeft size={14} /></button>
-          <span style={{ fontSize: 11, color: '#64748B' }}>
-            Página {page} de {totalPages}
+            className="rq-icon-btn"
+            style={{ width: 30, height: 30, opacity: page <= 1 ? 0.4 : 1 }}
+          >
+            <ChevronLeft size={14} />
+          </button>
+          <span className="font-mono text-[11px] tabular-nums" style={{ color: 'var(--text-secondary)' }}>
+            Página {page} / {totalPages}
           </span>
           <button
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            type="button"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            style={{
-              padding: '6px 10px', borderRadius: 8, border: 'none',
-              background: 'rgba(255,255,255,0.06)', color: page >= totalPages ? '#334155' : '#94A3B8',
-              cursor: page >= totalPages ? 'not-allowed' : 'pointer',
-              display: 'flex', alignItems: 'center',
-            }}
-          ><ChevronRight size={14} /></button>
+            className="rq-icon-btn"
+            style={{ width: 30, height: 30, opacity: page >= totalPages ? 0.4 : 1 }}
+          >
+            <ChevronRight size={14} />
+          </button>
         </div>
       )}
     </div>

@@ -1,56 +1,37 @@
-/**
- * ============================================
- * RutaQuilla - Composites Tab (Admin)
- * ============================================
- * Shows collaborative routes with map preview,
- * segment visualization, and promote-to-official flow.
- */
-
-import { useState, useEffect, useCallback } from 'react';
-import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  GitMerge, Users, CheckCircle2,
-  ChevronDown, ChevronRight, Zap, Crown, Bus
+  GitMerge,
+  Users,
+  CheckCircle2,
+  Zap,
+  Crown,
+  Bus,
+  ArrowLeft,
+  Trash2,
+  Loader2,
 } from 'lucide-react';
 import { adminAPI } from '../../services/api';
-import { useTheme } from '../../context/ThemeContext';
+import { useToast } from '../../context/ToastContext';
+import AdminVectorMap from './AdminVectorMap';
 
-const SEG_COLORS = ['#06B6D4', '#F59E0B', '#10B981', '#8B5CF6', '#EC4899', '#F97316'];
+const SEG_COLORS = ['#3B8BF0', '#FFC21A', '#1F9D6B', '#8B7CF6', '#EC4899', '#F97316'];
 
 const STATUS_CONFIG = {
-  building: { label: 'En construcción', color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.2)' },
-  complete: { label: 'Completa', color: '#10B981', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.2)' },
-  promoted: { label: 'Promovida', color: '#8B5CF6', bg: 'rgba(139,92,246,0.1)', border: 'rgba(139,92,246,0.2)' },
+  building: { label: 'En curso', color: 'var(--brand)', bg: 'var(--brand-soft)' },
+  complete: { label: 'Completa', color: 'var(--mangle)', bg: 'var(--mangle-soft)' },
+  promoted: { label: 'Promovida', color: 'var(--caribe)', bg: 'var(--caribe-soft)' },
 };
 
-/** Leaflet helper: invalidateSize + fitBounds */
-function MapFitter({ coordinates }) {
-  const map = useMap();
-  useEffect(() => {
-    const t = setTimeout(() => {
-      map.invalidateSize({ animate: false });
-      if (coordinates?.length >= 2) {
-        try {
-          const bounds = L.latLngBounds(coordinates.map(c => [c[1], c[0]]));
-          if (bounds.isValid()) map.fitBounds(bounds, { padding: [30, 30], maxZoom: 16 });
-        } catch (e) { /* ignore */ }
-      }
-    }, 150);
-    return () => clearTimeout(t);
-  }, [map, coordinates]);
-  return null;
-}
-
-export default function CompositesTab() {
-  const { isDark } = useTheme();
+export default function CompositesTab({ refreshTick = 0, onCompositesMutated }) {
+  const toast = useToast();
   const [composites, setComposites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
-  const [selected, setSelected] = useState(null); // full detail
+  const [selected, setSelected] = useState(null);
   const [promoting, setPromoting] = useState(null);
-  const [promoteForm, setPromoteForm] = useState({ origen: '', destino: '' });
-  const [message, setMessage] = useState(null);
+  const [promoteForm, setPromoteForm] = useState({ codigo: '', origen: '', destino: '', fare: 3700 });
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [fitTrigger, setFitTrigger] = useState(0);
 
   const loadComposites = useCallback(async () => {
     try {
@@ -61,19 +42,25 @@ export default function CompositesTab() {
       setComposites(res.data || []);
     } catch (err) {
       console.error(err);
-    } finally { setLoading(false); }
-  }, [filterStatus]);
+      toast.error('Error al cargar rutas colaborativas');
+    } finally {
+      setLoading(false);
+    }
+  }, [filterStatus, toast]);
 
-  useEffect(() => { loadComposites(); }, [loadComposites]);
-  useEffect(() => { if (message) { const t = setTimeout(() => setMessage(null), 5000); return () => clearTimeout(t); } }, [message]);
+  useEffect(() => {
+    loadComposites();
+  }, [loadComposites, refreshTick]);
 
   const handleSelect = async (comp) => {
-    // Fetch full detail with populated segment captures (geometry)
+    setDeleteConfirm(false);
     try {
       const res = await adminAPI.getCompositeById(comp._id);
       setSelected(res.data || comp);
-    } catch (e) {
+      setFitTrigger((n) => n + 1);
+    } catch {
       setSelected(comp);
+      setFitTrigger((n) => n + 1);
     }
   };
 
@@ -81,249 +68,308 @@ export default function CompositesTab() {
     try {
       setPromoting(id);
       await adminAPI.promoteComposite(id, promoteForm);
-      setMessage({ text: '✅ Ruta promovida a oficial exitosamente', type: 'success' });
-      setPromoteForm({ origen: '', destino: '' });
+      toast.success('Ruta colaborativa promovida a oficial');
+      setPromoteForm({ codigo: '', origen: '', destino: '', fare: 3700 });
       setSelected(null);
       loadComposites();
+      onCompositesMutated?.();
     } catch (err) {
-      setMessage({ text: `❌ ${err.message || 'Error al promover'}`, type: 'error' });
-    } finally { setPromoting(null); }
+      toast.error(err.message || 'Error al promover');
+    } finally {
+      setPromoting(null);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await adminAPI.deleteComposite(id);
+      setSelected(null);
+      setDeleteConfirm(false);
+      toast.success('Ruta colaborativa eliminada');
+      loadComposites();
+      onCompositesMutated?.();
+    } catch (err) {
+      toast.error(err.message || 'No se pudo eliminar');
+    }
   };
 
   const mergedCoords = selected?.mergedGeometry?.coordinates || [];
 
-  if (loading) {
-    return (
-      <div style={{ padding: 24, textAlign: 'center' }}>
-        <div className="w-5 h-5 border-2 border-amber-500/30 border-t-amber-500 rounded-full mx-auto"
-          style={{ animation: 'spin-slow 0.8s linear infinite' }} />
-        <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 10 }}>Cargando rutas colaborativas...</p>
-      </div>
-    );
-  }
+  const mapPolylines = useMemo(() => {
+    const lines = [];
+    if (mergedCoords.length >= 2) {
+      lines.push({
+        id: 'merged',
+        coordinates: mergedCoords,
+        color: '#FFC21A',
+        width: 5,
+        opacity: 0.55,
+        dashed: true,
+        showArrows: false,
+        label: `${selected?.routeName || 'Fusionada'} (trazo combinado)`,
+      });
+    }
+    (selected?.segments || []).forEach((seg, i) => {
+      const coords = seg.captureId?.geometry?.coordinates;
+      if (coords && coords.length >= 2) {
+        lines.push({
+          id: seg._id || `seg-${i}`,
+          coordinates: coords,
+          color: SEG_COLORS[i % SEG_COLORS.length],
+          width: 3.5,
+          opacity: 0.92,
+          showArrows: true,
+          label: `${seg.userName || 'Contribuidor'} · ${seg.pointCount || coords.length} pts`,
+        });
+      }
+    });
+    return lines;
+  }, [selected, mergedCoords]);
+
+  const mapEndpoints = useMemo(() => {
+    if (mergedCoords.length < 2) return [];
+    const first = mergedCoords[0];
+    const last = mergedCoords[mergedCoords.length - 1];
+    return [
+      { lng: first[0], lat: first[1], color: '#1F9D6B', label: 'Inicio' },
+      { lng: last[0], lat: last[1], color: '#E5484D', label: 'Fin' },
+    ];
+  }, [mergedCoords]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div className="flex flex-col h-full overflow-hidden">
       {/* Header + filters */}
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--subtle-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <GitMerge size={16} color="#F59E0B" />
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'Outfit, sans-serif' }}>
-            Rutas Colaborativas
+      <div
+        className="p-3 flex items-center justify-between gap-2 flex-wrap flex-shrink-0"
+        style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-color)' }}
+      >
+        <div className="flex items-center gap-2">
+          <GitMerge size={15} color="var(--brand)" />
+          <span className="font-display text-[13.5px] font-bold" style={{ color: 'var(--text-primary)' }}>
+            Rutas Colaborativas ({composites.length})
           </span>
-          <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>({composites.length})</span>
         </div>
-        <div style={{ display: 'flex', gap: 4 }}>
-          {['all', 'building', 'complete', 'promoted'].map(s => (
-            <button key={s} onClick={() => setFilterStatus(s)} style={{
-              padding: '5px 10px', borderRadius: 8, border: 'none',
-              background: filterStatus === s ? 'rgba(245,158,11,0.12)' : 'var(--subtle-bg)',
-              color: filterStatus === s ? '#F59E0B' : 'var(--text-muted)',
-              fontSize: 10, fontWeight: 600, cursor: 'pointer',
-            }}>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {['all', 'building', 'complete', 'promoted'].map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => {
+                setFilterStatus(s);
+                setSelected(null);
+              }}
+              className={`rq-chip${filterStatus === s ? ' active' : ''}`}
+              style={{ padding: '4px 9px', fontSize: 11 }}
+            >
               {s === 'all' ? 'Todas' : STATUS_CONFIG[s]?.label || s}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Toast */}
-      {message && (
-        <div style={{
-          padding: '10px 14px', margin: '8px 16px 0', borderRadius: 10,
-          background: message.type === 'error' ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
-          border: `1px solid ${message.type === 'error' ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)'}`,
-          color: message.type === 'error' ? '#F87171' : '#34D399', fontSize: 12, fontWeight: 600,
-        }}>{message.text}</div>
-      )}
-
-      {/* List + Detail */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        {/* List */}
-        <div style={{ width: selected ? '35%' : '100%', overflowY: 'auto', padding: 12, transition: 'width 0.3s' }}>
-          {composites.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-              <GitMerge size={40} style={{ color: 'var(--text-muted)', margin: '0 auto 10px', opacity: 0.3 }} />
-              <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>Sin rutas colaborativas aún</p>
-            </div>
-          ) : composites.map(comp => {
-            const st = STATUS_CONFIG[comp.status] || STATUS_CONFIG.building;
-            return (
-              <button key={comp._id} onClick={() => handleSelect(comp)} style={{
-                width: '100%', padding: '10px 12px', marginBottom: 6, borderRadius: 12, border: 'none', cursor: 'pointer',
-                background: selected?._id === comp._id ? 'rgba(245,158,11,0.08)' : 'var(--subtle-bg)',
-                borderLeft: `3px solid ${st.color}`,
-                textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 4,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Bus size={12} color={st.color} />
-                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{comp.routeName}</span>
-                  <span style={{ fontSize: 8, padding: '2px 6px', borderRadius: 6, fontWeight: 700, background: st.bg, color: st.color }}>{st.label}</span>
-                </div>
-                <div style={{ display: 'flex', gap: 8, fontSize: 9, color: 'var(--text-muted)' }}>
-                  <span>{comp.company}</span>
-                  <span style={{ color: comp.direction === 'ida' ? '#34D399' : '#A78BFA', fontWeight: 600 }}>
-                    {comp.direction === 'ida' ? '→ IDA' : '← VUELTA'}
-                  </span>
-                  <span><Users size={9} style={{ display: 'inline', verticalAlign: 'middle' }} /> {comp.contributorCount}</span>
-                  <span>{comp.completionEstimate}%</span>
-                </div>
-              </button>
-            );
-          })}
+      {/* Split responsivo */}
+      <div className="admin-split-layout flex-1 min-h-0">
+        <div className={`admin-list-pane${selected ? ' hidden md:block' : ''}`} style={{ width: selected ? undefined : '100%' }}>
+          <div className="p-2.5 space-y-1.5">
+            {loading ? (
+              <div className="py-10 flex items-center justify-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+                <Loader2 size={14} className="animate-spin" color="var(--brand)" />
+                <span>Cargando colaborativas...</span>
+              </div>
+            ) : composites.length === 0 ? (
+              <div className="text-center py-10 px-4">
+                <GitMerge size={30} style={{ color: 'var(--text-muted)', margin: '0 auto 8px', opacity: 0.45 }} />
+                <p className="text-xs m-0" style={{ color: 'var(--text-muted)' }}>
+                  Sin rutas colaborativas en esta categoría
+                </p>
+              </div>
+            ) : (
+              composites.map((comp) => {
+                const st = STATUS_CONFIG[comp.status] || STATUS_CONFIG.building;
+                return (
+                  <button
+                    key={comp._id}
+                    type="button"
+                    onClick={() => handleSelect(comp)}
+                    className={`route-pass-card${selected?._id === comp._id ? ' active' : ''}`}
+                    style={{ '--route-color': st.color }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Bus size={13} color={st.color} className="flex-shrink-0" />
+                      <span className="font-display text-[13px] font-bold flex-1 truncate" style={{ color: 'var(--text-primary)' }}>
+                        {comp.routeName}
+                      </span>
+                      <span
+                        className="font-mono text-[9.5px] font-bold px-1.5 py-0.5 rounded uppercase"
+                        style={{ background: st.bg, color: st.color }}
+                      >
+                        {st.label}
+                      </span>
+                    </div>
+                    <div className="text-[10.5px] mt-1 flex items-center gap-2 flex-wrap" style={{ color: 'var(--text-secondary)' }}>
+                      <span>{comp.company}</span>
+                      <span className="font-mono" style={{ color: comp.direction === 'ida' ? 'var(--mangle)' : 'var(--caribe)' }}>
+                        · {comp.direction?.toUpperCase()}
+                      </span>
+                      <span className="inline-flex items-center gap-1 font-mono">
+                        <Users size={10} /> {comp.contributorCount}
+                      </span>
+                      <span className="font-mono tabular-nums">{comp.completionEstimate}%</span>
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
         </div>
 
-        {/* Detail panel */}
         {selected && (
-          <div style={{ flex: 1, borderLeft: '1px solid var(--subtle-border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            {/* Map showing merged geometry + individual segments */}
-            <div style={{ height: '50%', position: 'relative' }}>
-              <MapContainer
-                key={selected._id}
-                center={[10.9685, -74.7813]}
-                zoom={13}
-                style={{ width: '100%', height: '100%' }}
-                className={isDark ? 'dark-map-tiles' : ''}
+          <div className="admin-detail-pane">
+            <div
+              className="md:hidden flex items-center justify-between gap-2 px-3 py-2 flex-shrink-0"
+              style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-color)' }}
+            >
+              <button
+                type="button"
+                onClick={() => setSelected(null)}
+                className="rq-chip"
+                style={{ padding: '4px 9px', fontSize: 11 }}
               >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  maxZoom={19}
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                />
-                <MapFitter coordinates={mergedCoords} />
-
-                {/* Merged geometry — thick background line */}
-                {mergedCoords.length >= 2 && (
-                  <Polyline
-                    positions={mergedCoords.map(c => [c[1], c[0]])}
-                    pathOptions={{ color: '#F59E0B', weight: 5, opacity: 0.4, dashArray: '8 6' }}
-                  >
-                    <Popup>Geometría fusionada ({mergedCoords.length} puntos)</Popup>
-                  </Polyline>
-                )}
-
-                {/* Individual segment traces (from populated captureId.geometry) */}
-                {(selected.segments || []).map((seg, i) => {
-                  const coords = seg.captureId?.geometry?.coordinates;
-                  if (!coords || coords.length < 2) return null;
-                  const color = SEG_COLORS[i % SEG_COLORS.length];
-                  return (
-                    <Polyline key={seg._id || i}
-                      positions={coords.map(c => [c[1], c[0]])}
-                      pathOptions={{ color, weight: 3, opacity: 0.85 }}
-                    >
-                      <Popup>
-                        <strong>{seg.userName}</strong><br/>
-                        {seg.pointCount} pts · ±{seg.averageAccuracy?.toFixed(0)}m
-                      </Popup>
-                    </Polyline>
-                  );
-                })}
-
-                {/* Start/end markers */}
-                {mergedCoords.length >= 2 && (
-                  <>
-                    <CircleMarker center={[mergedCoords[0][1], mergedCoords[0][0]]} radius={7}
-                      pathOptions={{ color: '#10B981', fillColor: '#10B981', fillOpacity: 0.9 }}>
-                      <Popup>📍 Inicio</Popup>
-                    </CircleMarker>
-                    <CircleMarker center={[mergedCoords[mergedCoords.length-1][1], mergedCoords[mergedCoords.length-1][0]]} radius={7}
-                      pathOptions={{ color: '#EF4444', fillColor: '#EF4444', fillOpacity: 0.9 }}>
-                      <Popup>🏁 Fin</Popup>
-                    </CircleMarker>
-                  </>
-                )}
-              </MapContainer>
-
-              {/* Segment color legend */}
-              {(selected.segments || []).length > 0 && (
-                <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 1000, padding: '6px 10px', borderRadius: 10, background: 'rgba(7,11,22,0.9)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <p style={{ fontSize: 9, fontWeight: 700, color: '#F59E0B', margin: '0 0 3px' }}>Segmentos</p>
-                  {(selected.segments || []).map((seg, i) => (
-                    <div key={seg._id || i} style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                      <div style={{ width: 8, height: 3, borderRadius: 2, background: SEG_COLORS[i % SEG_COLORS.length] }} />
-                      <span style={{ fontSize: 8, color: '#94A3B8' }}>{seg.userName} ({seg.pointCount} pts)</span>
-                    </div>
-                  ))}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 3, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 3 }}>
-                    <div style={{ width: 8, height: 3, borderRadius: 2, background: '#F59E0B', opacity: 0.5 }} />
-                    <span style={{ fontSize: 8, color: '#64748B' }}>Fusionada</span>
-                  </div>
-                </div>
-              )}
+                <ArrowLeft size={12} />
+                <span>Volver a la lista</span>
+              </button>
+              <span className="font-display text-xs font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+                {selected.routeName}
+              </span>
             </div>
 
-            {/* Info + promote panel */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: 14 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px' }}>{selected.routeName}</h3>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10, fontSize: 10, color: 'var(--text-secondary)' }}>
-                <span>🏢 {selected.company}</span>
-                <span style={{ color: selected.direction === 'ida' ? '#34D399' : '#A78BFA', fontWeight: 600 }}>
-                  {selected.direction === 'ida' ? '→ IDA' : '← VUELTA'}
-                </span>
-                <span><Users size={10} style={{ display: 'inline', verticalAlign: 'middle' }} /> {selected.contributorCount} contribuidores</span>
-                <span>{selected.totalLength ? `${(selected.totalLength / 1000).toFixed(1)} km` : '—'}</span>
+            <div className="h-[44%] min-h-[180px] relative">
+              <AdminVectorMap
+                polylines={mapPolylines}
+                endpoints={mapEndpoints}
+                fitCoordinates={mergedCoords}
+                fitTrigger={fitTrigger}
+                resizeKey={selected._id}
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-3.5 space-y-3" style={{ background: 'var(--bg-dark)' }}>
+              <div>
+                <h3 className="font-display text-base font-bold m-0" style={{ color: 'var(--text-primary)' }}>
+                  {selected.routeName}
+                </h3>
+                <div className="text-[11.5px] mt-1 flex flex-wrap gap-2" style={{ color: 'var(--text-secondary)' }}>
+                  <span>{selected.company}</span>
+                  <span>· {selected.direction?.toUpperCase()}</span>
+                  <span className="font-mono">· {selected.contributorCount} contribuidores</span>
+                  <span className="font-mono">
+                    · {selected.totalLength ? `${(selected.totalLength / 1000).toFixed(1)} km` : '—'}
+                  </span>
+                </div>
               </div>
 
-              {/* Progress bar */}
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3, fontSize: 10 }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Completitud estimada</span>
-                  <span style={{ fontWeight: 700, color: selected.completionEstimate >= 90 ? '#10B981' : selected.completionEstimate >= 50 ? '#F59E0B' : '#06B6D4' }}>
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span style={{ color: 'var(--text-secondary)' }}>Completitud estimada</span>
+                  <span className="font-mono font-bold tabular-nums" style={{ color: 'var(--mangle)' }}>
                     {selected.completionEstimate}%
                   </span>
                 </div>
-                <div style={{ width: '100%', height: 6, borderRadius: 3, background: 'var(--subtle-bg)', overflow: 'hidden' }}>
-                  <div style={{
-                    width: `${selected.completionEstimate}%`, height: '100%', borderRadius: 3,
-                    background: selected.completionEstimate >= 90 ? 'linear-gradient(90deg, #10B981, #34D399)' : selected.completionEstimate >= 50 ? 'linear-gradient(90deg, #F59E0B, #FBBF24)' : 'linear-gradient(90deg, #06B6D4, #22D3EE)',
-                    transition: 'width 0.8s ease',
-                  }} />
+                <div style={{ width: '100%', height: 6, borderRadius: 99, background: 'var(--bg-surface)', overflow: 'hidden' }}>
+                  <div
+                    style={{
+                      width: `${selected.completionEstimate}%`,
+                      height: '100%',
+                      background: 'var(--mangle)',
+                    }}
+                  />
                 </div>
-                <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>{selected.segments?.length || 0} segmentos · {mergedCoords.length} puntos fusionados</span>
               </div>
 
-              {/* Promote section */}
               {selected.status !== 'promoted' ? (
-                <div style={{ padding: 12, borderRadius: 10, background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)' }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: '#A78BFA', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Crown size={12} /> Promover a ruta oficial
-                  </p>
-                  <p style={{ fontSize: 9, color: 'var(--text-muted)', margin: '0 0 8px', lineHeight: 1.4 }}>
-                    Revisa el trazado en el mapa. Si la ruta está incompleta, puedes promoverla y luego completar el trazado manualmente desde el editor de rutas.
-                  </p>
-                  <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-                    <input type="text" placeholder="Origen (ej: Centro)" value={promoteForm.origen}
-                      onChange={e => setPromoteForm(f => ({ ...f, origen: e.target.value }))}
-                      style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid var(--subtle-border-strong)', background: 'var(--subtle-bg)', color: 'var(--text-primary)', fontSize: 11, outline: 'none' }}
+                <div className="rq-card p-3 space-y-2.5">
+                  <div className="flex items-center gap-1.5 text-xs font-bold" style={{ color: 'var(--brand)' }}>
+                    <Crown size={13} />
+                    <span>Promover a ruta oficial (+100 XP c/u)</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      placeholder="Código (opcional)"
+                      value={promoteForm.codigo}
+                      onChange={(e) => setPromoteForm((f) => ({ ...f, codigo: e.target.value }))}
+                      className="rq-input px-2.5 py-1.5 text-xs font-mono"
                     />
-                    <input type="text" placeholder="Destino (ej: Norte)" value={promoteForm.destino}
-                      onChange={e => setPromoteForm(f => ({ ...f, destino: e.target.value }))}
-                      style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid var(--subtle-border-strong)', background: 'var(--subtle-bg)', color: 'var(--text-primary)', fontSize: 11, outline: 'none' }}
+                    <input
+                      type="number"
+                      placeholder="Tarifa"
+                      value={promoteForm.fare}
+                      onChange={(e) => setPromoteForm((f) => ({ ...f, fare: parseInt(e.target.value, 10) || 3700 }))}
+                      className="rq-input px-2.5 py-1.5 text-xs font-mono"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Origen"
+                      value={promoteForm.origen}
+                      onChange={(e) => setPromoteForm((f) => ({ ...f, origen: e.target.value }))}
+                      className="rq-input px-2.5 py-1.5 text-xs"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Destino"
+                      value={promoteForm.destino}
+                      onChange={(e) => setPromoteForm((f) => ({ ...f, destino: e.target.value }))}
+                      className="rq-input px-2.5 py-1.5 text-xs"
                     />
                   </div>
-                  <button onClick={() => handlePromote(selected._id)} disabled={promoting === selected._id}
-                    style={{
-                      width: '100%', padding: '9px', borderRadius: 8, border: 'none',
-                      background: promoting === selected._id ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
-                      color: promoting === selected._id ? 'var(--text-muted)' : '#fff',
-                      fontSize: 11, fontWeight: 700, cursor: promoting === selected._id ? 'not-allowed' : 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    }}>
-                    {promoting === selected._id ? 'Promoviendo...' : <><Zap size={12} /> Promover ({selected.contributorCount} contribuidores)</>}
+                  <button
+                    type="button"
+                    onClick={() => handlePromote(selected._id)}
+                    disabled={promoting === selected._id}
+                    className="rq-btn-primary w-full text-xs"
+                    style={{ padding: '9px 12px' }}
+                  >
+                    <Zap size={13} />
+                    <span>{promoting === selected._id ? 'Promoviendo...' : 'Promover a oficial'}</span>
                   </button>
                 </div>
               ) : (
-                <div style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <CheckCircle2 size={16} color="#10B981" />
-                  <div>
-                    <p style={{ fontSize: 11, fontWeight: 600, color: '#34D399', margin: 0 }}>Promovida a ruta oficial</p>
-                    <p style={{ fontSize: 9, color: 'var(--text-muted)', margin: 0 }}>
-                      {selected.promotedAt ? new Date(selected.promotedAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
-                    </p>
-                  </div>
+                <div
+                  className="p-2.5 rounded-lg flex items-center gap-2 text-xs"
+                  style={{ background: 'var(--mangle-soft)', color: 'var(--mangle)', border: '1px solid var(--border-color)' }}
+                >
+                  <CheckCircle2 size={15} />
+                  <span>Promovida a ruta oficial</span>
                 </div>
               )}
+
+              <div>
+                {deleteConfirm ? (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(selected._id)}
+                      className="rq-chip"
+                      style={{ background: 'var(--carnaval)', color: '#fff', borderColor: 'var(--carnaval)', padding: '6px 12px' }}
+                    >
+                      Confirmar eliminación
+                    </button>
+                    <button type="button" onClick={() => setDeleteConfirm(false)} className="rq-chip" style={{ padding: '6px 12px' }}>
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setDeleteConfirm(true)}
+                    className="rq-chip"
+                    style={{ color: 'var(--carnaval)', padding: '5px 10px', fontSize: 11 }}
+                  >
+                    <Trash2 size={12} />
+                    <span>Eliminar colaborativa</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
