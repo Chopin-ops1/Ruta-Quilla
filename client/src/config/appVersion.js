@@ -4,33 +4,33 @@ import { isNativeApp } from '../utils/platform';
 
 const NativeUpdater = registerPlugin('NativeUpdater');
 
-export const LOCAL_APP_VERSION = '2.1.1';
-export const LOCAL_ANDROID_VERSION_CODE = 4;
+export const LOCAL_APP_VERSION = '2.1.2';
+export const LOCAL_ANDROID_VERSION_CODE = 5;
 export const DEFAULT_APK_DOWNLOAD_URL = 'https://rutaquilla.me/downloads/RutaQuilla.apk';
 
 export const DEFAULT_RELEASE_NOTES = {
   versionName: LOCAL_APP_VERSION,
   androidVersionCode: LOCAL_ANDROID_VERSION_CODE,
-  title: 'RutaQuilla 2.1.1 ya está disponible',
-  summary: 'Actualizaciones directas desde la app Android, barra superior más limpia y accesos rápidos.',
+  title: 'RutaQuilla 2.1.2 ya está disponible',
+  summary: 'Indicadores más limpios para subir y bajar del bus, guía visual al caminar y trazados de rutas corregidos.',
   downloadUrl: DEFAULT_APK_DOWNLOAD_URL,
   publishedAt: '2026-11-27',
   highlights: [
     {
-      category: 'Mejoras',
-      text: 'Ahora puedes descargar e instalar futuras actualizaciones directamente dentro de la app Android sin abrir el navegador.',
-    },
-    {
       category: 'Diseño',
-      text: 'Barra superior más limpia en celulares para leer el nombre y navegar con comodidad.',
+      text: 'Pines más sutiles para indicar dónde subir y bajar del bus sin tapar el mapa ni tus puntos.',
     },
     {
       category: 'Rutas',
-      text: 'Guarda tu Casa y Trabajo para calcular tu ruta con un solo toque.',
+      text: 'Trazado peatonal moderno con distancia y tiempo al bajar hacia tu destino, además de guía en 3 pasos.',
+    },
+    {
+      category: 'Mejoras',
+      text: 'Corrección de recorridos de buses que presentaban cruces o giros irregulares en el mapa.',
     },
     {
       category: 'Seguridad',
-      text: 'Protección reforzada de cuentas y verificación automática de nuevas versiones.',
+      text: 'Actualización directa dentro de la app Android sin tener que salir al navegador.',
     },
   ],
 };

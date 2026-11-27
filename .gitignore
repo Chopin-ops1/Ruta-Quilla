@@ -44,6 +44,7 @@ Thumbs.db
 scratch*.py
 scratch*.js
 server/data/backup_*.json
+server/data/backup_routes_pre_zigzag_fix.json
 
 # Presentación académica (proteger propiedad intelectual)
 presentacion/

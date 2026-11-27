@@ -166,33 +166,68 @@ function createArrowImageData() {
 
 // ---- Safe DOM Marker Factories ----
 
-function createOriginElement() {
+function createOriginElement(showLabel = true) {
   const el = document.createElement('div');
+  const pill = showLabel
+    ? `<div class="rq-map-pill" style="position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);color:#1F9D6B;">Origen</div>`
+    : '';
   el.innerHTML = `<div style="position:relative;animation:marker-drop 0.25s cubic-bezier(0.2,0,0,1) forwards;">
-    <div style="position:absolute;top:-7px;left:-7px;width:32px;height:32px;border:1.5px solid rgba(31,157,107,0.45);border-radius:50%;animation:origin-pulse-1 2.2s ease-out infinite;"></div>
-    <div style="width:18px;height:18px;background:#1F9D6B;border:2.5px solid #FFFFFF;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.4);"></div>
-    <div style="position:absolute;top:22px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:var(--font-mono);font-size:9px;font-weight:700;background:#14171C;color:#1F9D6B;padding:1px 5px;border-radius:4px;border:1px solid rgba(31,157,107,0.4);letter-spacing:0.04em;">ORIGEN</div>
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:22px;height:22px;border:1.5px solid rgba(31,157,107,0.42);border-radius:50%;animation:origin-pulse-1 2.2s ease-out infinite;"></div>
+    <div style="width:13px;height:13px;background:#1F9D6B;border:2.5px solid #FFFFFF;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.34);"></div>
+    ${pill}
   </div>`;
   return el;
 }
 
-function createDestinationElement() {
+function createDestinationElement(showLabel = true) {
   const el = document.createElement('div');
+  const pill = showLabel
+    ? `<div class="rq-map-pill" style="position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);color:#E5484D;">Destino</div>`
+    : '';
   el.innerHTML = `<div style="position:relative;animation:marker-drop 0.25s cubic-bezier(0.2,0,0,1) forwards;">
-    <div style="width:20px;height:20px;background:#E5484D;border:2.5px solid #FFFFFF;border-radius:5px;box-shadow:0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;transform:rotate(45deg);">
-      <div style="width:6px;height:6px;background:#FFFFFF;border-radius:50%;transform:rotate(-45deg);"></div>
+    <div style="width:14px;height:14px;background:#E5484D;border:2.5px solid #FFFFFF;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,0.34);display:flex;align-items:center;justify-content:center;transform:rotate(45deg);">
+      <div style="width:4px;height:4px;background:#FFFFFF;border-radius:50%;transform:rotate(-45deg);"></div>
     </div>
-    <div style="position:absolute;top:25px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:var(--font-mono);font-size:9px;font-weight:700;background:#14171C;color:#E5484D;padding:1px 5px;border-radius:4px;border:1px solid rgba(229,72,77,0.4);letter-spacing:0.04em;">DESTINO</div>
+    ${pill}
   </div>`;
   return el;
 }
 
-function createBoardAlightElement(color, label) {
+function createBoardAlightElement(color, label, { position = 'top', compact = false, hideLabel = false } = {}) {
   const safeBg = safeColor(color, '#FFC21A');
   const safeLabel = escapeHtml(label);
+  const size = compact ? 10 : 12;
+  const posCss = position === 'bottom' ? 'top:calc(100% + 5px);' : 'bottom:calc(100% + 5px);';
+  const pill = hideLabel
+    ? ''
+    : `<div class="rq-map-pill" style="position:absolute;${posCss}left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;border-radius:50%;background:${safeBg};flex-shrink:0;"></span><span>${safeLabel}</span></div>`;
   const el = document.createElement('div');
-  el.innerHTML = `<div style="display:inline-flex;align-items:center;gap:5px;background:#14171C;color:#F2EFE8;font-family:var(--font-mono);font-size:9.5px;font-weight:700;letter-spacing:0.03em;padding:3px 7px;border-radius:6px;border:1px solid rgba(242,239,232,0.18);border-left:3px solid ${safeBg};box-shadow:0 2px 8px rgba(0,0,0,0.4);white-space:nowrap;cursor:pointer;"><span>${safeLabel}</span></div>`;
+  el.innerHTML = `<div style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+    <div style="width:${size}px;height:${size}px;border-radius:50%;background:${safeBg};border:2.5px solid #FFFFFF;box-shadow:0 0 0 2px rgba(20,23,28,0.16),0 2px 6px rgba(0,0,0,0.32);"></div>
+    ${pill}
+  </div>`;
   return el;
+}
+
+function createWalkCalloutElement(walkMeters, walkMinutes) {
+  const el = document.createElement('div');
+  el.style.pointerEvents = 'none';
+  const m = escapeHtml(Math.round(walkMeters));
+  const min = escapeHtml(Math.max(1, Math.round(walkMinutes || Math.ceil(walkMeters / 80))));
+  el.innerHTML = `<div class="rq-walk-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/></svg><span>Camina ${m} m · ${min} min</span></div>`;
+  return el;
+}
+
+function getPolylineMidpoint(coordsLatLng) {
+  if (!Array.isArray(coordsLatLng) || coordsLatLng.length < 2) return null;
+  if (coordsLatLng.length === 2) {
+    return [
+      (coordsLatLng[0][1] + coordsLatLng[1][1]) / 2,
+      (coordsLatLng[0][0] + coordsLatLng[1][0]) / 2,
+    ];
+  }
+  const midIdx = Math.floor(coordsLatLng.length / 2);
+  return [coordsLatLng[midIdx][1], coordsLatLng[midIdx][0]];
 }
 
 function createUserElement() {
@@ -357,7 +392,7 @@ export default function MapComponent({
     return () => { cancelled = true; };
   }, [navKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ---- Map-match sparse bus segment ----
+  // ---- Preservar trazado oficial sin re-ruteo OSRM en avenidas ----
   useEffect(() => {
     if (!currentOption?.busSegment || currentOption.busSegment.length < 2) {
       setSmoothedBusSegment([]);
@@ -367,7 +402,8 @@ export default function MapComponent({
     let cancelled = false;
     async function matchBusRoute() {
       const rawLatLng = currentOption.busSegment.map((c) => [c[1], c[0]]);
-      if (rawLatLng.length < 20) {
+      const isCommunitySparse = currentOption?.route?.type === 'community' && rawLatLng.length < 6;
+      if (isCommunitySparse) {
         try {
           const matched = await getMultiStopRoute(rawLatLng);
           if (!cancelled && matched.coordinates?.length) {
@@ -382,7 +418,7 @@ export default function MapComponent({
     }
     matchBusRoute();
     return () => { cancelled = true; };
-  }, [currentOption?.busSegment]);
+  }, [currentOption?.busSegment, currentOption?.route?.type]);
 
   // ---- Reset direction filter & fit guard when selected route changes ----
   useEffect(() => {
@@ -400,7 +436,8 @@ export default function MapComponent({
     selectedStops: emptyFC(),
     transmetroStops: emptyFC(),
     roadSafety: emptyFC(),
-    navWalk: emptyFC(),
+    navWalkBoard: emptyFC(),
+    navWalkAlight: emptyFC(),
     navBus: emptyFC(),
     navBus2: emptyFC(),
     busColor: '#06B6D4',
@@ -436,9 +473,10 @@ export default function MapComponent({
       ? lineFC([rawSelectedIdaCoords])
       : emptyFC();
 
-  const walkLines = [];
+  const walkBoardLines = [];
+  const walkAlightLines = [];
   if (navigationResult && currentOption) {
-    if (walkToBoard.length > 1) walkLines.push(walkToBoard.map((c) => [c[1], c[0]]));
+    if (walkToBoard.length > 1) walkBoardLines.push(walkToBoard.map((c) => [c[1], c[0]]));
     if (
       currentOption.isTransfer &&
       currentOption.transfer?.transferPoint?.length >= 2 &&
@@ -447,12 +485,13 @@ export default function MapComponent({
       const p1 = currentOption.transfer.transferPoint;
       const p2 = currentOption.transfer.secondBoardPoint;
       if (p1[0] !== p2[0] || p1[1] !== p2[1]) {
-        walkLines.push([p1, p2]);
+        walkBoardLines.push([p1, p2]);
       }
     }
-    if (walkFromAlight.length > 1) walkLines.push(walkFromAlight.map((c) => [c[1], c[0]]));
+    if (walkFromAlight.length > 1) walkAlightLines.push(walkFromAlight.map((c) => [c[1], c[0]]));
   }
-  const navWalkGeoJSON = lineFC(walkLines);
+  const navWalkBoardGeoJSON = lineFC(walkBoardLines);
+  const navWalkAlightGeoJSON = lineFC(walkAlightLines);
 
   const navBusGeoJSON =
     navigationResult && currentOption && activeDisplayBusLatLng.length > 1
@@ -570,7 +609,8 @@ export default function MapComponent({
     selectedStops: selectedRouteStopsGeoJSON,
     transmetroStops: transmetroStopsGeoJSON,
     roadSafety: roadSafetyGeoJSON,
-    navWalk: navWalkGeoJSON,
+    navWalkBoard: navWalkBoardGeoJSON,
+    navWalkAlight: navWalkAlightGeoJSON,
     navBus: navBusGeoJSON,
     navBus2: navBus2GeoJSON,
     busColor,
@@ -631,7 +671,8 @@ export default function MapComponent({
     upsertSource('selected-route-vuelta', d.selectedVuelta);
     upsertSource('selected-route-ida', d.selectedIda);
     upsertSource('selected-route-stops', d.selectedStops || emptyFC());
-    upsertSource('nav-walk', d.navWalk);
+    upsertSource('nav-walk-board', d.navWalkBoard);
+    upsertSource('nav-walk-alight', d.navWalkAlight);
     upsertSource('nav-bus', d.navBus);
     upsertSource('nav-bus-2', d.navBus2);
     upsertSource('gps-track', d.gpsTrack);
@@ -843,18 +884,50 @@ export default function MapComponent({
       map.setPaintProperty('selected-route-stops-layer', 'circle-stroke-color', stopStrokeColor);
     }
 
-    // Navigation walking paths
-    if (!map.getLayer('nav-walk-line')) {
+    // Senderos peatonales modernos (perlas redondeadas con halo sutil)
+    if (!map.getLayer('nav-walk-board-halo')) {
       map.addLayer({
-        id: 'nav-walk-line',
+        id: 'nav-walk-board-halo',
         type: 'line',
-        source: 'nav-walk',
+        source: 'nav-walk-board',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#3B8BF0', 'line-width': 6.5, 'line-opacity': 0.16 },
+      });
+    }
+    if (!map.getLayer('nav-walk-board-dots')) {
+      map.addLayer({
+        id: 'nav-walk-board-dots',
+        type: 'line',
+        source: 'nav-walk-board',
         layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: {
           'line-color': '#3B8BF0',
-          'line-width': 4,
+          'line-width': 3.6,
           'line-opacity': 0.95,
-          'line-dasharray': [1.4, 1.8],
+          'line-dasharray': [0.14, 1.75],
+        },
+      });
+    }
+    if (!map.getLayer('nav-walk-alight-halo')) {
+      map.addLayer({
+        id: 'nav-walk-alight-halo',
+        type: 'line',
+        source: 'nav-walk-alight',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#E5484D', 'line-width': 6.5, 'line-opacity': 0.18 },
+      });
+    }
+    if (!map.getLayer('nav-walk-alight-dots')) {
+      map.addLayer({
+        id: 'nav-walk-alight-dots',
+        type: 'line',
+        source: 'nav-walk-alight',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: {
+          'line-color': '#E5484D',
+          'line-width': 3.6,
+          'line-opacity': 0.96,
+          'line-dasharray': [0.14, 1.75],
         },
       });
     }
@@ -1627,23 +1700,23 @@ export default function MapComponent({
         if (routeDirectionFilter !== 'regreso' && Array.isArray(idaCoords) && idaCoords.length > 1) {
           addMarker(
             idaCoords[0],
-            createBoardAlightElement('#1F9D6B', 'INICIO'),
+            createBoardAlightElement('#1F9D6B', 'Inicio', { position: 'top', compact: true }),
             `<div><strong>${title}</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:3px">Inicio recorrido (Ida)${selectedRoute.origen ? ` · ${escapeHtml(selectedRoute.origen)}` : ''}</div></div>`
           );
           addMarker(
             idaCoords[idaCoords.length - 1],
-            createBoardAlightElement(hasReg ? '#FFC21A' : '#E5484D', hasReg ? 'RETORNO' : 'FIN'),
+            createBoardAlightElement(hasReg ? '#FFC21A' : '#E5484D', hasReg ? 'Retorno' : 'Fin', { position: 'bottom', compact: true }),
             `<div><strong>${title}</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:3px">${hasReg ? 'Punto de retorno a regreso' : 'Destino final (recorrido lineal)'}${selectedRoute.destino ? ` · ${escapeHtml(selectedRoute.destino)}` : ''}</div></div>`
           );
         } else if (routeDirectionFilter === 'regreso' && hasReg) {
           addMarker(
             regCoords[0],
-            createBoardAlightElement('#E5484D', 'INICIO REG.'),
+            createBoardAlightElement('#E5484D', 'Inicio vuelta', { position: 'top', compact: true }),
             `<div><strong>${title}</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:3px">Inicio sentido regreso</div></div>`
           );
           addMarker(
             regCoords[regCoords.length - 1],
-            createBoardAlightElement('#1F9D6B', 'FIN REG.'),
+            createBoardAlightElement('#1F9D6B', 'Cierre', { position: 'bottom', compact: true }),
             `<div><strong>${title}</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:3px">Cierre de recorrido</div></div>`
           );
         }
@@ -1652,24 +1725,28 @@ export default function MapComponent({
       const rColor = safeColor(currentOption.route?.color, '#FFC21A');
       const rName = escapeHtml(currentOption.route?.name || currentOption.route?.nombre || 'Ruta');
       const dirText = currentOption.direction === 'ida' ? 'Ida' : 'Vuelta';
+      const walkAlightDist = currentOption.alightPoint?.walkDistance ?? 0;
+      const walkAlightMin = currentOption.alightPoint?.walkMinutes ?? Math.ceil(walkAlightDist / 80);
       const alightText =
-        currentOption.alightPoint.walkDistance < 50
-          ? 'Estás frente a tu destino'
-          : `Camina ${escapeHtml(currentOption.alightPoint.walkDistance)}m al destino`;
+        walkAlightDist < 45
+          ? 'El bus te deja frente a tu destino'
+          : `Camina ${escapeHtml(walkAlightDist)} m (~${escapeHtml(walkAlightMin)} min) hasta tu destino`;
+      const closeToBoard = (currentOption.boardPoint?.walkDistance ?? 999) < 35;
+      const closeToAlight = walkAlightDist < 35;
 
       addMarker(
         [navigationResult.origin.lng, navigationResult.origin.lat],
-        createOriginElement(),
+        createOriginElement(!closeToBoard),
         '<strong>Tu origen</strong>'
       );
       addMarker(
         [navigationResult.destination.lng, navigationResult.destination.lat],
-        createDestinationElement(),
+        createDestinationElement(!closeToAlight),
         '<strong>Tu destino</strong>'
       );
       addMarker(
         currentOption.boardPoint.coordinates,
-        createBoardAlightElement(rColor, 'SUBE AQUÍ'),
+        createBoardAlightElement(rColor, 'Subir', { position: 'top' }),
         `<div><strong>Aborda aquí</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:4px">${rName} (${dirText})</div></div>`
       );
       if (currentOption.isTransfer && currentOption.transfer?.transferPoint?.length >= 2) {
@@ -1677,17 +1754,31 @@ export default function MapComponent({
         const trWalk = escapeHtml(currentOption.transfer.walkDistance ?? 0);
         addMarker(
           currentOption.transfer.transferPoint,
-          createBoardAlightElement('#3B8BF0', 'TRANSBORDO'),
-          `<div><strong>Cambia a ${srName}</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:4px">Camina ${trWalk}m al siguiente tramo</div></div>`
+          createBoardAlightElement('#3B8BF0', 'Transbordo', { position: 'top' }),
+          `<div><strong>Cambia a ${srName}</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:4px">Camina ${trWalk} m al siguiente tramo</div></div>`
         );
       }
       addMarker(
         currentOption.alightPoint.coordinates,
-        createBoardAlightElement('#E5484D', 'BAJA AQUÍ'),
+        createBoardAlightElement('#E5484D', closeToAlight ? 'Bajar · Destino' : 'Bajar', { position: 'bottom' }),
         `<div><strong>Baja en este punto</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:4px">${alightText}</div></div>`
       );
+
+      if (walkAlightDist >= 45) {
+        const walkPathLatLng =
+          walkFromAlight.length >= 2
+            ? walkFromAlight
+            : [
+                [currentOption.alightPoint.coordinates[1], currentOption.alightPoint.coordinates[0]],
+                [navigationResult.destination.lat, navigationResult.destination.lng],
+              ];
+        const midLngLat = getPolylineMidpoint(walkPathLatLng);
+        if (midLngLat) {
+          addMarker(midLngLat, createWalkCalloutElement(walkAlightDist, walkAlightMin));
+        }
+      }
     }
-  }, [navigationResult, currentOption, previewOrigin, previewDestination, selectedRoute, routeDirectionFilter]);
+  }, [navigationResult, currentOption, previewOrigin, previewDestination, selectedRoute, routeDirectionFilter, walkFromAlight]);
 
   // ---- Sync Incident Report Markers ----
   useEffect(() => {

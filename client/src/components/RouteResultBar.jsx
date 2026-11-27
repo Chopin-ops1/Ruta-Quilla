@@ -77,7 +77,7 @@ function RouteResultBarContent({
     ? `Descenso cercano: ${selectedOpt.alightPoint.nearestStop.nombre}`
     : null;
 
-  const hasExtraDetails = Boolean(nearestStopText) || options.length > 1;
+  const hasExtraDetails = true;
 
   return (
     <div
@@ -242,10 +242,18 @@ function RouteResultBarContent({
               ~{selectedOpt.busMinutes}m
             </span>
             <CornerDownRight size={9} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-            <MapPin size={11} color="var(--carnaval)" className="flex-shrink-0" />
-            <span className="tabular-nums text-[10.5px] font-semibold truncate" style={{ color: 'var(--carnaval)' }}>
-              {selectedOpt.alightPoint.walkDistance < 50 ? 'Directo' : `${selectedOpt.alightPoint.walkDistance}m`}
-            </span>
+            {selectedOpt.alightPoint.walkDistance < 45 ? (
+              <span className="text-[10.5px] font-semibold truncate" style={{ color: 'var(--mangle)' }}>
+                Te deja ahí
+              </span>
+            ) : (
+              <>
+                <Footprints size={11} color="var(--carnaval)" className="flex-shrink-0" />
+                <span className="tabular-nums text-[10.5px] font-semibold truncate" style={{ color: 'var(--carnaval)' }}>
+                  {selectedOpt.alightPoint.walkDistance}m a pie
+                </span>
+              </>
+            )}
           </div>
 
           <button
@@ -326,7 +334,7 @@ function RouteResultBarContent({
           {nearestStopText && (
             <div
               style={{
-                marginBottom: options.length > 1 ? 9 : 0,
+                marginBottom: 9,
                 padding: '6px 9px',
                 borderRadius: 8,
                 background: 'var(--caribe-soft)',
@@ -340,6 +348,45 @@ function RouteResultBarContent({
               <span style={{ fontSize: 11, color: 'var(--text-primary)' }}>{nearestStopText}</span>
             </div>
           )}
+
+          {/* Guía paso a paso (Subir → En bus → Al bajar) */}
+          <div
+            style={{
+              marginBottom: options.length > 1 ? 10 : 0,
+              padding: '8px 10px',
+              borderRadius: 10,
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+            }}
+          >
+            <div className="flex items-center gap-2 text-[11.5px]" style={{ color: 'var(--text-primary)' }}>
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'var(--caribe)' }} />
+              <span>
+                <strong>1. Subir:</strong>{' '}
+                {selectedOpt.boardPoint.walkDistance < 45
+                  ? 'Aborda prácticamente frente a tu origen'
+                  : `camina ${selectedOpt.boardPoint.walkDistance} m (~${selectedOpt.boardPoint.walkMinutes} min) al punto de subida`}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-[11.5px]" style={{ color: 'var(--text-primary)' }}>
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: routeCol }} />
+              <span>
+                <strong>2. En bus:</strong> ~{selectedOpt.busMinutes} min en {mainRouteName}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-[11.5px]" style={{ color: 'var(--text-primary)' }}>
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'var(--carnaval)' }} />
+              <span>
+                <strong>3. Al bajar:</strong>{' '}
+                {selectedOpt.alightPoint.walkDistance < 45
+                  ? 'el bus te deja frente a tu destino'
+                  : `camina ${selectedOpt.alightPoint.walkDistance} m (~${selectedOpt.alightPoint.walkMinutes} min) hasta tu destino`}
+              </span>
+            </div>
+          </div>
 
           {options.length > 1 && (
             <>

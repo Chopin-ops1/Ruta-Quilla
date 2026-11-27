@@ -80,12 +80,12 @@ const SystemConfigSchema = new mongoose.Schema(
       default: [],
     },
     appRelease: {
-      versionName: { type: String, default: '2.1.1', trim: true },
-      androidVersionCode: { type: Number, default: 4 },
+      versionName: { type: String, default: '2.1.2', trim: true },
+      androidVersionCode: { type: Number, default: 5 },
       title: { type: String, default: 'Nueva versión de RutaQuilla', trim: true },
       summary: {
         type: String,
-        default: 'Actualizaciones directas desde la app Android, barra superior más limpia y accesos rápidos.',
+        default: 'Indicadores más limpios para subir y bajar del bus, guía visual al caminar y trazados de rutas corregidos.',
         trim: true,
       },
       downloadUrl: {
@@ -122,28 +122,28 @@ let cachedConfig = null;
 let cachedAt = 0;
 
 const DEFAULT_APP_RELEASE = {
-  versionName: '2.1.1',
-  androidVersionCode: 4,
-  title: 'RutaQuilla 2.1.1 ya está disponible',
-  summary: 'Actualizaciones directas desde la app Android, barra superior más limpia y accesos rápidos.',
+  versionName: '2.1.2',
+  androidVersionCode: 5,
+  title: 'RutaQuilla 2.1.2 ya está disponible',
+  summary: 'Indicadores más limpios para subir y bajar del bus, guía visual al caminar y trazados de rutas corregidos.',
   downloadUrl: 'https://rutaquilla.me/downloads/RutaQuilla.apk',
   publishedAt: '2026-11-27',
   highlights: [
     {
-      category: 'Mejoras',
-      text: 'Ahora puedes descargar e instalar futuras actualizaciones directamente dentro de la app Android sin abrir el navegador.',
-    },
-    {
       category: 'Diseño',
-      text: 'Barra superior más limpia en celulares para leer el nombre y navegar con comodidad.',
+      text: 'Pines más sutiles para indicar dónde subir y bajar del bus sin tapar el mapa ni tus puntos.',
     },
     {
       category: 'Rutas',
-      text: 'Guarda tu Casa y Trabajo para calcular tu ruta con un solo toque.',
+      text: 'Trazado peatonal moderno con distancia y tiempo al bajar hacia tu destino, además de guía en 3 pasos.',
+    },
+    {
+      category: 'Mejoras',
+      text: 'Corrección de recorridos de buses que presentaban cruces o giros irregulares en el mapa.',
     },
     {
       category: 'Seguridad',
-      text: 'Protección reforzada de cuentas y verificación automática de nuevas versiones.',
+      text: 'Actualización directa dentro de la app Android sin tener que salir al navegador.',
     },
   ],
 };
