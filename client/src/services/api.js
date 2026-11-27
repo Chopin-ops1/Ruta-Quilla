@@ -76,7 +76,7 @@ async function fetchWithTimeout(url, options = {}, ms = 10000) {
  * @param {object} options - Opciones de fetch
  * @param {number} retries - Número de reintentos
  */
-async function apiRequest(endpoint, options = {}, retries = 3) {
+async function apiRequest(endpoint, options = {}, retries = 3, timeoutMs = 10000) {
   const url = `${API_BASE}${endpoint}`;
 
   // Agregar token JWT si existe
@@ -98,7 +98,7 @@ async function apiRequest(endpoint, options = {}, retries = 3) {
 
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      const response = await fetchWithTimeout(url, fetchOptions);
+      const response = await fetchWithTimeout(url, fetchOptions, timeoutMs);
 
       // Si es error del servidor (5xx), reintentar
       if (response.status >= 500 && attempt < retries - 1) {
@@ -228,54 +228,54 @@ export const usersAPI = {
   /** Obtener token temporal HMAC anti-bots para el formulario */
   getFormToken: () => apiRequest('/users/form-token', {}, 1),
 
-  /** Registrar nuevo usuario */
+  /** Registrar nuevo usuario (sin reintentos automáticos para evitar invalidar verificación) */
   register: (userData) =>
     apiRequest('/users/register', {
       method: 'POST',
       body: JSON.stringify(userData),
-    }),
+    }, 1, 20000),
 
   /** Verificar email con código */
   verify: (email, code) =>
     apiRequest('/users/verify', {
       method: 'POST',
       body: JSON.stringify({ email, code }),
-    }),
+    }, 1, 15000),
 
   /** Verificar código OTP 2FA de acceso Admin */
   verify2FA: (email, code) =>
     apiRequest('/users/verify-2fa', {
       method: 'POST',
       body: JSON.stringify({ email, code }),
-    }),
+    }, 1, 15000),
 
   /** Reenviar código de verificación */
   resendCode: (email) =>
     apiRequest('/users/resend-code', {
       method: 'POST',
       body: JSON.stringify({ email }),
-    }),
+    }, 1, 20000),
 
   /** Solicitar código de recuperación de contraseña */
   forgotPassword: (email) =>
     apiRequest('/users/forgot-password', {
       method: 'POST',
       body: JSON.stringify({ email }),
-    }),
+    }, 1, 20000),
 
   /** Restablecer contraseña con código OTP */
   resetPassword: (email, code, newPassword) =>
     apiRequest('/users/reset-password', {
       method: 'POST',
       body: JSON.stringify({ email, code, newPassword }),
-    }),
+    }, 1, 15000),
 
   /** Iniciar sesión */
   login: (credentials) =>
     apiRequest('/users/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
-    }),
+    }, 1, 15000),
 
   /** Obtener perfil del usuario autenticado */
   getProfile: () => apiRequest('/users/profile'),

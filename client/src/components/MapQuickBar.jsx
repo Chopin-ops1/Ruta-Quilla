@@ -20,7 +20,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { MapPin, Search, X, Loader2, Navigation } from 'lucide-react';
-import { reverseGeocode } from '../services/routingService';
+import { reverseGeocode, isCoordinateString } from '../services/routingService';
 
 export default function MapQuickBar({
   originFromMap,
@@ -56,15 +56,15 @@ export default function MapQuickBar({
     prevOriginRef.current = key;
 
     const presetOriginName = effectiveOrigin.displayName || effectiveOrigin.name;
-    if (presetOriginName) {
+    if (presetOriginName && !isCoordinateString(presetOriginName)) {
       setOriginName(presetOriginName);
       return;
     }
 
     setOriginName(null); // Show "Cargando..." while fetching
     reverseGeocode(effectiveOrigin.lat, effectiveOrigin.lng)
-      .then(name => setOriginName(name))
-      .catch(() => setOriginName(`${effectiveOrigin.lat.toFixed(4)}, ${effectiveOrigin.lng.toFixed(4)}`));
+      .then(name => setOriginName(name || 'Origen en el mapa'))
+      .catch(() => setOriginName('Origen en el mapa'));
   }, [effectiveOrigin?.lat, effectiveOrigin?.lng, effectiveOrigin?.displayName, effectiveOrigin?.name]);
 
   // Resolve destination address
@@ -79,15 +79,15 @@ export default function MapQuickBar({
     prevDestRef.current = key;
 
     const presetDestName = effectiveDest.displayName || effectiveDest.name;
-    if (presetDestName) {
+    if (presetDestName && !isCoordinateString(presetDestName)) {
       setDestName(presetDestName);
       return;
     }
 
     setDestName(null);
     reverseGeocode(effectiveDest.lat, effectiveDest.lng)
-      .then(name => setDestName(name))
-      .catch(() => setDestName(`${effectiveDest.lat.toFixed(4)}, ${effectiveDest.lng.toFixed(4)}`));
+      .then(name => setDestName(name || 'Destino en el mapa'))
+      .catch(() => setDestName('Destino en el mapa'));
   }, [effectiveDest?.lat, effectiveDest?.lng, effectiveDest?.displayName, effectiveDest?.name]);
 
   // Hide when navigation results are shown

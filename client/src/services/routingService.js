@@ -194,20 +194,86 @@ function normalizePlaceName(str) {
     .trim();
 }
 
+export function isCoordinateString(str) {
+  return /^\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*$/.test(String(str || ''));
+}
+
+function formatColombianAddress(rawAddr) {
+  if (typeof rawAddr !== 'string') return '';
+  const cleaned = rawAddr.replace(/\s+/g, ' ').replace(/\s*#\s*/g, ' #').trim();
+  const streetMatch = cleaned.match(
+    /^((?:Avenida\s+)?(?:Calle|Carrera|Diagonal|Transversal|Circular|Vía|Via|Autopista)\s+\d+[A-Za-z]*(?:\s+(?:Bis|Sur|Este|Norte|Oeste))?)\s+(\d+[A-Za-z]*)\s+(\d+[A-Za-z]*)$/i
+  );
+  if (streetMatch) {
+    return `${streetMatch[1]} #${streetMatch[2]}-${streetMatch[3]}`;
+  }
+  return cleaned;
+}
+
+function looksLikeStreetQuery(raw) {
+  const s = String(raw || '').trim();
+  if (/\d+\s*#\s*\d+/.test(s)) return true;
+  return /\b(?:calle|cll|cl|carrera|cra|kr|k|diagonal|diag|dg|transversal|transv|tv|circular|via|vía)\s*\.?\s*\d+/i.test(s);
+}
+
+async function searchPlacesArcGis(query) {
+  try {
+    const normalized = query
+      .replace(/\b(?:cra|kr|k)\.?(?=\s|$|\d)/gi, 'Carrera')
+      .replace(/\b(?:cll|cl)\.?(?=\s|$|\d)/gi, 'Calle')
+      .replace(/\bav\.?(?=\s|$)/gi, 'Avenida')
+      .replace(/\b(?:diag|dg)\.?(?=\s|$|\d)/gi, 'Diagonal')
+      .replace(/\b(?:transv|tv)\.?(?=\s|$|\d)/gi, 'Transversal')
+      .replace(/[#-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const params = new URLSearchParams({
+      f: 'json',
+      SingleLine: `${normalized}, Barranquilla, Atlantico, COL`,
+      location: `${BARRANQUILLA_CENTER.lng},${BARRANQUILLA_CENTER.lat}`,
+      searchExtent: BARRANQUILLA_VIEWBOX,
+      outFields: 'Match_addr,Addr_type,Nbrhd,City',
+      maxLocations: '6',
+      langCode: 'ES',
+    });
+    const res = await fetch(
+      `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?${params}`
+    );
+    const data = await res.json();
+    return (data.candidates || [])
+      .filter((c) => Number(c?.score) >= 75)
+      .map((c) => {
+        const lat = Number(c?.location?.y);
+        const lng = Number(c?.location?.x);
+        const attrs = c?.attributes || {};
+        const firstPart = String(attrs.Match_addr || c.address || '').split(',')[0].trim();
+        const displayName = formatColombianAddress(firstPart) || firstPart || normalized;
+        const subtitle = [attrs.Nbrhd, attrs.City || 'Barranquilla'].filter(Boolean).join(', ') || 'Barranquilla, Atlántico';
+        return { displayName, subtitle, lat, lng, type: attrs.Addr_type || 'address', category: 'address', source: 'arcgis' };
+      })
+      .filter((item) => Number.isFinite(item.lat) && Number.isFinite(item.lng));
+  } catch (err) {
+    console.warn('Direct ArcGIS geocode failed:', err);
+    return [];
+  }
+}
+
 /**
  * Hybrid search for places in Barranquilla:
  * 1. Instant local catalog lookup
- * 2. Backend geocode proxy (Geoapify optional -> Photon -> Nominatim), or direct Photon fallback
- * 3. Merge & deduplicate results within 90m or matching names
+ * 2. Backend geocode proxy (ArcGIS/Geoapify/Photon/Nominatim), or direct client fallback
+ * 3. Merge & deduplicate results
  */
 export async function searchPlaces(query) {
   if (!query || query.trim().length < 2) return [];
 
   const trimmed = query.trim();
+  const isStreet = looksLikeStreetQuery(trimmed);
   const localResults = searchLocalPlaces(trimmed, 5);
 
   let remoteResults = [];
-  if (trimmed.length >= 3 || localResults.length < 3) {
+  if (trimmed.length >= 2 || localResults.length < 3) {
     if (hasGoogleKey()) {
       remoteResults = await searchPlacesGoogle(trimmed);
     } else {
@@ -215,8 +281,18 @@ export async function searchPlaces(query) {
         const res = await mapsAPI.geocode(trimmed);
         remoteResults = Array.isArray(res?.data) ? res.data : [];
       } catch (err) {
-        console.warn('Backend geocode unavailable, falling back to Photon:', err?.message || err);
-        remoteResults = await searchPlacesPhoton(trimmed);
+        console.warn('Backend geocode unavailable, falling back directly:', err?.message || err);
+        if (isStreet) {
+          remoteResults = await searchPlacesArcGis(trimmed);
+        }
+        if (remoteResults.length < 3) {
+          const photon = await searchPlacesPhoton(trimmed);
+          remoteResults = [...remoteResults, ...photon];
+        }
+        if (!isStreet && remoteResults.length < 2) {
+          const arc = await searchPlacesArcGis(trimmed);
+          remoteResults = [...remoteResults, ...arc];
+        }
         if (remoteResults.length === 0) {
           remoteResults = await searchPlacesNominatim(trimmed);
         }
@@ -224,15 +300,17 @@ export async function searchPlaces(query) {
     }
   }
 
-  // Merge local first + deduplicated remote
+  // Merge local first + deduplicated remote (threshold más estricto en direcciones específicas)
   const merged = [...localResults];
   for (const rem of remoteResults) {
     if (!rem || !Number.isFinite(rem.lat) || !Number.isFinite(rem.lng)) continue;
     const remNorm = normalizePlaceName(rem.displayName);
+    const dupDist = rem.source === 'arcgis' || isStreet ? 30 : 90;
     const isDuplicate = merged.some((m) => {
       const dist = haversineM(m.lat, m.lng, rem.lat, rem.lng);
-      if (dist < 90) return true;
-      return normalizePlaceName(m.displayName) === remNorm;
+      if (dist < dupDist && normalizePlaceName(m.displayName) === remNorm) return true;
+      if (dist < 25) return true;
+      return normalizePlaceName(m.displayName) === remNorm && dist < 180;
     });
     if (!isDuplicate) {
       merged.push(rem);
@@ -407,11 +485,42 @@ export async function reverseGeocode(lat, lng) {
     }
 
     if (!resolvedName) {
-      // Backend reverse geocode proxy (cached, Photon/Nominatim cascade)
+      // Backend reverse geocode proxy (ArcGIS / Geoapify / Photon / Nominatim)
       try {
         const res = await mapsAPI.reverse(numLat, numLng);
-        if (res?.data?.displayName) {
-          resolvedName = res.data.displayName;
+        const candidate = res?.data?.displayName;
+        if (candidate && !isCoordinateString(candidate)) {
+          resolvedName = candidate;
+        }
+      } catch (_) {
+        resolvedName = null;
+      }
+    }
+
+    if (!resolvedName) {
+      // Direct ArcGIS reverse geocode fallback
+      try {
+        const params = new URLSearchParams({
+          f: 'json',
+          location: `${numLng},${numLat}`,
+          langCode: 'ES',
+        });
+        const res = await fetch(
+          `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode?${params}`
+        );
+        const data = await res.json();
+        const addr = data?.address;
+        if (addr) {
+          const streetRaw = addr.ShortLabel || addr.Address || addr.PlaceName || '';
+          const formattedStreet = formatColombianAddress(streetRaw);
+          const hood = String(addr.Neighborhood || addr.District || '').trim();
+          if (formattedStreet) {
+            resolvedName = hood && !formattedStreet.toLowerCase().includes(hood.toLowerCase())
+              ? `${formattedStreet}, ${hood}`
+              : formattedStreet;
+          } else if (hood) {
+            resolvedName = hood;
+          }
         }
       } catch (_) {
         resolvedName = null;
@@ -434,7 +543,7 @@ export async function reverseGeocode(lat, lng) {
             : '';
           const primary = props.name || streetLine || props.district || props.city;
           const area = props.locality || props.district;
-          if (primary) {
+          if (primary && primary.toLowerCase() !== 'barranquilla') {
             resolvedName = area && area !== primary ? `${primary}, ${area}` : primary;
           }
         }
@@ -458,13 +567,16 @@ export async function reverseGeocode(lat, lng) {
         });
 
         const data = await res.json();
-        resolvedName = formatNominatimName(data) || null;
+        const nomName = formatNominatimName(data) || null;
+        if (nomName && !isCoordinateString(nomName)) {
+          resolvedName = nomName;
+        }
       } catch (_) {
         resolvedName = null;
       }
     }
 
-    if (resolvedName) {
+    if (resolvedName && !isCoordinateString(resolvedName)) {
       if (reverseGeocodeCache.size >= MAX_REVERSE_CACHE) {
         const oldestKey = reverseGeocodeCache.keys().next().value;
         reverseGeocodeCache.delete(oldestKey);
@@ -473,7 +585,7 @@ export async function reverseGeocode(lat, lng) {
       return resolvedName;
     }
 
-    return `${numLat.toFixed(4)}, ${numLng.toFixed(4)}`;
+    return 'Ubicación en el mapa';
   })();
 
   reverseGeocodeInFlight.set(cacheKey, requestPromise);

@@ -142,9 +142,24 @@ function verifyFormToken(token, { minAgeMs = 1500, maxAgeMs = 2 * 60 * 60 * 1000
       return { ok: false, reason: 'REPLAYED' };
     }
     usedNonces.set(nonce, ts + maxAgeMs);
+  } else if (usedNonces.has(nonce)) {
+    return { ok: false, reason: 'REPLAYED' };
   }
 
-  return { ok: true, ageMs: age };
+  return { ok: true, ageMs: age, nonce, ts };
+}
+
+/**
+ * Consume explícitamente el nonce de un formToken ya validado (una vez superadas las demás validaciones).
+ */
+function consumeFormTokenNonce(token, maxAgeMs = 2 * 60 * 60 * 1000) {
+  if (typeof token !== 'string') return;
+  const parts = token.trim().split('.');
+  if (parts.length !== 3) return;
+  const [tsStr, nonce] = parts;
+  const ts = parseInt(tsStr, 10) || Date.now();
+  cleanupUsedNonces();
+  usedNonces.set(nonce, ts + maxAgeMs);
 }
 
 /**
@@ -388,6 +403,7 @@ module.exports = {
   DEMO_DOMAINS,
   issueFormToken,
   verifyFormToken,
+  consumeFormTokenNonce,
   verifyTurnstileToken,
   checkDomainMx,
   isKeyboardMash,

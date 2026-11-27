@@ -86,6 +86,7 @@ app.use(helmet({
         'https://tiles.openfreemap.org',
         'https://photon.komoot.io',
         'https://nominatim.openstreetmap.org',
+        'https://geocode.arcgis.com',
         'https://router.project-osrm.org',
         'https://overpass-api.de',
         'https://basemaps.cartocdn.com',
@@ -153,6 +154,8 @@ const limiter = rateLimit({
     return (
       urlPath === '/api/health' ||
       urlPath === '/api/ping' ||
+      urlPath === '/api/maps/public-config' ||
+      urlPath === '/api/users/form-token' ||
       urlPath === '/api/maps/geocode' ||
       urlPath === '/api/maps/reverse' ||
       urlPath === '/api/maps/pois' ||
@@ -210,7 +213,9 @@ app.use('/api/users/verify-2fa', authLimiter);
 app.use('/api/users/reset-password', authLimiter);
 app.use('/api/users/resend-code', resendLimiter);
 app.use('/api/users/forgot-password', resendLimiter);
+app.use('/api/users/form-token', geocodeLimiter);
 app.use('/api/routes/capture', captureLimiter);
+app.use('/api/maps/public-config', geocodeLimiter);
 app.use('/api/maps/geocode', geocodeLimiter);
 app.use('/api/maps/reverse', geocodeLimiter);
 app.use('/api/maps/pois', geocodeLimiter);

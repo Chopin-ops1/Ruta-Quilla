@@ -295,14 +295,25 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
 
     setIsSubmitting(true);
     try {
+      let currentFormToken = formToken || publicConfig?.formToken || '';
+      if (mode === 'register' && !publicConfig?.turnstileEnabled && !currentFormToken) {
+        try {
+          const ftRes = await usersAPI.getFormToken();
+          if (ftRes?.formToken) {
+            currentFormToken = ftRes.formToken;
+            setFormToken(ftRes.formToken);
+          }
+        } catch (_) {}
+      }
+
       const antiBotMeta = {
         website: honeypotWebsite,
-        formToken: formToken || publicConfig?.formToken || '',
+        formToken: currentFormToken,
         turnstileToken,
       };
       if (mode === 'login') {
         if (publicConfig?.turnstileEnabled && publicConfig?.turnstileSiteKey && !turnstileToken) {
-          setLocalError('Completa la verificación humana (Turnstile) antes de continuar.');
+          setLocalError('Completa la verificación de seguridad antes de continuar.');
           setIsSubmitting(false);
           return;
         }
@@ -353,6 +364,15 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
       }
     } catch (err) {
       setLocalError(err.message || 'Error de autenticación');
+      if (window.turnstile && turnstileWidgetIdRef.current !== null) {
+        try {
+          window.turnstile.reset(turnstileWidgetIdRef.current);
+        } catch (_) {}
+        setTurnstileToken('');
+      }
+      usersAPI.getFormToken()
+        .then((res) => { if (res?.formToken) setFormToken(res.formToken); })
+        .catch(() => {});
     } finally {
       setIsSubmitting(false);
     }
@@ -1048,28 +1068,10 @@ export default function LoginModal({ isOpen, onClose, reason = null, onShowLegal
             </div>
           )}
 
-          {/* Turnstile opcional (Login y Registro) o sello visible Escudo Anti-Bots */}
+          {/* Verificación de seguridad opcional (Login y Registro) */}
           {publicConfig?.turnstileEnabled && publicConfig?.turnstileSiteKey && (
             <div className="mt-3 flex justify-center">
               <div ref={turnstileRef} />
-            </div>
-          )}
-
-          {publicConfig?.botShieldEnabled && (
-            <div
-              className="mt-2.5 px-2.5 py-1.5 rounded-lg flex items-center justify-center gap-1.5 text-[10.5px]"
-              style={{
-                background: 'var(--bg-surface)',
-                border: '1px solid var(--border-color)',
-                color: 'var(--text-secondary)',
-              }}
-            >
-              <Shield size={11} color="var(--mangle)" style={{ flexShrink: 0 }} />
-              <span>
-                {mode === 'login'
-                  ? 'Escudo Anti-Bots activo · Protección contra accesos automatizados'
-                  : 'Escudo Anti-Bots activo · Validación DNS MX y verificación OTP'}
-              </span>
             </div>
           )}
 

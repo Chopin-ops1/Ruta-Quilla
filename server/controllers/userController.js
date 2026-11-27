@@ -22,6 +22,7 @@ const { generateVerificationCode, sendVerificationEmail, sendPasswordResetEmail,
 const {
   issueFormToken,
   verifyFormToken,
+  consumeFormTokenNonce,
   verifyTurnstileToken,
   validateRegistrationEmail,
 } = require('../services/emailSecurityService');
@@ -96,24 +97,35 @@ async function register(req, res) {
 
     const { name, email, password, website, formToken, turnstileToken } = req.body || {};
 
-    if (sysConfig.botShieldEnabled) {
-      if (typeof website === 'string' && website.trim().length > 0) {
-        logAuthEvent('BOT_HONEYPOT_BLOCKED', String(email || 'unknown'), req.ip, false);
-        await logAdminAction({
-          req,
-          action: 'BOT_HONEYPOT_BLOCKED',
-          category: 'security',
-          summary: `Registro bot bloqueado por honeypot (${String(email || 'sin-email').slice(0, 60)})`,
-          adminEmailOverride: 'bot-shield',
-        });
+    if (sysConfig.botShieldEnabled && typeof website === 'string' && website.trim().length > 0) {
+      logAuthEvent('BOT_HONEYPOT_BLOCKED', String(email || 'unknown'), req.ip, false);
+      await logAdminAction({
+        req,
+        action: 'BOT_HONEYPOT_BLOCKED',
+        category: 'security',
+        summary: `Registro bot bloqueado por honeypot (${String(email || 'sin-email').slice(0, 60)})`,
+        adminEmailOverride: 'bot-shield',
+      });
+      return res.status(403).json({
+        success: false,
+        code: 'BOT_BLOCKED',
+        message: 'No se pudo procesar tu solicitud. Intenta de nuevo.',
+      });
+    }
+
+    const turnstileActive = Boolean(sysConfig.turnstileEnabled && process.env.TURNSTILE_SECRET_KEY);
+
+    if (turnstileActive) {
+      const tsCheck = await verifyTurnstileToken(turnstileToken, req.ip);
+      if (!tsCheck.ok) {
         return res.status(403).json({
           success: false,
-          code: 'BOT_BLOCKED',
-          message: 'Solicitud bloqueada por el filtro anti-bots.',
+          code: 'CAPTCHA_FAILED',
+          message: 'Por favor completa la casilla de verificación para continuar.',
         });
       }
-
-      const tokenCheck = verifyFormToken(formToken);
+    } else if (sysConfig.botShieldEnabled) {
+      const tokenCheck = verifyFormToken(formToken, { minAgeMs: 800, consumeNonce: false });
       if (!tokenCheck.ok) {
         logAuthEvent(`BOT_TOKEN_${tokenCheck.reason}`, String(email || 'unknown'), req.ip, false);
         await logAdminAction({
@@ -125,22 +137,11 @@ async function register(req, res) {
         });
         return res.status(403).json({
           success: false,
-          code: 'BOT_BLOCKED',
+          code: 'FORM_TOKEN_INVALID',
           message:
             tokenCheck.reason === 'TOO_FAST'
-              ? 'Envío demasiado rápido detectado. Espera unos segundos e intenta nuevamente.'
-              : 'Token de seguridad expirado o inválido. Recarga el formulario e intenta de nuevo.',
-        });
-      }
-    }
-
-    if (sysConfig.turnstileEnabled && process.env.TURNSTILE_SECRET_KEY) {
-      const tsCheck = await verifyTurnstileToken(turnstileToken, req.ip);
-      if (!tsCheck.ok) {
-        return res.status(403).json({
-          success: false,
-          code: 'CAPTCHA_FAILED',
-          message: 'Completa la verificación humana (Turnstile) antes de registrarte.',
+              ? 'Envío demasiado rápido. Espera un momento e intenta de nuevo.'
+              : 'La sesión del formulario expiró. Intenta enviar nuevamente.',
         });
       }
     }
@@ -206,6 +207,9 @@ async function register(req, res) {
         existingUser.verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 min
         existingUser.verificationAttempts = 0;
         await existingUser.save();
+        if (!turnstileActive && sysConfig.botShieldEnabled) {
+          consumeFormTokenNonce(formToken);
+        }
 
         // Enviar email
         if (smtpConfigured) {
@@ -247,6 +251,9 @@ async function register(req, res) {
     });
 
     await user.save();
+    if (!turnstileActive && sysConfig.botShieldEnabled) {
+      consumeFormTokenNonce(formToken);
+    }
 
     // Enviar email de verificación si verificación requerida
     if (mustVerify) {
@@ -479,7 +486,7 @@ async function login(req, res) {
         return res.status(403).json({
           success: false,
           code: 'CAPTCHA_FAILED',
-          message: 'Completa la verificación humana (Turnstile) antes de iniciar sesión.',
+          message: 'Por favor completa la casilla de verificación para iniciar sesión.',
         });
       }
     }

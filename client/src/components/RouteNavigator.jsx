@@ -25,7 +25,7 @@ import {
   ChevronUp,
   ArrowUpDown,
 } from 'lucide-react';
-import { searchPlaces, reverseGeocode } from '../services/routingService';
+import { searchPlaces, reverseGeocode, isCoordinateString } from '../services/routingService';
 import { getCurrentPosition } from '../services/gpsService';
 import { useToast } from '../context/ToastContext';
 
@@ -38,7 +38,7 @@ const QUICK_DESTINATIONS = [
   { label: 'Estadio Metro', displayName: 'Estadio Metropolitano', lat: 10.92695, lng: -74.80051 },
 ];
 
-function InputRow({ id, placeholder, value, onChange, onFocus, onBlur, rightSlot, focused }) {
+function InputRow({ id, placeholder, value, onChange, onFocus, onBlur, onKeyDown, rightSlot, focused }) {
   return (
     <div
       style={{
@@ -59,6 +59,7 @@ function InputRow({ id, placeholder, value, onChange, onFocus, onBlur, rightSlot
         onChange={onChange}
         onFocus={onFocus}
         onBlur={onBlur}
+        onKeyDown={onKeyDown}
         placeholder={placeholder}
         className="flex-1 bg-transparent outline-none rq-plain-input"
         style={{
@@ -205,6 +206,7 @@ export default function RouteNavigator({
 
   const [expandedOption, setExpandedOption] = useState(0);
   const [gpsLoading, setGpsLoading] = useState(false);
+  const [resolvingSearch, setResolvingSearch] = useState(false);
   const toast = useToast();
 
   const [searchHistory, setSearchHistory] = useState(() => {
@@ -268,7 +270,7 @@ export default function RouteNavigator({
     setOrigin({ lat: s.lat, lng: s.lng });
     setShowOriginSugg(false);
     saveToHistory(s);
-    onPreviewOriginChange?.({ lat: s.lat, lng: s.lng });
+    onPreviewOriginChange?.({ lat: s.lat, lng: s.lng, displayName: s.displayName });
   };
 
   const selectDest = (s) => {
@@ -276,7 +278,7 @@ export default function RouteNavigator({
     setDestination({ lat: s.lat, lng: s.lng });
     setShowDestSugg(false);
     saveToHistory(s);
-    onPreviewDestinationChange?.({ lat: s.lat, lng: s.lng });
+    onPreviewDestinationChange?.({ lat: s.lat, lng: s.lng, displayName: s.displayName });
   };
 
   const handleGPS = async () => {
@@ -284,9 +286,10 @@ export default function RouteNavigator({
       setGpsLoading(true);
       const pos = await getCurrentPosition();
       setOrigin({ lat: pos.lat, lng: pos.lng });
-      onPreviewOriginChange?.({ lat: pos.lat, lng: pos.lng });
       const name = await reverseGeocode(pos.lat, pos.lng);
-      setOriginText(name || 'Mi ubicación GPS');
+      const cleanName = name && !isCoordinateString(name) ? name : 'Mi ubicación GPS';
+      setOriginText(cleanName);
+      onPreviewOriginChange?.({ lat: pos.lat, lng: pos.lng, displayName: cleanName });
     } catch {
       toast.error('No se pudo obtener tu ubicación. Verifica permisos del navegador.');
     } finally {
@@ -304,33 +307,96 @@ export default function RouteNavigator({
     setDestination(prevOrig);
     setOriginText(prevDestText);
     setDestText(prevOrigText);
-    onPreviewOriginChange?.(prevDest);
-    onPreviewDestinationChange?.(prevOrig);
+    onPreviewOriginChange?.(prevDest ? { ...prevDest, displayName: prevDestText } : null);
+    onPreviewDestinationChange?.(prevOrig ? { ...prevOrig, displayName: prevOrigText } : null);
   };
 
   useEffect(() => {
-    if (onSetOriginFromMap?.lat) {
-      setOrigin(onSetOriginFromMap);
-      onPreviewOriginChange?.(onSetOriginFromMap);
-      reverseGeocode(onSetOriginFromMap.lat, onSetOriginFromMap.lng).then((n) =>
-        setOriginText(n || `${onSetOriginFromMap.lat.toFixed(4)}, ${onSetOriginFromMap.lng.toFixed(4)}`)
-      );
+    if (!onSetOriginFromMap?.lat) return;
+    let cancelled = false;
+    setOrigin({ lat: onSetOriginFromMap.lat, lng: onSetOriginFromMap.lng });
+    const presetName = onSetOriginFromMap.displayName || onSetOriginFromMap.name;
+    if (presetName && !isCoordinateString(presetName)) {
+      setOriginText(presetName);
+      onPreviewOriginChange?.({ lat: onSetOriginFromMap.lat, lng: onSetOriginFromMap.lng, displayName: presetName });
+      return;
     }
+    setOriginText('Ubicando dirección...');
+    reverseGeocode(onSetOriginFromMap.lat, onSetOriginFromMap.lng).then((n) => {
+      if (cancelled) return;
+      const resolved = n && !isCoordinateString(n) ? n : 'Origen en el mapa';
+      setOriginText(resolved);
+      onPreviewOriginChange?.({ lat: onSetOriginFromMap.lat, lng: onSetOriginFromMap.lng, displayName: resolved });
+    });
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onSetOriginFromMap]);
 
   useEffect(() => {
-    if (onSetDestinationFromMap?.lat) {
-      setDestination(onSetDestinationFromMap);
-      onPreviewDestinationChange?.(onSetDestinationFromMap);
-      reverseGeocode(onSetDestinationFromMap.lat, onSetDestinationFromMap.lng).then((n) =>
-        setDestText(n || `${onSetDestinationFromMap.lat.toFixed(4)}, ${onSetDestinationFromMap.lng.toFixed(4)}`)
-      );
+    if (!onSetDestinationFromMap?.lat) return;
+    let cancelled = false;
+    setDestination({ lat: onSetDestinationFromMap.lat, lng: onSetDestinationFromMap.lng });
+    const presetName = onSetDestinationFromMap.displayName || onSetDestinationFromMap.name;
+    if (presetName && !isCoordinateString(presetName)) {
+      setDestText(presetName);
+      onPreviewDestinationChange?.({ lat: onSetDestinationFromMap.lat, lng: onSetDestinationFromMap.lng, displayName: presetName });
+      return;
     }
+    setDestText('Ubicando dirección...');
+    reverseGeocode(onSetDestinationFromMap.lat, onSetDestinationFromMap.lng).then((n) => {
+      if (cancelled) return;
+      const resolved = n && !isCoordinateString(n) ? n : 'Destino en el mapa';
+      setDestText(resolved);
+      onPreviewDestinationChange?.({ lat: onSetDestinationFromMap.lat, lng: onSetDestinationFromMap.lng, displayName: resolved });
+    });
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onSetDestinationFromMap]);
 
-  const handleSearch = () => {
-    if (!origin || !destination) return;
-    onNavigate?.(origin, destination);
+  const handleSearch = async () => {
+    if (isNavigating || resolvingSearch) return;
+
+    let finalOrigin = origin;
+    let finalDest = destination;
+
+    if ((!finalOrigin && originText.trim().length >= 2) || (!finalDest && destText.trim().length >= 2)) {
+      setResolvingSearch(true);
+      try {
+        if (!finalOrigin && originText.trim().length >= 2) {
+          const suggs = originSuggestions.length > 0 ? originSuggestions : await searchPlaces(originText.trim());
+          if (suggs?.length > 0) {
+            const best = suggs[0];
+            finalOrigin = { lat: best.lat, lng: best.lng };
+            setOrigin(finalOrigin);
+            setOriginText(best.displayName);
+            saveToHistory(best);
+            onPreviewOriginChange?.({ lat: best.lat, lng: best.lng, displayName: best.displayName });
+            setShowOriginSugg(false);
+          }
+        }
+        if (!finalDest && destText.trim().length >= 2) {
+          const suggs = destSuggestions.length > 0 ? destSuggestions : await searchPlaces(destText.trim());
+          if (suggs?.length > 0) {
+            const best = suggs[0];
+            finalDest = { lat: best.lat, lng: best.lng };
+            setDestination(finalDest);
+            setDestText(best.displayName);
+            saveToHistory(best);
+            onPreviewDestinationChange?.({ lat: best.lat, lng: best.lng, displayName: best.displayName });
+            setShowDestSugg(false);
+          }
+        }
+      } finally {
+        setResolvingSearch(false);
+      }
+    }
+
+    if (!finalOrigin || !finalDest) {
+      toast.warning('No ubicamos esa dirección en Barranquilla. Elige una sugerencia o márcala en el mapa.');
+      return;
+    }
+
+    onNavigate?.(finalOrigin, finalDest);
     onSelectOptionIdx?.(0);
     setExpandedOption(0);
   };
@@ -348,7 +414,31 @@ export default function RouteNavigator({
   };
 
   const options = navigationResult?.options || [];
-  const canSearch = origin && destination && !isNavigating;
+  const hasOriginInput = Boolean(origin || originText.trim().length >= 3);
+  const hasDestInput = Boolean(destination || destText.trim().length >= 3);
+  const canSearch = hasOriginInput && hasDestInput && !isNavigating && !resolvingSearch;
+
+  const handleInputKeyDown = (isOriginField) => (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    if (isOriginField && !origin && originSuggestions.length > 0) {
+      selectOrigin(originSuggestions[0]);
+      return;
+    }
+    if (!isOriginField && !destination && destSuggestions.length > 0) {
+      const chosenDest = destSuggestions[0];
+      selectDest(chosenDest);
+      if (origin) {
+        onNavigate?.(origin, { lat: chosenDest.lat, lng: chosenDest.lng });
+        onSelectOptionIdx?.(0);
+        setExpandedOption(0);
+      }
+      return;
+    }
+    if (hasOriginInput && hasDestInput) {
+      handleSearch();
+    }
+  };
 
   return (
     <div className="animate-fade-in" style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -419,9 +509,10 @@ export default function RouteNavigator({
             <div style={{ position: 'relative' }}>
               <InputRow
                 id="origin-input"
-                placeholder="¿Desde dónde sales?"
+                placeholder="¿Desde dónde sales? (Ej: Cra 43 #72-10)"
                 value={originText}
                 onChange={(e) => handleOriginInput(e.target.value)}
+                onKeyDown={handleInputKeyDown(true)}
                 onFocus={() => {
                   setOriginFocused(true);
                   if (originSuggestions.length) setShowOriginSugg(true);
@@ -492,9 +583,10 @@ export default function RouteNavigator({
             <div style={{ position: 'relative' }}>
               <InputRow
                 id="destination-input"
-                placeholder="¿A dónde vas? (Ej: Buenavista, Centro)"
+                placeholder="¿A dónde vas? (Ej: Calle 84 #46-20)"
                 value={destText}
                 onChange={(e) => handleDestInput(e.target.value)}
+                onKeyDown={handleInputKeyDown(false)}
                 onFocus={() => {
                   setDestFocused(true);
                   if (destSuggestions.length) setShowDestSugg(true);
@@ -550,9 +642,9 @@ export default function RouteNavigator({
             className="rq-btn-primary"
             style={{ flex: 1, padding: '10px 14px', fontSize: 13 }}
           >
-            {isNavigating ? (
+            {isNavigating || resolvingSearch ? (
               <>
-                <Loader2 size={14} className="animate-spin" /> Buscando rutas...
+                <Loader2 size={14} className="animate-spin" /> {resolvingSearch ? 'Ubicando dirección...' : 'Buscando rutas...'}
               </>
             ) : (
               <>

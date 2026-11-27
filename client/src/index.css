@@ -709,35 +709,29 @@ textarea::placeholder,
   color: var(--text-secondary) !important;
 }
 
-/* ---- Chips de categorías POI sobre el mapa ---- */
-.poi-chips {
+/* ---- Menú desplegable minimalista de categorías POI sobre el mapa ---- */
+.poi-dropdown-wrap {
   position: absolute;
   top: 12px;
   left: 12px;
-  right: 60px;
   z-index: 9;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 6px;
-  overflow-x: auto;
-  padding: 2px 18px 6px 2px;
-  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 18px), transparent 100%);
-  mask-image: linear-gradient(to right, #000 calc(100% - 18px), transparent 100%);
-  pointer-events: none;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
 }
 
-.poi-chips::-webkit-scrollbar {
-  display: none;
-}
-
-.poi-chip {
-  pointer-events: auto;
+.poi-trigger-row {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 11px;
+  gap: 5px;
+}
+
+.poi-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 11px;
   border-radius: var(--radius-sm);
   background: var(--panel-bg);
   border: 1px solid var(--border-color);
@@ -746,20 +740,94 @@ textarea::placeholder,
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-md);
   transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
 }
 
-.poi-chip:hover {
+.poi-trigger-btn:hover {
   background: var(--bg-card);
   border-color: var(--subtle-border-strong);
 }
 
-.poi-chip.active {
+.poi-trigger-btn.filtered {
   background: var(--plate-bg);
   color: #F2EFE8;
   border-color: var(--chip-color, var(--brand));
-  box-shadow: inset 3px 0 0 var(--chip-color, var(--brand)), var(--shadow-sm);
+  box-shadow: inset 3px 0 0 var(--chip-color, var(--brand)), var(--shadow-md);
+}
+
+.poi-clear-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-md);
+  transition: color 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+}
+
+.poi-clear-btn:hover {
+  color: var(--carnaval);
+  border-color: color-mix(in srgb, var(--carnaval) 45%, var(--border-color));
+  background: var(--bg-card);
+}
+
+.poi-dropdown-menu {
+  width: min(232px, calc(100vw - 68px));
+  padding: 6px;
+  border-radius: var(--radius-md);
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.poi-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 7px 6px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 3px;
+}
+
+.poi-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.poi-dropdown-item:hover {
+  background: var(--subtle-bg-hover);
+}
+
+.poi-dropdown-item.active {
+  background: color-mix(in srgb, var(--chip-color, var(--brand)) 13%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--chip-color, var(--brand)) 40%, transparent);
 }
 
 /* ---- Píldora sutil de aviso de zoom ---- */
@@ -1370,18 +1438,25 @@ textarea::placeholder,
     text-overflow: ellipsis;
   }
 
-  .poi-chips {
+  .poi-dropdown-wrap {
     top: 8px;
     left: 8px;
-    right: 48px;
-    gap: 5px;
-    padding: 2px 14px 4px 2px;
   }
 
-  .poi-chip {
-    padding: 5px 9px;
+  .poi-trigger-btn {
+    padding: 6px 9px;
     font-size: 11px;
-    gap: 4px;
+    gap: 5px;
+  }
+
+  .poi-clear-btn {
+    width: 26px;
+    height: 26px;
+  }
+
+  .poi-dropdown-menu {
+    width: min(216px, calc(100vw - 58px));
+    padding: 5px;
   }
 
   .map-hint-pill {

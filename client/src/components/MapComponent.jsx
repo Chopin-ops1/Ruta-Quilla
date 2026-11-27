@@ -36,6 +36,8 @@ import {
   X,
   Loader2,
   PanelLeftOpen,
+  ChevronDown,
+  Check,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -261,12 +263,14 @@ export default function MapComponent({
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const layersPopoverRef = useRef(null);
+  const poiMenuRef = useRef(null);
   const currentStyleRef = useRef(isDark ? STYLE_DARK : STYLE_LIGHT);
   const styleLoadedRef = useRef(false);
 
   const [is3D, setIs3D] = useState(false);
   const [showPOIs, setShowPOIs] = useState(true);
   const [layersOpen, setLayersOpen] = useState(false);
+  const [poiMenuOpen, setPoiMenuOpen] = useState(false);
   const [poiCategory, setPoiCategory] = useState('all');
   const [mapZoom, setMapZoom] = useState(DEFAULT_ZOOM);
   const [mapBearing, setMapBearing] = useState(0);
@@ -1599,17 +1603,19 @@ export default function MapComponent({
 
     if (!navigationResult) {
       if (previewOrigin) {
+        const originLabel = previewOrigin.displayName || previewOrigin.name;
         addMarker(
           [previewOrigin.lng, previewOrigin.lat],
           createOriginElement(),
-          '<strong>Origen seleccionado</strong>'
+          originLabel ? `<strong>Origen</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:2px">${escapeHtml(originLabel)}</div>` : '<strong>Origen seleccionado</strong>'
         );
       }
       if (previewDestination) {
+        const destLabel = previewDestination.displayName || previewDestination.name;
         addMarker(
           [previewDestination.lng, previewDestination.lat],
           createDestinationElement(),
-          '<strong>Destino seleccionado</strong>'
+          destLabel ? `<strong>Destino</strong><div style="font-size:11px;color:var(--text-secondary);margin-top:2px">${escapeHtml(destLabel)}</div>` : '<strong>Destino seleccionado</strong>'
         );
       }
       if (selectedRoute) {
@@ -1917,16 +1923,22 @@ export default function MapComponent({
     });
   }, [focusedTransmetroStop]);
 
-  // ---- Close layers popover on outside click or Escape ----
+  // ---- Close layers & POI popovers on outside click or Escape ----
   useEffect(() => {
-    if (!layersOpen) return;
+    if (!layersOpen && !poiMenuOpen) return;
     const handleOutside = (e) => {
-      if (layersPopoverRef.current && !layersPopoverRef.current.contains(e.target)) {
+      if (layersOpen && layersPopoverRef.current && !layersPopoverRef.current.contains(e.target)) {
         setLayersOpen(false);
+      }
+      if (poiMenuOpen && poiMenuRef.current && !poiMenuRef.current.contains(e.target)) {
+        setPoiMenuOpen(false);
       }
     };
     const handleKey = (e) => {
-      if (e.key === 'Escape') setLayersOpen(false);
+      if (e.key === 'Escape') {
+        setLayersOpen(false);
+        setPoiMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleOutside);
     document.addEventListener('keydown', handleKey);
@@ -1934,7 +1946,7 @@ export default function MapComponent({
       document.removeEventListener('mousedown', handleOutside);
       document.removeEventListener('keydown', handleKey);
     };
-  }, [layersOpen]);
+  }, [layersOpen, poiMenuOpen]);
 
   // ---- Floating Map Controls ----
   const handleZoomIn = () => {
@@ -1972,45 +1984,103 @@ export default function MapComponent({
 
   const handleSelectCategory = (catId) => {
     setPoiCategory(catId);
+    setPoiMenuOpen(false);
     const map = mapRef.current;
     if (catId !== 'all' && map && map.getZoom() < 14) {
       map.easeTo({ zoom: 14.5, duration: 550 });
     }
   };
 
+  const activePoiMeta = poiCategory !== 'all' ? POI_CATEGORIES[poiCategory] : null;
+  const ActivePoiIcon = activePoiMeta ? (ICON_COMPONENTS[activePoiMeta.icon] || MapPin) : Layers;
+
   return (
     <div className="w-full h-full relative" style={{ cursor: pinMode ? 'crosshair' : undefined }}>
       <div ref={containerRef} className="w-full h-full" />
 
-      {/* Category filter chips */}
+      {/* Category filter dropdown (minimalista) */}
       {showPOIs && !pinMode && !isLiveNav && (
-        <div className="poi-chips" role="toolbar" aria-label="Filtrar lugares de interés">
-          <button
-            type="button"
-            className={`poi-chip${poiCategory === 'all' ? ' active' : ''}`}
-            style={{ '--chip-color': 'var(--brand)' }}
-            onClick={() => handleSelectCategory('all')}
-          >
-            <Layers size={13} color={poiCategory === 'all' ? 'var(--brand)' : undefined} />
-            <span>Todo</span>
-          </button>
-          {POI_CHIP_ORDER.map((catId) => {
-            const meta = POI_CATEGORIES[catId];
-            const IconComp = ICON_COMPONENTS[meta.icon] || MapPin;
-            const active = poiCategory === catId;
-            return (
+        <div ref={poiMenuRef} className="poi-dropdown-wrap">
+          <div className="poi-trigger-row">
+            <button
+              type="button"
+              id="poi-menu-toggle-btn"
+              onClick={() => setPoiMenuOpen((prev) => !prev)}
+              className={`poi-trigger-btn${poiCategory !== 'all' ? ' filtered' : ''}`}
+              style={{ '--chip-color': activePoiMeta?.color || 'var(--brand)' }}
+              aria-expanded={poiMenuOpen}
+              aria-haspopup="menu"
+            >
+              <ActivePoiIcon size={13} color={activePoiMeta?.color || 'var(--brand)'} />
+              <span>{activePoiMeta ? activePoiMeta.chip : 'Puntos de interés'}</span>
+              <ChevronDown
+                size={13}
+                style={{
+                  transform: poiMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.16s ease',
+                  opacity: 0.8,
+                }}
+              />
+            </button>
+
+            {poiCategory !== 'all' && (
               <button
-                key={catId}
                 type="button"
-                className={`poi-chip${active ? ' active' : ''}`}
-                style={{ '--chip-color': meta.color }}
-                onClick={() => handleSelectCategory(active ? 'all' : catId)}
+                onClick={() => handleSelectCategory('all')}
+                className="poi-clear-btn"
+                title="Mostrar todas las categorías"
+                aria-label="Quitar filtro de lugares"
               >
-                <IconComp size={13} color={meta.color} />
-                <span>{meta.chip}</span>
+                <X size={12} />
               </button>
-            );
-          })}
+            )}
+          </div>
+
+          {poiMenuOpen && (
+            <div
+              className="poi-dropdown-menu animate-fade-in"
+              role="menu"
+              aria-label="Filtrar lugares de interés"
+            >
+              <div className="poi-dropdown-header">
+                <span className="rq-section-label">Lugares de interés</span>
+              </div>
+
+              <button
+                type="button"
+                role="menuitemradio"
+                aria-checked={poiCategory === 'all'}
+                className={`poi-dropdown-item${poiCategory === 'all' ? ' active' : ''}`}
+                style={{ '--chip-color': 'var(--brand)' }}
+                onClick={() => handleSelectCategory('all')}
+              >
+                <Layers size={13} color="var(--brand)" />
+                <span className="flex-1">Todos los lugares</span>
+                {poiCategory === 'all' && <Check size={12} color="var(--brand)" />}
+              </button>
+
+              {POI_CHIP_ORDER.map((catId) => {
+                const meta = POI_CATEGORIES[catId];
+                const IconComp = ICON_COMPONENTS[meta.icon] || MapPin;
+                const active = poiCategory === catId;
+                return (
+                  <button
+                    key={catId}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={active}
+                    className={`poi-dropdown-item${active ? ' active' : ''}`}
+                    style={{ '--chip-color': meta.color }}
+                    onClick={() => handleSelectCategory(active ? 'all' : catId)}
+                  >
+                    <IconComp size={13} color={meta.color} />
+                    <span className="flex-1">{meta.chip}</span>
+                    {active && <Check size={12} color={meta.color} />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
