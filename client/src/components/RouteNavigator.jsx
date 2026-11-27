@@ -25,6 +25,8 @@ import {
   ChevronUp,
   ArrowUpDown,
   Share2,
+  Home,
+  Briefcase,
 } from 'lucide-react';
 import { searchPlaces, reverseGeocode, isCoordinateString } from '../services/routingService';
 import { getCurrentPosition } from '../services/gpsService';
@@ -40,6 +42,21 @@ const QUICK_DESTINATIONS = [
   { label: 'Gran Malecón', displayName: 'Gran Malecón del Río', lat: 11.02155, lng: -74.79442 },
   { label: 'Estadio Metro', displayName: 'Estadio Metropolitano', lat: 10.92695, lng: -74.80051 },
 ];
+
+const SAVED_PLACES_STORAGE_KEY = 'rutaquilla_saved_places_v1';
+
+function loadSavedPlaces() {
+  try {
+    const raw = localStorage.getItem(SAVED_PLACES_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return {
+      home: parsed?.home && Number.isFinite(parsed.home.lat) ? parsed.home : null,
+      work: parsed?.work && Number.isFinite(parsed.work.lat) ? parsed.work : null,
+    };
+  } catch {
+    return { home: null, work: null };
+  }
+}
 
 function InputRow({ id, placeholder, value, onChange, onFocus, onBlur, onKeyDown, rightSlot, focused }) {
   return (
@@ -206,6 +223,76 @@ export default function RouteNavigator({
 
   const [originFocused, setOriginFocused] = useState(false);
   const [destFocused, setDestFocused] = useState(false);
+
+  const [savedPlaces, setSavedPlaces] = useState(() => loadSavedPlaces());
+  const [editingPlaceSlot, setEditingPlaceSlot] = useState(null); // 'home' | 'work' | null
+  const [savingPlaceGPS, setSavingPlaceGPS] = useState(false);
+
+  const persistSavedPlaces = (next) => {
+    setSavedPlaces(next);
+    try {
+      localStorage.setItem(SAVED_PLACES_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // Silencioso si almacenamiento restringido
+    }
+  };
+
+  const handleSavePlaceFromDest = (slot) => {
+    if (!destination) return;
+    fxPinDrop();
+    const shortName = String(destText || destination.displayName || '').split(',')[0].trim()
+      || (slot === 'home' ? 'Casa' : 'Trabajo');
+    persistSavedPlaces({
+      ...savedPlaces,
+      [slot]: {
+        label: slot === 'home' ? 'Casa' : 'Trabajo',
+        displayName: shortName,
+        lat: destination.lat,
+        lng: destination.lng,
+      },
+    });
+    setEditingPlaceSlot(null);
+  };
+
+  const handleSavePlaceFromGPS = async (slot) => {
+    setSavingPlaceGPS(true);
+    try {
+      const pos = await getCurrentPosition();
+      let displayName = slot === 'home' ? 'Casa' : 'Trabajo';
+      try {
+        const rev = await reverseGeocode(pos.lat, pos.lng);
+        if (rev?.displayName && !isCoordinateString(rev.displayName)) {
+          displayName = String(rev.displayName).split(',')[0].trim() || displayName;
+        }
+      } catch {
+        // Mantiene etiqueta amigable si falla geocodificación inversa
+      }
+      fxPinDrop();
+      persistSavedPlaces({
+        ...savedPlaces,
+        [slot]: {
+          label: slot === 'home' ? 'Casa' : 'Trabajo',
+          displayName,
+          lat: pos.lat,
+          lng: pos.lng,
+        },
+      });
+      setEditingPlaceSlot(null);
+    } catch {
+      // Ignorado si no hay permiso de ubicación
+    } finally {
+      setSavingPlaceGPS(false);
+    }
+  };
+
+  const handleClearSavedPlace = (slot, e) => {
+    e.stopPropagation();
+    fxTap();
+    persistSavedPlaces({
+      ...savedPlaces,
+      [slot]: null,
+    });
+  };
 
   const [expandedOption, setExpandedOption] = useState(0);
   const [gpsLoading, setGpsLoading] = useState(false);
@@ -1017,9 +1104,131 @@ export default function RouteNavigator({
         </div>
       )}
 
-      {/* ---- Estado inicial: Destinos frecuentes + Guía rápida ---- */}
+      {/* ---- Estado inicial: Mis lugares (Casa / Trabajo) + Destinos frecuentes + Guía rápida ---- */}
       {!navigationResult && (
         <div className="space-y-3">
+          <div className="rq-card" style={{ padding: '12px' }}>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="rq-section-label m-0">Mis lugares</div>
+              <span style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>1 toque para ir</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { key: 'home', title: 'Casa', Icon: Home, accent: 'var(--mangle)' },
+                { key: 'work', title: 'Trabajo', Icon: Briefcase, accent: 'var(--caribe)' },
+              ].map(({ key, title, Icon, accent }) => {
+                const saved = savedPlaces[key];
+                const isEditing = editingPlaceSlot === key;
+                return (
+                  <div
+                    key={key}
+                    onClick={() => {
+                      if (saved) {
+                        selectDest({ ...saved, displayName: `${title} · ${saved.displayName}` });
+                      } else {
+                        fxTap();
+                        setEditingPlaceSlot(isEditing ? null : key);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        if (saved) {
+                          selectDest({ ...saved, displayName: `${title} · ${saved.displayName}` });
+                        } else {
+                          fxTap();
+                          setEditingPlaceSlot(isEditing ? null : key);
+                        }
+                      }
+                    }}
+                    className="rq-chip flex items-center justify-between gap-1.5 cursor-pointer"
+                    style={{
+                      padding: '8px 10px',
+                      borderRadius: 10,
+                      borderColor: isEditing ? 'var(--brand)' : 'var(--border-color)',
+                      background: saved ? 'var(--bg-surface)' : 'transparent',
+                    }}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Icon size={14} color={accent} className="flex-shrink-0" />
+                      <div className="min-w-0 text-left">
+                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.15 }}>
+                          {title}
+                        </div>
+                        <div
+                          className="truncate"
+                          style={{ fontSize: 10, color: 'var(--text-muted)', maxWidth: 105 }}
+                        >
+                          {saved ? saved.displayName : 'Guardar lugar'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {saved && (
+                      <button
+                        type="button"
+                        onClick={(e) => handleClearSavedPlace(key, e)}
+                        aria-label={`Borrar ${title}`}
+                        title={`Cambiar ${title}`}
+                        className="bg-transparent border-0 p-1 cursor-pointer flex-shrink-0 inline-flex"
+                        style={{ color: 'var(--text-muted)' }}
+                      >
+                        <X size={12} />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {editingPlaceSlot && (
+              <div
+                className="mt-2.5 p-2.5 rounded-xl space-y-2 animate-fade-in"
+                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)' }}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)' }}>
+                    Guardar {editingPlaceSlot === 'home' ? 'Casa' : 'Trabajo'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setEditingPlaceSlot(null)}
+                    className="bg-transparent border-0 p-0 cursor-pointer text-[11px]"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    Cerrar
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    disabled={savingPlaceGPS}
+                    onClick={() => handleSavePlaceFromGPS(editingPlaceSlot)}
+                    className="rq-chip"
+                    style={{ padding: '5px 10px', fontSize: 11, color: 'var(--mangle)' }}
+                  >
+                    {savingPlaceGPS ? <Loader2 size={12} className="animate-spin" /> : <Crosshair size={12} />}
+                    Usar mi ubicación
+                  </button>
+                  {destination && (
+                    <button
+                      type="button"
+                      onClick={() => handleSavePlaceFromDest(editingPlaceSlot)}
+                      className="rq-chip"
+                      style={{ padding: '5px 10px', fontSize: 11, color: 'var(--brand)' }}
+                    >
+                      <MapPin size={12} />
+                      Usar destino actual
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="rq-card" style={{ padding: '12px' }}>
             <div className="rq-section-label mb-2">Destinos frecuentes</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>

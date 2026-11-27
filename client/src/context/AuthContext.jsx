@@ -30,6 +30,7 @@ const DEFAULT_PUBLIC_CONFIG = {
   capturesEnabled: true,
   maxFreeSearches: DEFAULT_FREE_SEARCHES,
   banner: { enabled: false, type: 'info', text: '' },
+  appRelease: null,
   formToken: '',
 };
 

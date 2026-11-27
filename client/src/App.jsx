@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
-import { Trophy, Megaphone, X } from 'lucide-react';
+import { Trophy, Megaphone, X, WifiOff } from 'lucide-react';
 import { App as CapApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
@@ -23,6 +23,14 @@ import { routesAPI, mapsAPI, reportAPI } from './services/api';
 import { getCurrentPosition, startTracking, stopTracking } from './services/gpsService';
 import { isNativeApp } from './utils/platform';
 import { fxRouteFound, fxPinDrop } from './utils/soundAndHaptics';
+import UpdateChangelogModal from './components/UpdateChangelogModal';
+import {
+  LOCAL_APP_VERSION,
+  LOCAL_ANDROID_VERSION_CODE,
+  DEFAULT_RELEASE_NOTES,
+  getInstalledVersionInfo,
+  isAndroidUpdateAvailable,
+} from './config/appVersion';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import MapComponent from './components/MapComponent';
@@ -149,6 +157,93 @@ export default function App() {
       ? publicConfig.banner
       : null;
   const toast = useToast();
+  const [isOnline, setIsOnline] = useState(() => (typeof navigator !== 'undefined' ? navigator.onLine : true));
+  const [installedVersionInfo, setInstalledVersionInfo] = useState(() => ({
+    isNative: isNativeApp(),
+    versionName: LOCAL_APP_VERSION,
+    versionCode: LOCAL_ANDROID_VERSION_CODE,
+  }));
+  const [releaseModal, setReleaseModal] = useState({ open: false, mode: 'changelog' });
+
+  const activeRelease = publicConfig?.appRelease || DEFAULT_RELEASE_NOTES;
+  const androidUpdateAvailable = isAndroidUpdateAvailable(installedVersionInfo, activeRelease);
+
+  useEffect(() => {
+    const onOnline = () => setIsOnline(true);
+    const onOffline = () => setIsOnline(false);
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    getInstalledVersionInfo().then(setInstalledVersionInfo);
+    return () => {
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (authLoading || !publicConfig?.appRelease) return;
+    const remoteVer = String(activeRelease.versionName || LOCAL_APP_VERSION);
+
+    if (androidUpdateAvailable) {
+      let dismissedVer = '';
+      try {
+        dismissedVer = sessionStorage.getItem('rutaquilla_dismissed_update_v1') || '';
+      } catch {
+        dismissedVer = '';
+      }
+      if (dismissedVer !== remoteVer) {
+        setReleaseModal({ open: true, mode: 'update' });
+      }
+      return;
+    }
+
+    if (isNativeApp() && !isAuthenticated) return;
+    if (showLogin || showLegal || currentPage === 'admin') return;
+
+    let seenVer = '';
+    try {
+      seenVer = localStorage.getItem('rutaquilla_seen_release_v1') || '';
+    } catch {
+      seenVer = '';
+    }
+    if (seenVer !== remoteVer) {
+      setReleaseModal({ open: true, mode: 'changelog' });
+    }
+  }, [
+    authLoading,
+    publicConfig?.appRelease,
+    activeRelease.versionName,
+    androidUpdateAvailable,
+    isAuthenticated,
+    showLogin,
+    showLegal,
+    currentPage,
+  ]);
+
+  const handleCloseReleaseModal = () => {
+    const remoteVer = String(activeRelease?.versionName || LOCAL_APP_VERSION);
+    if (releaseModal.mode === 'update') {
+      try {
+        sessionStorage.setItem('rutaquilla_dismissed_update_v1', remoteVer);
+      } catch {
+        // Ignorado
+      }
+    } else {
+      try {
+        localStorage.setItem('rutaquilla_seen_release_v1', remoteVer);
+      } catch {
+        // Ignorado
+      }
+    }
+    setReleaseModal((prev) => ({ ...prev, open: false }));
+  };
+
+  const handleOpenManualChangelog = () => {
+    setReleaseModal({
+      open: true,
+      mode: androidUpdateAvailable ? 'update' : 'changelog',
+    });
+  };
   const hasQuickBar = Boolean(
     !navigationResult && (previewOrigin || previewDestination || originFromMap || destFromMap)
   );
@@ -670,6 +765,13 @@ export default function App() {
             onNavigate={setShowLegal}
           />
         )}
+        <UpdateChangelogModal
+          isOpen={releaseModal.open && releaseModal.mode === 'update'}
+          mode="update"
+          release={activeRelease}
+          installedVersion={installedVersionInfo.versionName}
+          onClose={handleCloseReleaseModal}
+        />
       </div>
     );
   }
@@ -724,6 +826,9 @@ export default function App() {
         routeCount={routes.length}
         canInstallPWA={Boolean(installPromptEvent)}
         onInstallPWA={handleInstallPWA}
+        onOpenChangelog={handleOpenManualChangelog}
+        hasAndroidUpdate={androidUpdateAvailable}
+        appVersion={installedVersionInfo.versionName}
       />
 
       <div className="flex-1 flex relative overflow-hidden" style={{ marginTop: 56 }}>
@@ -837,6 +942,34 @@ export default function App() {
             </div>
           )}
 
+          {!isOnline && (
+            <div
+              className="animate-fade-in"
+              style={{
+                position: 'absolute',
+                top: activeBanner ? (isDesktop ? 92 : 88) : (isDesktop ? 56 : 52),
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 44,
+                maxWidth: '90vw',
+                padding: '5px 12px',
+                borderRadius: 999,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 11,
+                fontWeight: 600,
+                background: 'var(--plate-bg)',
+                color: 'var(--plate-fg)',
+                border: '1px solid rgba(255, 194, 26, 0.35)',
+                boxShadow: 'var(--shadow-md)',
+              }}
+            >
+              <WifiOff size={12} style={{ flexShrink: 0 }} />
+              <span className="truncate">Sin conexión · Usando rutas guardadas</span>
+            </div>
+          )}
+
           {loading ? (
             <div className="w-full h-full flex items-center justify-center p-6">
               <div className="rq-card animate-fade-in" style={{ width: '100%', maxWidth: 320, padding: '24px 22px', textAlign: 'center' }}>
@@ -944,6 +1077,14 @@ export default function App() {
       )}
 
       <StorageNotice onShowPrivacy={() => setShowLegal('privacy')} />
+
+      <UpdateChangelogModal
+        isOpen={releaseModal.open}
+        mode={releaseModal.mode}
+        release={activeRelease}
+        installedVersion={installedVersionInfo.versionName}
+        onClose={handleCloseReleaseModal}
+      />
 
       {/* Floating bottom bar for map-picked points (mobile-friendly) */}
       {!hideMobileMapChrome && (

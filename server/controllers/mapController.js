@@ -1007,6 +1007,7 @@ async function getPublicConfig(req, res) {
           type: cfg.bannerType,
           text: cfg.bannerText,
         },
+        appRelease: cfg.appRelease,
         formToken: issueFormToken(),
       },
     });

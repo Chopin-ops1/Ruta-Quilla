@@ -5,7 +5,7 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { User, Crown, LogOut, Menu, X, ChevronDown, Shield, Sun, Moon, Search, Layers, Download, Volume2, VolumeX, Smartphone } from 'lucide-react';
+import { User, Crown, LogOut, Menu, X, ChevronDown, Shield, Sun, Moon, Search, Layers, Download, Volume2, VolumeX, Smartphone, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { isNativeApp } from '../utils/platform';
@@ -20,6 +20,9 @@ export default function Header({
   routeCount = 0,
   canInstallPWA = false,
   onInstallPWA,
+  onOpenChangelog,
+  hasAndroidUpdate = false,
+  appVersion = '2.1.0',
 }) {
   const { user, isAuthenticated, isPremium, logout, remainingFreeSearches, maxFreeSearches } = useAuth();
   const { isDark, toggleTheme } = useTheme();
@@ -92,7 +95,7 @@ export default function Header({
           {menuOpen ? <X size={15} /> : <Menu size={15} />}
         </button>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           <div
             className="w-[24px] h-[24px] sm:w-[28px] sm:h-[28px]"
             style={{
@@ -109,7 +112,7 @@ export default function Header({
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
           </div>
-          <div className="min-w-0">
+          <div className="flex-shrink-0">
             <h1
               className="font-display text-[13.5px] sm:text-[15.5px]"
               style={{
@@ -219,7 +222,7 @@ export default function Header({
       </div>
 
       {/* Right: Acciones + Cuenta */}
-      <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+      <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
         {!isNativeApp() && (
           canInstallPWA ? (
             <button
@@ -246,7 +249,7 @@ export default function Header({
               id="download-android-apk-btn"
               aria-label="Descargar app para Android"
               title="Descargar app Android (.apk)"
-              className="rq-chip"
+              className="rq-chip hidden sm:inline-flex"
               style={{
                 height: 30,
                 padding: '0 8px',
@@ -268,13 +271,30 @@ export default function Header({
           id="instagram-btn"
           aria-label="Síguenos en Instagram"
           title="Instagram @ruta.quilla"
-          className="rq-icon-btn"
+          className="rq-icon-btn hidden sm:flex"
           style={{ width: 30, height: 30, textDecoration: 'none' }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
           </svg>
         </a>
+
+        {!isAuthenticated && onOpenChangelog && (
+          <button
+            type="button"
+            onClick={() => {
+              fxTap();
+              onOpenChangelog();
+            }}
+            id="changelog-header-btn"
+            aria-label="Ver novedades de esta versión"
+            title={`Novedades v${appVersion}`}
+            className="rq-icon-btn"
+            style={{ width: 30, height: 30, color: 'var(--mangle)' }}
+          >
+            <Sparkles size={14} />
+          </button>
+        )}
 
         <button
           onClick={toggleTheme}
@@ -291,14 +311,16 @@ export default function Header({
           <button
             onClick={onAdminClick}
             id="admin-btn"
-            className="rq-chip"
+            aria-label="Panel de administración"
+            title="Panel de administración"
+            className="rq-chip h-[30px] sm:h-[34px] px-2 sm:px-3"
             style={{
-              height: 34,
               borderColor: 'color-mix(in srgb, var(--brand) 45%, var(--border-color))',
               color: 'var(--brand)',
             }}
           >
-            <Shield size={12} /> Admin
+            <Shield size={13} />
+            <span className="hidden sm:inline">Admin</span>
           </button>
         )}
 
@@ -324,12 +346,12 @@ export default function Header({
             <button
               onClick={() => setShowUserMenu((v) => !v)}
               id="user-menu-btn"
+              className="h-[30px] sm:h-[34px] px-1.5 sm:px-2.5 sm:pl-1.5"
               style={{
+                position: 'relative',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 7,
-                height: 34,
-                padding: '0 9px 0 5px',
                 borderRadius: 8,
                 background: 'var(--bg-card)',
                 border: `1px solid ${showUserMenu ? 'var(--brand)' : 'var(--border-color)'}`,
@@ -339,8 +361,8 @@ export default function Header({
             >
               <div
                 style={{
-                  width: 24,
-                  height: 24,
+                  width: 22,
+                  height: 22,
                   borderRadius: 6,
                   flexShrink: 0,
                   background: isPremium ? 'var(--brand)' : 'var(--bg-surface)',
@@ -352,6 +374,22 @@ export default function Header({
               >
                 {isPremium ? <Crown size={12} color="var(--brand-ink)" /> : <User size={12} color="var(--text-secondary)" />}
               </div>
+
+              {hasAndroidUpdate && (
+                <span
+                  aria-label="Actualización disponible"
+                  style={{
+                    position: 'absolute',
+                    top: -3,
+                    right: -3,
+                    width: 9,
+                    height: 9,
+                    borderRadius: '50%',
+                    background: 'var(--mangle)',
+                    border: '2px solid var(--bg-card)',
+                  }}
+                />
+              )}
 
               <div className="hidden sm:block" style={{ textAlign: 'left' }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.15 }}>
@@ -366,6 +404,7 @@ export default function Header({
               <ChevronDown
                 size={13}
                 color="var(--text-muted)"
+                className="hidden sm:block"
                 style={{ transition: 'transform 0.18s', transform: showUserMenu ? 'rotate(180deg)' : 'none' }}
               />
             </button>
@@ -428,6 +467,94 @@ export default function Header({
                     </span>
                   </div>
                 </div>
+
+                {onOpenChangelog && (
+                  <button
+                    onClick={() => {
+                      fxTap();
+                      setShowUserMenu(false);
+                      onOpenChangelog();
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 9,
+                      border: 'none',
+                      borderBottom: '1px solid var(--border-color)',
+                      background: hasAndroidUpdate ? 'var(--mangle-soft)' : 'transparent',
+                      color: hasAndroidUpdate ? 'var(--mangle)' : 'var(--text-secondary)',
+                      fontSize: 12.5,
+                      fontWeight: hasAndroidUpdate ? 700 : 500,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9 }}>
+                      <Sparkles size={14} />
+                      {hasAndroidUpdate ? 'Actualizar app disponible' : `Novedades · v${appVersion}`}
+                    </span>
+                    {hasAndroidUpdate && (
+                      <span className="font-mono" style={{ fontSize: 9.5, fontWeight: 800 }}>
+                        NUEVA
+                      </span>
+                    )}
+                  </button>
+                )}
+
+                {!isNativeApp() && (
+                  <a
+                    href="/downloads/RutaQuilla.apk"
+                    download="RutaQuilla.apk"
+                    className="flex sm:hidden"
+                    onClick={() => {
+                      fxTap();
+                      setShowUserMenu(false);
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      alignItems: 'center',
+                      gap: 9,
+                      borderBottom: '1px solid var(--border-color)',
+                      background: 'transparent',
+                      color: 'var(--brand)',
+                      fontSize: 12.5,
+                      fontWeight: 600,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    <Smartphone size={14} />
+                    Descargar App Android
+                  </a>
+                )}
+
+                <a
+                  href="https://instagram.com/ruta.quilla"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex sm:hidden"
+                  onClick={() => setShowUserMenu(false)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    alignItems: 'center',
+                    gap: 9,
+                    borderBottom: '1px solid var(--border-color)',
+                    background: 'transparent',
+                    color: 'var(--text-secondary)',
+                    fontSize: 12.5,
+                    fontWeight: 500,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+                  </svg>
+                  Instagram (@ruta.quilla)
+                </a>
 
                 <button
                   onClick={() => {

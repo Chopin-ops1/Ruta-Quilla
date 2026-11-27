@@ -480,6 +480,151 @@ export default function SecurityAuditTab({ refreshTick = 0 }) {
                 </div>
               )}
             </div>
+
+            {/* Actualizaciones y Novedades (Web y Android) */}
+            <div className="p-3 rounded-xl space-y-2.5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)' }}>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Megaphone size={14} color="var(--mangle)" />
+                  <span className="text-[12px] font-bold" style={{ color: 'var(--text-primary)' }}>
+                    Actualizaciones y Novedades (Web y Android)
+                  </span>
+                </div>
+                <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                  Se muestra al abrir la app cuando subes versión o resumen de cambios
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                <div>
+                  <label className="block text-[10px] font-bold mb-1" style={{ color: 'var(--text-muted)' }}>
+                    Versión visible
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={24}
+                    placeholder="2.1.0"
+                    value={config.appRelease?.versionName || ''}
+                    onChange={(e) =>
+                      setConfig((prev) => ({
+                        ...prev,
+                        appRelease: { ...(prev.appRelease || {}), versionName: e.target.value },
+                      }))
+                    }
+                    className="rq-input w-full px-2.5 py-1.5 text-xs font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold mb-1" style={{ color: 'var(--text-muted)' }}>
+                    Código Android
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={999999}
+                    value={config.appRelease?.androidVersionCode ?? 3}
+                    onChange={(e) =>
+                      setConfig((prev) => ({
+                        ...prev,
+                        appRelease: {
+                          ...(prev.appRelease || {}),
+                          androidVersionCode: Number(e.target.value) || 1,
+                        },
+                      }))
+                    }
+                    className="rq-input w-full px-2.5 py-1.5 text-xs font-mono"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-[10px] font-bold mb-1" style={{ color: 'var(--text-muted)' }}>
+                    Título del aviso
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={90}
+                    placeholder="RutaQuilla 2.1.0 ya está disponible"
+                    value={config.appRelease?.title || ''}
+                    onChange={(e) =>
+                      setConfig((prev) => ({
+                        ...prev,
+                        appRelease: { ...(prev.appRelease || {}), title: e.target.value },
+                      }))
+                    }
+                    className="rq-input w-full px-2.5 py-1.5 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] font-bold mb-1" style={{ color: 'var(--text-muted)' }}>
+                    Resumen corto (lenguaje simple)
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={220}
+                    placeholder="Qué mejoró para las personas que usan la app"
+                    value={config.appRelease?.summary || ''}
+                    onChange={(e) =>
+                      setConfig((prev) => ({
+                        ...prev,
+                        appRelease: { ...(prev.appRelease || {}), summary: e.target.value },
+                      }))
+                    }
+                    className="rq-input w-full px-2.5 py-1.5 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold mb-1" style={{ color: 'var(--text-muted)' }}>
+                    Enlace descarga Android (.apk)
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={240}
+                    placeholder="https://rutaquilla.me/downloads/RutaQuilla.apk"
+                    value={config.appRelease?.downloadUrl || ''}
+                    onChange={(e) =>
+                      setConfig((prev) => ({
+                        ...prev,
+                        appRelease: { ...(prev.appRelease || {}), downloadUrl: e.target.value },
+                      }))
+                    }
+                    className="rq-input w-full px-2.5 py-1.5 text-xs font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold mb-1" style={{ color: 'var(--text-muted)' }}>
+                  Lista de cambios (1 por línea · formato: Categoría: Descripción)
+                </label>
+                <textarea
+                  rows={4}
+                  value={(config.appRelease?.highlights || [])
+                    .map((h) => `${h.category || 'Mejoras'}: ${h.text || ''}`)
+                    .join('\n')}
+                  onChange={(e) => {
+                    const lines = e.target.value.split('\n').slice(0, 8);
+                    const parsed = lines.map((line) => {
+                      const sepIdx = line.indexOf(':');
+                      if (sepIdx > 0 && sepIdx < 24) {
+                        return {
+                          category: line.slice(0, sepIdx).trim() || 'Mejoras',
+                          text: line.slice(sepIdx + 1).trim(),
+                        };
+                      }
+                      return { category: 'Mejoras', text: line.trim() };
+                    });
+                    setConfig((prev) => ({
+                      ...prev,
+                      appRelease: { ...(prev.appRelease || {}), highlights: parsed },
+                    }));
+                  }}
+                  placeholder={'Diseño: Barra superior más limpia en celulares.\nRutas: Accesos rápidos a Casa y Trabajo.'}
+                  className="rq-input w-full px-2.5 py-1.5 text-xs leading-relaxed"
+                />
+              </div>
+            </div>
           </>
         )}
       </div>
