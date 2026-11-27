@@ -42,6 +42,7 @@ import { useAuth } from '../context/AuthContext';
 import { mapsAPI, routesAPI } from '../services/api';
 import { getRouteLength } from '../utils/geoUtils';
 import { safeColor } from '../utils/sanitize';
+import { isNativeApp } from '../utils/platform';
 import RouteNavigator from './RouteNavigator';
 
 function ScheduleRow({ label, block }) {
@@ -614,7 +615,7 @@ function SelectedRouteFicha({
 
                     {isOfficialStops && (
                       <p className="text-[10px] m-0 px-0.5" style={{ color: 'var(--text-muted)' }}>
-                        Secuencia oficial · {route.fuenteParadas || 'datos.gov.co (hxy3-94yh · 2020)'}
+                        Secuencia oficial de paraderos
                       </p>
                     )}
                   </div>
@@ -1517,7 +1518,7 @@ export default function Sidebar({
                       )}
 
                       <p className="text-[10px] text-center m-0 pt-1" style={{ color: 'var(--text-muted)' }}>
-                        Catálogo oficial Datos Abiertos Colombia · datos.gov.co (2020)
+                        Paraderos oficiales de Transmetro
                       </p>
                     </div>
                   )}
@@ -1546,7 +1547,6 @@ export default function Sidebar({
                   groupedOperators.map(([operador, operadorRoutes]) => {
                     const opColor = safeColor(operadorRoutes[0]?.color, '#FFC21A');
                     const isExpanded = forceExpandAll || expandedCompany === operador;
-                    const isTransmetro = operador === 'Transmetro';
 
                     return (
                       <div key={operador}>
@@ -1575,18 +1575,6 @@ export default function Sidebar({
                             >
                               {operador}
                             </span>
-                            {isTransmetro && (
-                              <span
-                                className="font-mono text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider flex-shrink-0"
-                                style={{
-                                  background: 'var(--caribe-soft)',
-                                  color: 'var(--caribe)',
-                                  border: '1px solid color-mix(in srgb, var(--caribe) 32%, transparent)',
-                                }}
-                              >
-                                BRT
-                              </span>
-                            )}
                           </div>
                           <span
                             className="text-[10.5px] px-2 py-0.5 rounded font-semibold tabular-nums flex-shrink-0"
@@ -1693,7 +1681,7 @@ export default function Sidebar({
           {/* ---- Tab: Captura GPS ---- */}
           {activeTab === 'capture' && (
             <div className="animate-fade-in p-3.5 space-y-3">
-              {/* Tarjeta principal modo cartógrafo */}
+              {/* Tarjeta principal modo colaborador */}
               <div className="rq-card p-4">
                 <div className="flex items-start gap-3">
                   <div
@@ -1713,7 +1701,7 @@ export default function Sidebar({
                     <Radio size={18} />
                   </div>
                   <div className="min-w-0">
-                    <div className="rq-section-label mb-0.5">Crowdsourcing GPS</div>
+                    <div className="rq-section-label mb-0.5">Aporte comunitario</div>
                     <h3 className="font-display text-[15px] font-bold m-0" style={{ color: 'var(--text-primary)' }}>
                       Registrar recorrido en vivo
                     </h3>
@@ -1724,7 +1712,7 @@ export default function Sidebar({
                 </div>
               </div>
 
-              {/* Telemetría / Reglas técnicas */}
+              {/* Estado y detalles simples */}
               <div className="rq-card p-3.5">
                 <div className="flex items-center justify-between pb-2.5 mb-2.5" style={{ borderBottom: '1px solid var(--border-color)' }}>
                   <div className="flex items-center gap-2">
@@ -1733,19 +1721,19 @@ export default function Sidebar({
                       className="text-xs font-bold"
                       style={{ color: isCapturing ? 'var(--carnaval)' : 'var(--text-primary)' }}
                     >
-                      {isCapturing ? 'Grabación en curso' : 'GPS en espera'}
+                      {isCapturing ? 'Grabación en curso' : 'GPS listo'}
                     </span>
                   </div>
                   <span className="font-mono text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                    5s · ≤ 20m
+                    {isCapturing ? 'En vivo' : 'En espera'}
                   </span>
                 </div>
 
                 <div className="space-y-2">
                   {[
-                    { icon: Clock, color: 'var(--brand)', text: 'Muestreo automático cada 5 segundos' },
-                    { icon: Crosshair, color: 'var(--mangle)', text: 'Filtro de precisión mínima ≤ 20 metros' },
-                    { icon: GitMerge, color: 'var(--caribe)', text: 'Fusión colaborativa con otros aportes' },
+                    { icon: Clock, color: 'var(--brand)', text: 'Sigue grabando aunque apagues la pantalla' },
+                    { icon: Crosshair, color: 'var(--mangle)', text: 'Ubicación de alta precisión en todo el trayecto' },
+                    { icon: GitMerge, color: 'var(--caribe)', text: 'Ayuda a mantener actualizadas las rutas' },
                   ].map((item, i) => (
                     <div key={i} className="flex items-center gap-2.5 text-[11.5px]" style={{ color: 'var(--text-secondary)' }}>
                       <item.icon size={13} color={item.color} className="flex-shrink-0" />
@@ -1792,6 +1780,44 @@ export default function Sidebar({
             </div>
           )}
         </div>
+
+        {/* Descarga app Android en web */}
+        {!isNativeApp() && (
+          <div className="px-3 pb-2.5 pt-2" style={{ borderTop: '1px solid var(--border-color)' }}>
+            <a
+              href="/downloads/RutaQuilla.apk"
+              download="RutaQuilla.apk"
+              className="rq-card w-full p-2.5 flex items-center gap-2.5 cursor-pointer text-left"
+              style={{ textDecoration: 'none' }}
+            >
+              <div
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 8,
+                  background: 'var(--mangle-soft)',
+                  color: 'var(--mangle)',
+                  border: '1px solid color-mix(in srgb, var(--mangle) 30%, transparent)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <Download size={14} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold m-0" style={{ color: 'var(--text-primary)' }}>
+                  App para Android
+                </p>
+                <p className="text-[10px] m-0" style={{ color: 'var(--text-muted)' }}>
+                  Descarga directa (.apk) con GPS en ruta
+                </p>
+              </div>
+              <ChevronRight size={13} style={{ color: 'var(--text-muted)' }} />
+            </a>
+          </div>
+        )}
 
         {/* Footer: Quilla-Pass */}
         {isAuthenticated && !isPremium && (

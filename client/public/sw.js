@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'rutaquilla-shell-v3';
-const API_CACHE = 'rutaquilla-api-v3';
+const SHELL_CACHE = 'rutaquilla-shell-v4';
+const API_CACHE = 'rutaquilla-api-v4';
 const SHELL_ASSETS = ['/', '/logo.png', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
@@ -47,8 +47,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Pass through all other /api/* requests directly (never cache auth/user/admin)
-  if (url.pathname.startsWith('/api/')) return;
+  // Pass through all other /api/* requests and APK downloads directly
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/downloads/')) return;
 
   // Shell/navigation fallback
   if (request.mode === 'navigate') {

@@ -15,7 +15,35 @@
  * VITE_API_URL apunta al backend (ej: https://rutaquilla-api.onrender.com/api).
  * En desarrollo, usamos '/api' que el proxy de Vite redirige a localhost:5000.
  */
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+import { isNativeApp } from '../utils/platform';
+
+const API_BASE = import.meta.env.VITE_API_URL || (isNativeApp() ? 'https://ruta-quilla2.onrender.com/api' : '/api');
+
+const OFFLINE_ROUTES_KEY = 'rutaquilla_offline_routes_v1';
+const OFFLINE_GEOM_KEY = 'rutaquilla_offline_geoms_v1';
+
+function readJsonStorage(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJsonStorage(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+}
+
+function saveOfflineRouteGeom(id, routeData) {
+  if (!id || !routeData) return;
+  const map = readJsonStorage(OFFLINE_GEOM_KEY, {});
+  const next = { ...map, [id]: { route: routeData, savedAt: Date.now() } };
+  const entries = Object.entries(next).sort((a, b) => (b[1]?.savedAt || 0) - (a[1]?.savedAt || 0)).slice(0, 25);
+  writeJsonStorage(OFFLINE_GEOM_KEY, Object.fromEntries(entries));
+}
 
 /**
  * Obtiene el token JWT del localStorage.
@@ -165,14 +193,46 @@ async function apiRequest(endpoint, options = {}, retries = 3, timeoutMs = 10000
 
 // ---- Rutas ----
 export const routesAPI = {
-  /** Obtener todas las rutas */
-  getAll: (filters = {}) => {
-    const params = new URLSearchParams(filters).toString();
-    return apiRequest(`/routes${params ? `?${params}` : ''}`);
+  /** Obtener todas las rutas (con respaldo offline para Android/conexión intermitente) */
+  getAll: async (filters = {}) => {
+    const cleanFilters = Object.fromEntries(
+      Object.entries(filters || {}).filter(([, v]) => v !== undefined && v !== null && v !== '')
+    );
+    const params = new URLSearchParams(cleanFilters).toString();
+    const isFullCatalog = Object.keys(cleanFilters).length === 0;
+    try {
+      const res = await apiRequest(`/routes${params ? `?${params}` : ''}`);
+      if (isFullCatalog && Array.isArray(res?.data) && res.data.length > 0) {
+        writeJsonStorage(OFFLINE_ROUTES_KEY, res.data);
+      }
+      return res;
+    } catch (err) {
+      if (isFullCatalog) {
+        const cached = readJsonStorage(OFFLINE_ROUTES_KEY, null);
+        if (Array.isArray(cached) && cached.length > 0) {
+          return { success: true, data: cached, offline: true };
+        }
+      }
+      throw err;
+    }
   },
 
-  /** Obtener ruta por ID */
-  getById: (id) => apiRequest(`/routes/${id}`),
+  /** Obtener ruta por ID (con caché local offline de las últimas 25 rutas vistas) */
+  getById: async (id) => {
+    try {
+      const res = await apiRequest(`/routes/${id}`);
+      if (res?.data) {
+        saveOfflineRouteGeom(id, res.data);
+      }
+      return res;
+    } catch (err) {
+      const geomMap = readJsonStorage(OFFLINE_GEOM_KEY, {});
+      if (geomMap[id]?.route) {
+        return { success: true, data: geomMap[id].route, offline: true };
+      }
+      throw err;
+    }
+  },
 
   /** Búsqueda radial de rutas cercanas */
   getNearby: (lat, lng, radius = 500, { limit = 25, includeGeometry = false } = {}) =>

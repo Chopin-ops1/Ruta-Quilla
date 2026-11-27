@@ -10,6 +10,7 @@
 
 import { useState, useEffect } from 'react';
 import { ShieldCheck } from 'lucide-react';
+import { isNativeApp } from '../utils/platform';
 
 const CONSENT_KEY = 'rutaquilla_cookies_accepted';
 
@@ -17,6 +18,7 @@ export default function StorageNotice({ onShowPrivacy }) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    if (isNativeApp()) return;
     // Show banner after a short delay if not yet accepted
     const accepted = localStorage.getItem(CONSENT_KEY);
     if (!accepted) {

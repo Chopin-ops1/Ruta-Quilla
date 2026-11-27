@@ -1726,6 +1726,42 @@ textarea::placeholder,
   }
 }
 
+@keyframes rqSpringUp {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes rqDashFlow {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -112;
+  }
+}
+
+.animate-spring-up {
+  animation: rqSpringUp 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.android-hero-dash {
+  animation: rqDashFlow 9s linear infinite;
+}
+
+.rq-pressable {
+  transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1), filter 0.15s ease;
+}
+
+.rq-pressable:active:not(:disabled) {
+  transform: scale(0.975);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

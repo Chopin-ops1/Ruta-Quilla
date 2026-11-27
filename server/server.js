@@ -126,6 +126,10 @@ app.use(cors({
     ? [
         'https://rutaquilla.me',
         'https://www.rutaquilla.me',
+        'https://app.rutaquilla.me',
+        'https://localhost',
+        'capacitor://localhost',
+        'http://localhost',
         // Render.com static site (actualizar con la URL real después del deploy)
         process.env.CLIENT_URL,
       ].filter(Boolean)

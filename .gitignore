@@ -56,3 +56,12 @@ presentacion/
 *.pfx
 credentials.json
 service-account*.json
+
+# Android Keystore, secretos locales y artefactos compilados
+*.jks
+*.keystore
+keystore.properties
+local.properties
+.gradle/
+release-artifacts/
+/client/android/capacitor-cordova-android-plugins/

@@ -5,9 +5,11 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { User, Crown, LogOut, Menu, X, ChevronDown, Shield, Sun, Moon, Search, Layers, Download } from 'lucide-react';
+import { User, Crown, LogOut, Menu, X, ChevronDown, Shield, Sun, Moon, Search, Layers, Download, Volume2, VolumeX, Smartphone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { isNativeApp } from '../utils/platform';
+import { isSoundMuted, toggleSoundMuted, fxTap } from '../utils/soundAndHaptics';
 
 export default function Header({
   onLoginClick,
@@ -22,6 +24,7 @@ export default function Header({
   const { user, isAuthenticated, isPremium, logout, remainingFreeSearches, maxFreeSearches } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [soundMuted, setSoundMuted] = useState(() => isSoundMuted());
   const [isOnline, setIsOnline] = useState(() => (typeof navigator !== 'undefined' ? navigator.onLine : true));
   const menuRef = useRef(null);
 
@@ -145,7 +148,7 @@ export default function Header({
                 textTransform: 'uppercase',
               }}
             >
-              Barranquilla · SITM + TPC
+              Barranquilla
             </p>
           </div>
         </div>
@@ -217,24 +220,45 @@ export default function Header({
 
       {/* Right: Acciones + Cuenta */}
       <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-        {canInstallPWA && (
-          <button
-            type="button"
-            onClick={onInstallPWA}
-            id="install-pwa-btn"
-            aria-label="Instalar RutaQuilla como app"
-            title="Instalar RutaQuilla"
-            className="rq-chip"
-            style={{
-              height: 30,
-              padding: '0 8px',
-              borderColor: 'color-mix(in srgb, var(--brand) 45%, var(--border-color))',
-              color: 'var(--brand)',
-            }}
-          >
-            <Download size={13} />
-            <span className="hidden sm:inline" style={{ fontSize: 11, fontWeight: 700 }}>App</span>
-          </button>
+        {!isNativeApp() && (
+          canInstallPWA ? (
+            <button
+              type="button"
+              onClick={onInstallPWA}
+              id="install-pwa-btn"
+              aria-label="Instalar RutaQuilla como app"
+              title="Instalar RutaQuilla"
+              className="rq-chip"
+              style={{
+                height: 30,
+                padding: '0 8px',
+                borderColor: 'color-mix(in srgb, var(--brand) 45%, var(--border-color))',
+                color: 'var(--brand)',
+              }}
+            >
+              <Download size={13} />
+              <span className="hidden sm:inline" style={{ fontSize: 11, fontWeight: 700 }}>App</span>
+            </button>
+          ) : (
+            <a
+              href="/downloads/RutaQuilla.apk"
+              download="RutaQuilla.apk"
+              id="download-android-apk-btn"
+              aria-label="Descargar app para Android"
+              title="Descargar app Android (.apk)"
+              className="rq-chip"
+              style={{
+                height: 30,
+                padding: '0 8px',
+                textDecoration: 'none',
+                borderColor: 'color-mix(in srgb, var(--brand) 42%, var(--border-color))',
+                color: 'var(--brand)',
+              }}
+            >
+              <Smartphone size={13} />
+              <span className="hidden sm:inline" style={{ fontSize: 11, fontWeight: 700 }}>Android</span>
+            </a>
+          )
         )}
 
         <a
@@ -404,6 +428,44 @@ export default function Header({
                     </span>
                   </div>
                 </div>
+
+                <button
+                  onClick={() => {
+                    const nextMuted = toggleSoundMuted();
+                    setSoundMuted(nextMuted);
+                    if (!nextMuted) fxTap();
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 9,
+                    border: 'none',
+                    borderBottom: '1px solid var(--border-color)',
+                    background: 'transparent',
+                    color: 'var(--text-secondary)',
+                    fontSize: 12.5,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'var(--subtle-bg)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9 }}>
+                    {soundMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                    Sonidos de la app
+                  </span>
+                  <span className="font-mono" style={{ fontSize: 10, color: soundMuted ? 'var(--text-muted)' : 'var(--mangle)', fontWeight: 700 }}>
+                    {soundMuted ? 'OFF' : 'ON'}
+                  </span>
+                </button>
 
                 <button
                   onClick={() => {

@@ -24,10 +24,13 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowUpDown,
+  Share2,
 } from 'lucide-react';
 import { searchPlaces, reverseGeocode, isCoordinateString } from '../services/routingService';
 import { getCurrentPosition } from '../services/gpsService';
 import { useToast } from '../context/ToastContext';
+import { shareRouteSummary } from '../utils/platform';
+import { fxTap, fxSearchStart, fxRouteFound, fxPinDrop } from '../utils/soundAndHaptics';
 
 const QUICK_DESTINATIONS = [
   { label: 'Portal del Prado', displayName: 'C.C. Portal del Prado', lat: 10.98954, lng: -74.78858 },
@@ -355,6 +358,7 @@ export default function RouteNavigator({
 
   const handleSearch = async () => {
     if (isNavigating || resolvingSearch) return;
+    fxSearchStart();
 
     let finalOrigin = origin;
     let finalDest = destination;
@@ -813,7 +817,7 @@ export default function RouteNavigator({
                                         fontWeight: 700,
                                       }}
                                     >
-                                      2 pasajes (SITM + TPC)
+                                      2 pasajes
                                     </span>
                                   )}
                                 </div>
@@ -1040,7 +1044,7 @@ export default function RouteNavigator({
               {[
                 { icon: Crosshair, color: 'var(--caribe)', text: 'Detecta tu punto actual usando GPS' },
                 { icon: Search, color: 'var(--brand)', text: 'Escribe barrios, vías o centros comerciales' },
-                { icon: MapPin, color: 'var(--mangle)', text: 'Haz clic derecho o mantén pulsado el mapa' },
+                { icon: MapPin, color: 'var(--mangle)', text: 'Mantén pulsado el mapa para marcar un punto' },
               ].map((tip, i) => (
                 <div
                   key={i}

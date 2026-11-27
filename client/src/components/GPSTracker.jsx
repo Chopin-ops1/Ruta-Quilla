@@ -25,10 +25,18 @@ import {
   Crosshair,
   Building2,
 } from 'lucide-react';
-import { startTracking, stopTracking, getSignalQuality, isGeolocationAvailable } from '../services/gpsService';
+import {
+  startTracking,
+  stopTracking,
+  getSignalQuality,
+  isGeolocationAvailable,
+  ensureLocationReady,
+  openDeviceLocationSettings,
+} from '../services/gpsService';
 import { routesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { fxCaptureStart, fxCaptureSaved, fxTap } from '../utils/soundAndHaptics';
 
 const COMPANIES = [
   'Sobrusa', 'Coolitoral', 'Transmecar', 'Sobusa',
@@ -59,53 +67,83 @@ export default function GPSTracker({
   // Save dialog
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [gpsNeedsSettings, setGpsNeedsSettings] = useState(false);
 
   const watchIdRef = useRef(null);
   const pointsRef = useRef([]);
   const startTimeRef = useRef(null);
 
-  const gpsAvailable = isGeolocationAvailable();
-
   /**
    * Open config modal before starting capture.
    */
-  const handleCaptureButton = useCallback(() => {
+  const handleCaptureButton = useCallback(async () => {
     if (isCapturing) {
-      // Stop capture
+      fxTap();
+      // Stop capture & merge any background points recorded with screen off
       if (watchIdRef.current !== null) {
-        stopTracking(watchIdRef.current);
+        const bgPoints = await stopTracking(watchIdRef.current);
         watchIdRef.current = null;
+        if (Array.isArray(bgPoints) && bgPoints.length > 0) {
+          const existingTs = new Set(pointsRef.current.map((p) => Math.floor((p.timestamp || 0) / 1000)));
+          const extras = bgPoints.filter((bp) => {
+            const acc = typeof bp.accuracy === 'number' ? bp.accuracy : 20;
+            const bucket = Math.floor((bp.timestamp || 0) / 1000);
+            return acc <= 25 && !existingTs.has(bucket);
+          });
+          if (extras.length > 0) {
+            pointsRef.current = [...pointsRef.current, ...extras].sort(
+              (a, b) => (a.timestamp || 0) - (b.timestamp || 0)
+            );
+            setGpsPoints([...pointsRef.current]);
+            setPointCount(pointsRef.current.length);
+            onTrackUpdate?.(pointsRef.current);
+          }
+        }
       }
       onCaptureToggle?.(false);
 
       if (pointsRef.current.length >= 2) {
         setShowSaveDialog(true);
+      } else {
+        toast.info('Captura muy corta. Graba al menos 2 puntos en movimiento para guardar.');
       }
     } else {
-      // Show config first (this is handled by App.jsx now, so this might be unused, but kept for compatibility)
       if (!isAuthenticated) {
         toast.warning('Debes iniciar sesión para capturar rutas');
         return;
       }
-      onCloseConfigModal?.(); // Just in case, though it's not the opener
+      onCloseConfigModal?.();
     }
-  }, [isCapturing, onCaptureToggle, isAuthenticated, onCloseConfigModal]);
+  }, [isCapturing, onCaptureToggle, isAuthenticated, onCloseConfigModal, onTrackUpdate, toast]);
 
   /**
-   * Start GPS capture after config is filled.
+   * Start GPS capture after requesting permissions & checking GPS state.
    */
-  const startCapture = useCallback(() => {
+  const startCapture = useCallback(async () => {
     if (!routeName.trim()) {
       setError('Ingresa el nombre del bus/ruta');
       return;
     }
 
-    onCloseConfigModal?.();
     setError(null);
+    setGpsNeedsSettings(false);
+    const ready = await ensureLocationReady({ backgroundCapture: true });
+    if (!ready.granted) {
+      setError(ready.message || 'Debes autorizar el permiso de ubicación para grabar rutas.');
+      return;
+    }
+    if (!ready.gpsEnabled) {
+      setGpsNeedsSettings(true);
+      setError('Enciende la ubicación (GPS) del teléfono para iniciar la captura.');
+      return;
+    }
+
+    onCloseConfigModal?.();
     setGpsPoints([]);
     pointsRef.current = [];
     setPointCount(0);
     startTimeRef.current = Date.now();
+    fxCaptureStart();
 
     watchIdRef.current = startTracking(
       (position) => {
@@ -126,11 +164,18 @@ export default function GPSTracker({
         setError(err.message);
         console.error('Error GPS:', err);
       },
-      { maxAccuracy: 20, minInterval: 5000 }
+      {
+        foregroundCapture: true,
+        routeName: routeName.trim(),
+        company: routeCompany,
+        maxAccuracy: 25,
+        minInterval: 4000,
+        minDistanceMeters: 8,
+      }
     );
 
     onCaptureToggle?.(true);
-  }, [routeName, onCaptureToggle, onPositionUpdate, onTrackUpdate]);
+  }, [routeName, routeCompany, onCloseConfigModal, onCaptureToggle, onPositionUpdate, onTrackUpdate]);
 
   // Collaborative feedback state
   const [collabFeedback, setCollabFeedback] = useState(null);
@@ -188,6 +233,7 @@ export default function GPSTracker({
       }
 
       // Reset capture state
+      fxCaptureSaved();
       pointsRef.current = [];
       setGpsPoints([]);
       setPointCount(0);
@@ -340,7 +386,24 @@ export default function GPSTracker({
               </div>
 
               {error && (
-                <p style={{ fontSize: 11.5, color: 'var(--carnaval)', margin: 0 }}>{error}</p>
+                <div className="space-y-1.5">
+                  <p style={{ fontSize: 11.5, color: 'var(--carnaval)', margin: 0 }}>{error}</p>
+                  {gpsNeedsSettings && (
+                    <button
+                      type="button"
+                      onClick={() => openDeviceLocationSettings()}
+                      className="rq-chip"
+                      style={{
+                        fontSize: 11,
+                        padding: '5px 10px',
+                        color: 'var(--brand)',
+                        borderColor: 'color-mix(in srgb, var(--brand) 42%, transparent)',
+                      }}
+                    >
+                      <Crosshair size={12} /> Activar GPS del teléfono
+                    </button>
+                  )}
+                </div>
               )}
 
               {/* Start button */}

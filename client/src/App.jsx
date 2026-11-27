@@ -14,15 +14,21 @@
 
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { Trophy, Megaphone, X } from 'lucide-react';
+import { App as CapApp } from '@capacitor/app';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { SplashScreen } from '@capacitor/splash-screen';
 import { useAuth } from './context/AuthContext';
 import { useToast } from './context/ToastContext';
 import { routesAPI, mapsAPI, reportAPI } from './services/api';
 import { getCurrentPosition, startTracking, stopTracking } from './services/gpsService';
+import { isNativeApp } from './utils/platform';
+import { fxRouteFound, fxPinDrop } from './utils/soundAndHaptics';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import MapComponent from './components/MapComponent';
 import GPSTracker from './components/GPSTracker';
 import LoginModal from './components/LoginModal';
+import AndroidAuthScreen from './components/AndroidAuthScreen';
 import LegalPages from './components/LegalPages';
 import StorageNotice from './components/StorageNotice';
 import MapQuickBar from './components/MapQuickBar';
@@ -238,11 +244,11 @@ export default function App() {
   }, []);
 
   /**
-   * Request user geolocation on mount.
+   * Request user geolocation on mount (deferred until authenticated in native Android app).
    * Centers the map on the user's position and shows the animated blue dot.
-   * Silently falls back to default center if permission is denied.
    */
   useEffect(() => {
+    if (isNativeApp() && !isAuthenticated) return;
     getCurrentPosition()
       .then((pos) => {
         setUserPosition(pos);
@@ -250,7 +256,7 @@ export default function App() {
       .catch((err) => {
         console.log('📍 Ubicación no disponible:', err.message);
       });
-  }, []);
+  }, [isAuthenticated]);
 
   /**
    * Continuous GPS tracking during active Live Navigation (unless capture is active).
@@ -404,6 +410,9 @@ export default function App() {
       const response = await routesAPI.navigate(origin, destination);
       setNavigationResult(response);
       setSelectedOptionIdx(0);
+      if (response?.options?.length > 0) {
+        fxRouteFound();
+      }
 
       // Increment usage counter (only for non-authenticated users)
       incrementUsage();
@@ -459,10 +468,12 @@ export default function App() {
    */
   const handleMapClick = useCallback((coords) => {
     if (pinMode === 'origin') {
+      fxPinDrop();
       setOriginFromMap({ ...coords });
       setPreviewOrigin({ ...coords });
       setPinMode(null);
     } else if (pinMode === 'destination') {
+      fxPinDrop();
       setDestFromMap({ ...coords });
       setPreviewDestination({ ...coords });
       setPinMode(null);
@@ -590,6 +601,78 @@ export default function App() {
     setReportTrigger({ route, defaultType: 'desvio', _t: Date.now() });
     if (!isDesktop) setMenuOpen(false);
   }, [isAuthenticated, isDesktop, toast]);
+
+  const nativeApp = isNativeApp();
+
+  useEffect(() => {
+    if (!nativeApp) return;
+    StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+    StatusBar.setBackgroundColor({ color: '#0D1014' }).catch(() => {});
+    SplashScreen.hide().catch(() => {});
+
+    const backSub = CapApp.addListener('backButton', () => {
+      if (showLegal) { setShowLegal(null); return; }
+      if (showLogin) { handleCloseLogin(); return; }
+      if (showCommunity) { setShowCommunity(false); return; }
+      if (selectedReport) { setSelectedReport(null); return; }
+      if (showCaptureConfig) { setShowCaptureConfig(false); return; }
+      if (liveNavOption) { handleCancelLiveNav(); return; }
+      if (!isDesktop && menuOpen) { setMenuOpen(false); return; }
+      if (navigationResult) { handleClearNavigation(); return; }
+      if (selectedRoute) { handleClearSelectedRoute(); return; }
+      CapApp.minimizeApp();
+    });
+
+    return () => {
+      backSub.then((h) => h.remove()).catch(() => {});
+    };
+  }, [
+    nativeApp, showLegal, showLogin, showCommunity, selectedReport, showCaptureConfig,
+    liveNavOption, isDesktop, menuOpen, navigationResult, selectedRoute,
+    handleCloseLogin, handleCancelLiveNav, handleClearNavigation, handleClearSelectedRoute,
+  ]);
+
+  if (nativeApp && authLoading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center p-6" style={{ background: 'var(--bg-dark)' }}>
+        <div className="rq-card animate-spring-up" style={{ width: '100%', maxWidth: 300, padding: '24px 20px', textAlign: 'center' }}>
+          <div
+            className="mx-auto mb-3 overflow-hidden"
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 14,
+              border: '1px solid rgba(255, 194, 26, 0.35)',
+              background: 'var(--plate-bg)',
+            }}
+          >
+            <img src="/logo.png" alt="RutaQuilla" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </div>
+          <p className="font-display text-base font-bold m-0" style={{ color: 'var(--text-primary)' }}>
+            RutaQuilla
+          </p>
+          <p className="text-xs mt-1 mb-0" style={{ color: 'var(--text-muted)' }}>
+            Preparando tu sesión...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (nativeApp && !isAuthenticated) {
+    return (
+      <div className="w-full h-full" style={{ background: 'var(--bg-dark)' }}>
+        <AndroidAuthScreen onShowLegal={setShowLegal} />
+        {showLegal && (
+          <LegalPages
+            page={showLegal}
+            onClose={() => setShowLegal(null)}
+            onNavigate={setShowLegal}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full flex flex-col" style={{ background: 'var(--bg-dark)' }}>

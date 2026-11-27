@@ -25,6 +25,7 @@ import {
   ChevronUp, Volume2, VolumeX, BellRing,
   ArrowUp, CornerDownRight, Target,
 } from 'lucide-react';
+import { fxBoardBus, fxAlightAlert, fxArrived } from '../utils/soundAndHaptics';
 
 // Phases enum
 const PHASE = {
@@ -45,43 +46,6 @@ function haversineM(lat1, lon1, lat2, lon2) {
     Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
     Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-// Play an alert tone using AudioContext
-function playAlertTone() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = 880;
-    osc.type = 'sine';
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.8);
-    // Double beep
-    setTimeout(() => {
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.connect(gain2);
-      gain2.connect(ctx.destination);
-      osc2.frequency.value = 1100;
-      osc2.type = 'sine';
-      gain2.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
-      osc2.start(ctx.currentTime);
-      osc2.stop(ctx.currentTime + 0.6);
-    }, 400);
-  } catch (_) {}
-}
-
-// Vibrate the device if supported
-function vibrateDevice(pattern = [200, 100, 400]) {
-  try {
-    if (navigator.vibrate) navigator.vibrate(pattern);
-  } catch (_) {}
 }
 
 // Request wake lock to keep screen on
@@ -153,26 +117,20 @@ export default function LiveNavigation({
     if (phase === PHASE.WALKING_TO_BOARD && dBoard < 50) {
       setPhase(PHASE.WAITING_FOR_BUS);
       onPhaseChange?.(PHASE.WAITING_FOR_BUS);
-      if (soundEnabled) playAlertTone();
-      vibrateDevice([100, 50, 100]);
+      if (soundEnabled) fxBoardBus();
     }
 
     if (phase === PHASE.RIDING_BUS && dAlight < 200 && !alertFired) {
       setPhase(PHASE.ALERT_ALIGHT);
       onPhaseChange?.(PHASE.ALERT_ALIGHT);
       setAlertFired(true);
-      if (soundEnabled) {
-        playAlertTone();
-        setTimeout(playAlertTone, 1500);
-      }
-      vibrateDevice([300, 200, 300, 200, 500]);
+      if (soundEnabled) fxAlightAlert();
     }
 
     if (phase === PHASE.WALKING_TO_DEST && dDest < 30) {
       setPhase(PHASE.ARRIVED);
       onPhaseChange?.(PHASE.ARRIVED);
-      if (soundEnabled) playAlertTone();
-      vibrateDevice([200, 100, 200]);
+      if (soundEnabled) fxArrived();
     }
   }, [userPosition, phase, boardLat, boardLng, alightLat, alightLng, destination, soundEnabled, alertFired, onPhaseChange]);
 
@@ -184,7 +142,7 @@ export default function LiveNavigation({
   const handleConfirmBoarded = () => {
     setPhase(PHASE.RIDING_BUS);
     onPhaseChange?.(PHASE.RIDING_BUS);
-    if (soundEnabled) playAlertTone();
+    if (soundEnabled) fxBoardBus();
   };
 
   const handleConfirmAlighted = () => {
