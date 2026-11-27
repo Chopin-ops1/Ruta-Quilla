@@ -717,6 +717,7 @@ export default function Sidebar({
   onPreviewOriginChange,
   onPreviewDestinationChange,
   activeReports = [],
+  onDownloadAndroid,
 }) {
   const { isPremium, isAuthenticated } = useAuth();
   const [filterType, setFilterType] = useState('all');
@@ -1787,6 +1788,12 @@ export default function Sidebar({
             <a
               href="/downloads/RutaQuilla.apk"
               download="RutaQuilla.apk"
+              onClick={(e) => {
+                if (typeof onDownloadAndroid === 'function') {
+                  e.preventDefault();
+                  onDownloadAndroid();
+                }
+              }}
               className="rq-card w-full p-2.5 flex items-center gap-2.5 cursor-pointer text-left"
               style={{ textDecoration: 'none' }}
             >
@@ -1811,7 +1818,7 @@ export default function Sidebar({
                   App para Android
                 </p>
                 <p className="text-[10px] m-0" style={{ color: 'var(--text-muted)' }}>
-                  Descarga directa (.apk) con GPS en ruta
+                  Instala la app oficial con guía paso a paso
                 </p>
               </div>
               <ChevronRight size={13} style={{ color: 'var(--text-muted)' }} />

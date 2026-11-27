@@ -4,33 +4,33 @@ import { isNativeApp } from '../utils/platform';
 
 const NativeUpdater = registerPlugin('NativeUpdater');
 
-export const LOCAL_APP_VERSION = '2.1.2';
-export const LOCAL_ANDROID_VERSION_CODE = 5;
+export const LOCAL_APP_VERSION = '2.1.3';
+export const LOCAL_ANDROID_VERSION_CODE = 6;
 export const DEFAULT_APK_DOWNLOAD_URL = 'https://rutaquilla.me/downloads/RutaQuilla.apk';
 
 export const DEFAULT_RELEASE_NOTES = {
   versionName: LOCAL_APP_VERSION,
   androidVersionCode: LOCAL_ANDROID_VERSION_CODE,
-  title: 'RutaQuilla 2.1.2 ya está disponible',
-  summary: 'Indicadores más limpios para subir y bajar del bus, guía visual al caminar y trazados de rutas corregidos.',
+  title: 'RutaQuilla 2.1.3 ya está disponible',
+  summary: 'Guía visual para instalar la app en Android sin dudas y activación automática de actualizaciones en un paso.',
   downloadUrl: DEFAULT_APK_DOWNLOAD_URL,
   publishedAt: '2026-11-27',
   highlights: [
     {
-      category: 'Diseño',
-      text: 'Pines más sutiles para indicar dónde subir y bajar del bus sin tapar el mapa ni tus puntos.',
-    },
-    {
-      category: 'Rutas',
-      text: 'Trazado peatonal moderno con distancia y tiempo al bajar hacia tu destino, además de guía en 3 pasos.',
-    },
-    {
       category: 'Mejoras',
-      text: 'Corrección de recorridos de buses que presentaban cruces o giros irregulares en el mapa.',
+      text: 'Tutorial paso a paso al descargar RutaQuilla desde la web móvil para que instalar sea rápido y claro.',
     },
     {
       category: 'Seguridad',
-      text: 'Actualización directa dentro de la app Android sin tener que salir al navegador.',
+      text: 'Guía de permiso único dentro de la app Android que desaparece automáticamente una vez activado.',
+    },
+    {
+      category: 'Diseño',
+      text: 'Pines más sutiles para indicar dónde subir y bajar del bus, además de guía visual de caminata.',
+    },
+    {
+      category: 'Rutas',
+      text: 'Recorridos urbanos verificados para evitar trazados irregulares en el mapa.',
     },
   ],
 };
@@ -83,6 +83,31 @@ export function isAndroidUpdateAvailable(installedInfo, appRelease) {
     return compareSemver(appRelease.versionName, installedInfo?.versionName || LOCAL_APP_VERSION) > 0;
   }
   return false;
+}
+
+export async function checkCanInstallPackages() {
+  if (!isNativeApp()) {
+    return { supported: false, granted: true };
+  }
+  try {
+    const res = await NativeUpdater.canInstallPackages();
+    return { supported: true, granted: Boolean(res?.granted) };
+  } catch (err) {
+    const msg = String(err?.message || err || '');
+    if (/not implemented|UNIMPLEMENTED|does not have/i.test(msg)) {
+      return { supported: false, granted: false };
+    }
+    return { supported: false, granted: false };
+  }
+}
+
+export async function openAndroidInstallPermissionSettings() {
+  if (!isNativeApp()) return;
+  try {
+    await NativeUpdater.openInstallPermissionSettings();
+  } catch {
+    // Ignorado en versiones antiguas sin el plugin nativo
+  }
 }
 
 export async function startInAppAndroidUpdate(url, onProgress) {

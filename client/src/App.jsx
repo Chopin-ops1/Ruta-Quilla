@@ -24,6 +24,10 @@ import { getCurrentPosition, startTracking, stopTracking } from './services/gpsS
 import { isNativeApp } from './utils/platform';
 import { fxRouteFound, fxPinDrop } from './utils/soundAndHaptics';
 import UpdateChangelogModal from './components/UpdateChangelogModal';
+import AndroidInstallGuideModal, {
+  shouldSkipInstallGuide,
+  triggerApkDownload,
+} from './components/AndroidInstallGuideModal';
 import {
   LOCAL_APP_VERSION,
   LOCAL_ANDROID_VERSION_CODE,
@@ -164,9 +168,19 @@ export default function App() {
     versionCode: LOCAL_ANDROID_VERSION_CODE,
   }));
   const [releaseModal, setReleaseModal] = useState({ open: false, mode: 'changelog' });
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
 
   const activeRelease = publicConfig?.appRelease || DEFAULT_RELEASE_NOTES;
   const androidUpdateAvailable = isAndroidUpdateAvailable(installedVersionInfo, activeRelease);
+
+  const handleRequestAndroidDownload = useCallback(() => {
+    const url = activeRelease?.downloadUrl || '/downloads/RutaQuilla.apk';
+    if (shouldSkipInstallGuide()) {
+      triggerApkDownload(url);
+    } else {
+      setShowInstallGuide(true);
+    }
+  }, [activeRelease?.downloadUrl]);
 
   useEffect(() => {
     const onOnline = () => setIsOnline(true);
@@ -829,12 +843,14 @@ export default function App() {
         onOpenChangelog={handleOpenManualChangelog}
         hasAndroidUpdate={androidUpdateAvailable}
         appVersion={installedVersionInfo.versionName}
+        onDownloadAndroid={handleRequestAndroidDownload}
       />
 
       <div className="flex-1 flex relative overflow-hidden" style={{ marginTop: 56 }}>
         <Sidebar
           routes={routes}
           isOpen={menuOpen}
+          onDownloadAndroid={handleRequestAndroidDownload}
           onRouteSelect={handleRouteSelect}
           selectedRoute={selectedRoute}
           loadingRouteId={loadingRouteId}
@@ -1084,6 +1100,13 @@ export default function App() {
         release={activeRelease}
         installedVersion={installedVersionInfo.versionName}
         onClose={handleCloseReleaseModal}
+        onOpenInstallGuide={handleRequestAndroidDownload}
+      />
+
+      <AndroidInstallGuideModal
+        isOpen={showInstallGuide}
+        downloadUrl={activeRelease?.downloadUrl || '/downloads/RutaQuilla.apk'}
+        onClose={() => setShowInstallGuide(false)}
       />
 
       {/* Floating bottom bar for map-picked points (mobile-friendly) */}

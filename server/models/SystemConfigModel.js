@@ -80,12 +80,12 @@ const SystemConfigSchema = new mongoose.Schema(
       default: [],
     },
     appRelease: {
-      versionName: { type: String, default: '2.1.2', trim: true },
-      androidVersionCode: { type: Number, default: 5 },
+      versionName: { type: String, default: '2.1.3', trim: true },
+      androidVersionCode: { type: Number, default: 6 },
       title: { type: String, default: 'Nueva versión de RutaQuilla', trim: true },
       summary: {
         type: String,
-        default: 'Indicadores más limpios para subir y bajar del bus, guía visual al caminar y trazados de rutas corregidos.',
+        default: 'Guía visual para instalar la app en Android sin dudas y activación automática de actualizaciones en un paso.',
         trim: true,
       },
       downloadUrl: {
@@ -122,28 +122,28 @@ let cachedConfig = null;
 let cachedAt = 0;
 
 const DEFAULT_APP_RELEASE = {
-  versionName: '2.1.2',
-  androidVersionCode: 5,
-  title: 'RutaQuilla 2.1.2 ya está disponible',
-  summary: 'Indicadores más limpios para subir y bajar del bus, guía visual al caminar y trazados de rutas corregidos.',
+  versionName: '2.1.3',
+  androidVersionCode: 6,
+  title: 'RutaQuilla 2.1.3 ya está disponible',
+  summary: 'Guía visual para instalar la app en Android sin dudas y activación automática de actualizaciones en un paso.',
   downloadUrl: 'https://rutaquilla.me/downloads/RutaQuilla.apk',
   publishedAt: '2026-11-27',
   highlights: [
     {
-      category: 'Diseño',
-      text: 'Pines más sutiles para indicar dónde subir y bajar del bus sin tapar el mapa ni tus puntos.',
-    },
-    {
-      category: 'Rutas',
-      text: 'Trazado peatonal moderno con distancia y tiempo al bajar hacia tu destino, además de guía en 3 pasos.',
-    },
-    {
       category: 'Mejoras',
-      text: 'Corrección de recorridos de buses que presentaban cruces o giros irregulares en el mapa.',
+      text: 'Tutorial paso a paso al descargar RutaQuilla desde la web móvil para que instalar sea rápido y claro.',
     },
     {
       category: 'Seguridad',
-      text: 'Actualización directa dentro de la app Android sin tener que salir al navegador.',
+      text: 'Guía de permiso único dentro de la app Android que desaparece automáticamente una vez activado.',
+    },
+    {
+      category: 'Diseño',
+      text: 'Pines más sutiles para indicar dónde subir y bajar del bus, además de guía visual de caminata.',
+    },
+    {
+      category: 'Rutas',
+      text: 'Recorridos urbanos verificados para evitar trazados irregulares en el mapa.',
     },
   ],
 };

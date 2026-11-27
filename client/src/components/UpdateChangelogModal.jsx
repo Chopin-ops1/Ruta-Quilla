@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { App as CapacitorApp } from '@capacitor/app';
 import {
   X,
   Download,
@@ -21,6 +22,8 @@ import {
   DEFAULT_RELEASE_NOTES,
   startInAppAndroidUpdate,
   retryInstallDownloadedUpdate,
+  checkCanInstallPackages,
+  openAndroidInstallPermissionSettings,
 } from '../config/appVersion';
 
 const CATEGORY_STYLE = {
@@ -70,24 +73,18 @@ export default function UpdateChangelogModal({
   installedVersion,
   onClose,
   onDownloadUpdate,
+  onOpenInstallGuide,
 }) {
   const [updateState, setUpdateState] = useState('idle'); // 'idle' | 'downloading' | 'permission_required' | 'error'
+  const [installPerm, setInstallPerm] = useState('checking'); // 'checking' | 'granted' | 'needed' | 'unsupported'
+  const [permBannerJustGranted, setPermBannerJustGranted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [downloadedBytes, setDownloadedBytes] = useState(0);
   const [totalBytes, setTotalBytes] = useState(0);
   const [errorMsg, setErrorMsg] = useState('');
 
-  useEffect(() => {
-    if (isOpen) {
-      setUpdateState('idle');
-      setProgress(0);
-      setDownloadedBytes(0);
-      setTotalBytes(0);
-      setErrorMsg('');
-    }
-  }, [isOpen, mode]);
-
-  if (!isOpen) return null;
+  const waitingForPermissionReturnRef = useRef(false);
+  const downloadedReadyRef = useRef(false);
 
   const native = isNativeApp();
   const data = release && release.versionName ? release : DEFAULT_RELEASE_NOTES;
@@ -97,14 +94,36 @@ export default function UpdateChangelogModal({
     ? data.highlights
     : DEFAULT_RELEASE_NOTES.highlights;
 
-  const handleDownload = async () => {
+  const handleRetryInstall = useCallback(async () => {
+    fxTap();
+    setErrorMsg('');
+    try {
+      const res = await retryInstallDownloadedUpdate();
+      if (res?.status === 'permission_required') {
+        waitingForPermissionReturnRef.current = true;
+        setInstallPerm('needed');
+        setUpdateState('permission_required');
+      } else {
+        setUpdateState('idle');
+      }
+    } catch (err) {
+      setUpdateState('error');
+      setErrorMsg(err?.message || 'No se pudo iniciar la instalación.');
+    }
+  }, []);
+
+  const handleDownload = useCallback(async () => {
     fxRouteFound();
     if (typeof onDownloadUpdate === 'function') {
       onDownloadUpdate(downloadUrl);
       return;
     }
     if (!native) {
-      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+      if (typeof onOpenInstallGuide === 'function') {
+        onOpenInstallGuide();
+      } else {
+        window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+      }
       return;
     }
 
@@ -124,6 +143,9 @@ export default function UpdateChangelogModal({
         return;
       }
       if (res?.status === 'permission_required') {
+        downloadedReadyRef.current = Boolean(res?.fileReady);
+        waitingForPermissionReturnRef.current = true;
+        setInstallPerm('needed');
         setUpdateState('permission_required');
         return;
       }
@@ -132,22 +154,92 @@ export default function UpdateChangelogModal({
       setUpdateState('error');
       setErrorMsg(err?.message || 'No se pudo completar la descarga. Verifica tu conexión.');
     }
-  };
+  }, [native, downloadUrl, onDownloadUpdate, onOpenInstallGuide]);
 
-  const handleRetryInstall = async () => {
-    fxTap();
-    setErrorMsg('');
-    try {
-      const res = await retryInstallDownloadedUpdate();
-      if (res?.status === 'permission_required') {
-        setUpdateState('permission_required');
-      } else {
-        setUpdateState('idle');
-      }
-    } catch (err) {
-      setUpdateState('error');
-      setErrorMsg(err?.message || 'No se pudo iniciar la instalación.');
+  const recheckPermission = useCallback(async () => {
+    if (!native || !isUpdateMode) return;
+    const perm = await checkCanInstallPackages();
+    if (!perm.supported) {
+      setInstallPerm('unsupported');
+      return;
     }
+    if (perm.granted) {
+      setInstallPerm('granted');
+      if (waitingForPermissionReturnRef.current) {
+        waitingForPermissionReturnRef.current = false;
+        setPermBannerJustGranted(true);
+        if (downloadedReadyRef.current) {
+          handleRetryInstall();
+        } else {
+          handleDownload();
+        }
+      }
+    } else {
+      setInstallPerm('needed');
+    }
+  }, [native, isUpdateMode, handleRetryInstall, handleDownload]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setUpdateState('idle');
+    setPermBannerJustGranted(false);
+    setProgress(0);
+    setDownloadedBytes(0);
+    setTotalBytes(0);
+    setErrorMsg('');
+    waitingForPermissionReturnRef.current = false;
+    downloadedReadyRef.current = false;
+
+    if (native && isUpdateMode) {
+      setInstallPerm('checking');
+      checkCanInstallPackages().then((perm) => {
+        if (!perm.supported) {
+          setInstallPerm('unsupported');
+        } else {
+          setInstallPerm(perm.granted ? 'granted' : 'needed');
+        }
+      });
+    } else {
+      setInstallPerm('granted');
+    }
+  }, [isOpen, mode, native, isUpdateMode]);
+
+  useEffect(() => {
+    if (!isOpen || !native || !isUpdateMode) return undefined;
+
+    let capListener = null;
+    const onActive = () => {
+      recheckPermission();
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') recheckPermission();
+    };
+
+    window.addEventListener('focus', onActive);
+    document.addEventListener('visibilitychange', onVisibility);
+    CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) recheckPermission();
+    })
+      .then((handle) => {
+        capListener = handle;
+      })
+      .catch(() => {});
+
+    return () => {
+      window.removeEventListener('focus', onActive);
+      document.removeEventListener('visibilitychange', onVisibility);
+      if (capListener && typeof capListener.remove === 'function') {
+        capListener.remove().catch(() => {});
+      }
+    };
+  }, [isOpen, native, isUpdateMode, recheckPermission]);
+
+  if (!isOpen) return null;
+
+  const handleOpenPermissionSettings = async () => {
+    fxTap();
+    waitingForPermissionReturnRef.current = true;
+    await openAndroidInstallPermissionSettings();
   };
 
   const handleClose = () => {
@@ -155,6 +247,9 @@ export default function UpdateChangelogModal({
     fxTap();
     onClose?.();
   };
+
+  const showOneTimePermissionGuide =
+    native && isUpdateMode && installPerm === 'needed' && updateState === 'idle';
 
   return (
     <div
@@ -232,6 +327,58 @@ export default function UpdateChangelogModal({
             </p>
           )}
 
+          {permBannerJustGranted && (
+            <div
+              className="p-2.5 rounded-xl flex items-center gap-2 text-[12px] font-semibold animate-fade-in"
+              style={{
+                background: 'var(--mangle-soft)',
+                color: 'var(--mangle)',
+                border: '1px solid color-mix(in srgb, var(--mangle) 40%, transparent)',
+              }}
+            >
+              <CheckCircle2 size={15} className="flex-shrink-0" />
+              <span>Permiso activado · Continuando actualización dentro de RutaQuilla.</span>
+            </div>
+          )}
+
+          {showOneTimePermissionGuide && (
+            <div
+              className="p-3.5 rounded-xl space-y-2.5 animate-fade-in"
+              style={{
+                background: 'var(--brand-soft)',
+                border: '1px solid color-mix(in srgb, var(--brand) 45%, transparent)',
+              }}
+            >
+              <div className="flex items-center gap-2 text-xs font-extrabold" style={{ color: 'var(--brand)' }}>
+                <Settings size={14} />
+                <span>Paso único para actualizar desde la app</span>
+              </div>
+              <p className="text-[12px] leading-snug m-0" style={{ color: 'var(--text-primary)' }}>
+                Android necesita tu autorización una sola vez para que RutaQuilla pueda actualizarse directo aquí sin volver al navegador.
+              </p>
+              <ol className="m-0 pl-4 space-y-1 text-[11.5px]" style={{ color: 'var(--text-secondary)' }}>
+                <li>Toca <strong>Activar permiso en Ajustes</strong> abajo.</li>
+                <li>Enciende <strong>Permitir desde esta fuente</strong>.</li>
+                <li>Vuelve atrás y la actualización continuará sola.</li>
+              </ol>
+              <div
+                className="px-2.5 py-1.5 rounded-lg flex items-center justify-between gap-2"
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+              >
+                <span className="text-[11px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  Permitir desde esta fuente
+                </span>
+                <span
+                  className="inline-flex items-center rounded-full p-0.5"
+                  style={{ width: 32, height: 18, background: 'var(--mangle)', justifyContent: 'flex-end' }}
+                  aria-hidden="true"
+                >
+                  <span style={{ width: 14, height: 14, borderRadius: '50%', background: '#FFFFFF' }} />
+                </span>
+              </div>
+            </div>
+          )}
+
           {updateState === 'downloading' && (
             <div
               className="p-3 rounded-xl space-y-2"
@@ -262,7 +409,7 @@ export default function UpdateChangelogModal({
 
           {updateState === 'permission_required' && (
             <div
-              className="p-3 rounded-xl space-y-1.5"
+              className="p-3 rounded-xl space-y-2"
               style={{ background: 'var(--brand-soft)', border: '1px solid var(--brand)' }}
             >
               <div className="flex items-center gap-1.5 text-xs font-bold" style={{ color: 'var(--brand)' }}>
@@ -270,8 +417,16 @@ export default function UpdateChangelogModal({
                 Permiso necesario para instalar
               </div>
               <p className="text-[12px] leading-snug m-0" style={{ color: 'var(--text-primary)' }}>
-                Activa el permiso para permitir actualizaciones de RutaQuilla en tu teléfono y luego toca <strong>Instalar actualización</strong>.
+                Activa <strong>Permitir desde esta fuente</strong> en los ajustes que se acaban de abrir y regresa para terminar la instalación.
               </p>
+              <button
+                type="button"
+                onClick={handleOpenPermissionSettings}
+                className="rq-chip"
+                style={{ padding: '5px 10px', fontSize: 11, color: 'var(--brand)' }}
+              >
+                <Settings size={12} /> Abrir Ajustes otra vez
+              </button>
             </div>
           )}
 
@@ -344,6 +499,24 @@ export default function UpdateChangelogModal({
                   Instalar actualización
                 </button>
               </>
+            ) : showOneTimePermissionGuide ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="rq-btn-secondary px-3.5 py-2 text-xs font-semibold"
+                >
+                  Más tarde
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOpenPermissionSettings}
+                  className="rq-btn-primary px-4 py-2 text-xs font-bold inline-flex items-center gap-1.5 flex-1 justify-center"
+                >
+                  <Settings size={14} />
+                  Activar permiso en Ajustes
+                </button>
+              </>
             ) : (
               <>
                 <button
@@ -377,17 +550,23 @@ export default function UpdateChangelogModal({
           ) : (
             <>
               {!native && (
-                <a
-                  href={downloadUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => fxTap()}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold no-underline px-2.5 py-1.5 rounded-lg"
+                <button
+                  type="button"
+                  onClick={() => {
+                    fxTap();
+                    if (typeof onOpenInstallGuide === 'function') {
+                      onClose?.();
+                      onOpenInstallGuide();
+                    } else {
+                      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border-0 cursor-pointer"
                   style={{ color: 'var(--mangle)', background: 'var(--mangle-soft)' }}
                 >
                   <Smartphone size={13} />
                   App Android
-                </a>
+                </button>
               )}
               <button
                 type="button"

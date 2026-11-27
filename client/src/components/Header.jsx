@@ -22,7 +22,8 @@ export default function Header({
   onInstallPWA,
   onOpenChangelog,
   hasAndroidUpdate = false,
-  appVersion = '2.1.0',
+  appVersion = '2.1.3',
+  onDownloadAndroid,
 }) {
   const { user, isAuthenticated, isPremium, logout, remainingFreeSearches, maxFreeSearches } = useAuth();
   const { isDark, toggleTheme } = useTheme();
@@ -248,7 +249,14 @@ export default function Header({
               download="RutaQuilla.apk"
               id="download-android-apk-btn"
               aria-label="Descargar app para Android"
-              title="Descargar app Android (.apk)"
+              title="Descargar app Android"
+              onClick={(e) => {
+                if (typeof onDownloadAndroid === 'function') {
+                  e.preventDefault();
+                  fxTap();
+                  onDownloadAndroid();
+                }
+              }}
               className="rq-chip hidden sm:inline-flex"
               style={{
                 height: 30,
@@ -509,9 +517,13 @@ export default function Header({
                     href="/downloads/RutaQuilla.apk"
                     download="RutaQuilla.apk"
                     className="flex sm:hidden"
-                    onClick={() => {
+                    onClick={(e) => {
                       fxTap();
                       setShowUserMenu(false);
+                      if (typeof onDownloadAndroid === 'function') {
+                        e.preventDefault();
+                        onDownloadAndroid();
+                      }
                     }}
                     style={{
                       width: '100%',
