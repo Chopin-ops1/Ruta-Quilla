@@ -125,6 +125,18 @@ async function apiRequest(endpoint, options = {}, retries = 3, timeoutMs = 10000
           await new Promise(r => setTimeout(r, delay));
           continue;
         }
+        if (error.name === 'AbortError') {
+          throw {
+            status: 408,
+            code: 'REQUEST_TIMEOUT',
+            message: 'El servidor tardó demasiado en responder. Por favor intenta de nuevo en unos segundos.',
+          };
+        }
+        throw {
+          status: 0,
+          code: 'NETWORK_ERROR',
+          message: 'No se pudo conectar con el servidor. Verifica tu conexión e intenta de nuevo.',
+        };
       }
 
       // Si es error de autenticación, no reintentar

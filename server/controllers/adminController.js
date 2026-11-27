@@ -23,7 +23,7 @@ const { AdminLog, CATEGORIES, logAdminAction } = require('../models/AdminLogMode
 const { getTrafficData } = require('../middleware/trafficTracker');
 const { escapeRegex } = require('../middleware/security');
 const { getMapCacheStats, clearMapCaches } = require('./mapController');
-const { generateVerificationCode, sendVerificationEmail, verifySmtpStatus } = require('../services/emailService');
+const { generateVerificationCode, sendVerificationEmail, verifySmtpStatus, isEmailConfigured } = require('../services/emailService');
 const { checkDomainMx, analyzeUserAccount } = require('../services/emailSecurityService');
 
 /**
@@ -588,8 +588,12 @@ async function resendUserVerificationAdmin(req, res) {
     if (target.isVerified) {
       return res.status(400).json({ success: false, message: 'Este usuario ya está verificado' });
     }
-    if (!process.env.ZOHO_EMAIL || !process.env.ZOHO_PASSWORD) {
-      return res.status(503).json({ success: false, message: 'SMTP (ZOHO_EMAIL/ZOHO_PASSWORD) no está configurado en el servidor' });
+    const smtp = await verifySmtpStatus({ force: true });
+    if (!smtp.connected) {
+      return res.status(503).json({
+        success: false,
+        message: smtp.error || 'El servicio de correo no está disponible en el servidor.',
+      });
     }
 
     const code = generateVerificationCode();
@@ -1015,7 +1019,7 @@ async function getSystemHealth(req, res) {
       User.countDocuments({ role: 'admin' }),
     ]);
 
-    const smtpConfigured = Boolean(process.env.ZOHO_EMAIL && process.env.ZOHO_PASSWORD);
+    const smtpConfigured = isEmailConfigured();
     const jwtStrongSecret = Boolean(process.env.JWT_SECRET && process.env.JWT_SECRET.length >= 32);
 
     res.json({
@@ -1145,11 +1149,14 @@ async function getSecurityConfigAdmin(req, res) {
  */
 async function updateSecurityConfigAdmin(req, res) {
   try {
-    if (req.body?.adminLogin2FA === true && !(process.env.ZOHO_EMAIL && process.env.ZOHO_PASSWORD)) {
-      return res.status(400).json({
-        success: false,
-        message: 'No se puede activar 2FA por correo sin configurar primero ZOHO_EMAIL y ZOHO_PASSWORD en el servidor.',
-      });
+    if (req.body?.adminLogin2FA === true) {
+      const smtp = await verifySmtpStatus({ force: true });
+      if (!smtp.connected) {
+        return res.status(400).json({
+          success: false,
+          message: smtp.error || 'No se puede activar 2FA por correo sin un servicio de envío operativo (en Render Free configura RESEND_API_KEY o BREVO_API_KEY).',
+        });
+      }
     }
 
     const updated = await updateSystemConfig(req.body || {}, req.user?.email || '');

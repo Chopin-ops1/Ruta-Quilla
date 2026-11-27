@@ -18,7 +18,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/UserModel');
 const { getSystemConfig } = require('../models/SystemConfigModel');
 const { logAdminAction } = require('../models/AdminLogModel');
-const { generateVerificationCode, sendVerificationEmail, sendPasswordResetEmail, sendAdminLoginOtpEmail, verifyConnection } = require('../services/emailService');
+const { generateVerificationCode, sendVerificationEmail, sendPasswordResetEmail, sendAdminLoginOtpEmail, verifyConnection, isEmailDeliveryReady } = require('../services/emailService');
 const {
   issueFormToken,
   verifyFormToken,
@@ -30,9 +30,7 @@ const { logAuthEvent, isValidObjectId } = require('../middleware/security');
 
 const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/jwt');
 
-const smtpConfigured = Boolean(process.env.ZOHO_EMAIL && process.env.ZOHO_PASSWORD);
-
-// Check SMTP on startup (for diagnostic logging)
+// Check email delivery on startup (for diagnostic logging & warm cache)
 verifyConnection();
 
 /**
@@ -181,49 +179,71 @@ async function register(req, res) {
       }
     }
 
-    const mustVerify = Boolean(
-      sysConfig.requireEmailVerification && (smtpConfigured || process.env.NODE_ENV === 'production')
-    );
-
-    if (mustVerify && !smtpConfigured) {
-      return res.status(503).json({
-        success: false,
-        code: 'SMTP_UNAVAILABLE',
-        message: 'El servicio de verificación por correo no está disponible en este momento. Intenta más tarde.',
-      });
-    }
+    const emailReady = sysConfig.requireEmailVerification ? await isEmailDeliveryReady() : false;
+    const mustVerify = Boolean(sysConfig.requireEmailVerification && emailReady);
 
     // Verificar si el email ya existe
     const existingUser = await User.findOne({ email: normalizedEmail })
       .select('+verificationCode +verificationCodeExpiry +verificationAttempts');
     
     if (existingUser) {
-      // Si existe pero NO está verificado, permitir re-registro (reenviar código)
+      // Si existe pero NO está verificado, permitir re-registro (reenviar código o activar si SMTP está bloqueado)
       if (!existingUser.isVerified) {
-        const code = generateVerificationCode();
+        if (mustVerify) {
+          const code = generateVerificationCode();
+          existingUser.name = cleanName;
+          existingUser.password = password; // Se re-hashea en pre-save
+          existingUser.verificationCode = hashVerificationCode(code);
+          existingUser.verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 min
+          existingUser.verificationAttempts = 0;
+          await existingUser.save();
+          if (!turnstileActive && sysConfig.botShieldEnabled) {
+            consumeFormTokenNonce(formToken);
+          }
+
+          try {
+            await sendVerificationEmail(normalizedEmail, cleanName, code);
+          } catch (emailErr) {
+            console.error('Error enviando email:', emailErr);
+          }
+
+          return res.status(200).json({
+            success: true,
+            message: 'Código de verificación reenviado a tu email',
+            data: { requiresVerification: true, email: normalizedEmail },
+          });
+        }
+
         existingUser.name = cleanName;
         existingUser.password = password; // Se re-hashea en pre-save
-        existingUser.verificationCode = hashVerificationCode(code);
-        existingUser.verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 min
+        existingUser.isVerified = true;
+        existingUser.verificationCode = undefined;
+        existingUser.verificationCodeExpiry = undefined;
         existingUser.verificationAttempts = 0;
         await existingUser.save();
         if (!turnstileActive && sysConfig.botShieldEnabled) {
           consumeFormTokenNonce(formToken);
         }
 
-        // Enviar email
-        if (smtpConfigured) {
-          try {
-            await sendVerificationEmail(normalizedEmail, cleanName, code);
-          } catch (emailErr) {
-            console.error('Error enviando email:', emailErr);
-          }
+        if (sysConfig.requireEmailVerification && !emailReady) {
+          console.warn('⚠️ Verificación OTP omitida por SMTP bloqueado; cuenta activada con protección Turnstile/MX');
         }
 
+        const token = generateToken(existingUser);
         return res.status(200).json({
           success: true,
-          message: 'Código de verificación reenviado a tu email',
-          data: { requiresVerification: true, email: normalizedEmail },
+          message: 'Cuenta activada exitosamente',
+          data: {
+            user: {
+              id: existingUser._id,
+              name: existingUser.name,
+              email: existingUser.email,
+              role: existingUser.role,
+              isPremium: existingUser.isPremium,
+              contributions: existingUser.contributions,
+            },
+            token,
+          },
         });
       }
 
@@ -255,15 +275,13 @@ async function register(req, res) {
       consumeFormTokenNonce(formToken);
     }
 
-    // Enviar email de verificación si verificación requerida
+    // Enviar email de verificación si el envío de correos está operativo
     if (mustVerify) {
-      if (smtpConfigured) {
-        try {
-          await sendVerificationEmail(normalizedEmail, cleanName, code);
-        } catch (emailErr) {
-          console.error('Error enviando email:', emailErr);
-          // Still return success — user can request resend
-        }
+      try {
+        await sendVerificationEmail(normalizedEmail, cleanName, code);
+      } catch (emailErr) {
+        console.error('Error enviando email:', emailErr);
+        // Still return success — user can request resend
       }
 
       return res.status(201).json({
@@ -273,7 +291,11 @@ async function register(req, res) {
       });
     }
 
-    // Solo en desarrollo cuando SMTP no está configurado: auto-verify and return token
+    if (sysConfig.requireEmailVerification && !emailReady) {
+      console.warn('⚠️ Verificación OTP omitida por SMTP bloqueado; cuenta activada con protección Turnstile/MX');
+    }
+
+    // Activar y emitir JWT cuando la verificación por correo no está activa o SMTP no responde
     const token = generateToken(user);
     res.status(201).json({
       success: true,
@@ -437,6 +459,15 @@ async function resendCode(req, res) {
       });
     }
 
+    const emailReady = await isEmailDeliveryReady();
+    if (!emailReady) {
+      return res.status(503).json({
+        success: false,
+        code: 'EMAIL_DELIVERY_UNAVAILABLE',
+        message: 'El envío de códigos por correo no está disponible en este momento. Intenta iniciar sesión o registrarte nuevamente.',
+      });
+    }
+
     // Generate new code
     const code = generateVerificationCode();
     user.verificationCode = hashVerificationCode(code);
@@ -444,9 +475,7 @@ async function resendCode(req, res) {
     user.verificationAttempts = 0;
     await user.save();
 
-    if (smtpConfigured) {
-      await sendVerificationEmail(normalizedEmail, user.name, code);
-    }
+    await sendVerificationEmail(normalizedEmail, user.name, code);
 
     res.json({
       success: true,
@@ -576,9 +605,10 @@ async function login(req, res) {
     }
 
     // Check if verified (después de validar la contraseña)
-    const enforceVerified = Boolean(
-      sysConfig.requireEmailVerification && (smtpConfigured || process.env.NODE_ENV === 'production')
-    );
+    const emailReadyForVerify = !user.isVerified && sysConfig.requireEmailVerification && user.role !== 'admin'
+      ? await isEmailDeliveryReady()
+      : false;
+    const enforceVerified = Boolean(sysConfig.requireEmailVerification && emailReadyForVerify);
     if (!user.isVerified && enforceVerified && user.role !== 'admin') {
       return res.status(403).json({
         success: false,
@@ -589,7 +619,7 @@ async function login(req, res) {
     }
 
     // Si 2FA por email para Administradores está habilitado, exigir código OTP antes de emitir JWT
-    if (user.role === 'admin' && sysConfig.adminLogin2FA && smtpConfigured) {
+    if (user.role === 'admin' && sysConfig.adminLogin2FA && await isEmailDeliveryReady()) {
       const code = generateVerificationCode();
       await User.updateOne(
         { _id: user._id },
@@ -772,7 +802,7 @@ async function forgotPassword(req, res) {
       user.resetAttempts = 0;
       await user.save();
 
-      if (smtpConfigured) {
+      if (await isEmailDeliveryReady()) {
         try {
           await sendPasswordResetEmail(normalizedEmail, user.name, code);
         } catch (emailErr) {

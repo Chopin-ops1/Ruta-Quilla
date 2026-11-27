@@ -8,19 +8,106 @@
  */
 
 const crypto = require('crypto');
+const axios = require('axios');
 const nodemailer = require('nodemailer');
 const { escapeHtml } = require('../middleware/security');
 
-// Crear transporter con Zoho Mail SMTP
+// Crear transporter con Zoho Mail SMTP (timeouts acotados para detectar puertos bloqueados)
 const transporter = nodemailer.createTransport({
   host: 'smtp.zoho.com',
   port: 465,
   secure: true, // SSL
+  connectionTimeout: 5000,
+  greetingTimeout: 5000,
+  socketTimeout: 8000,
   auth: {
     user: process.env.ZOHO_EMAIL,
     pass: process.env.ZOHO_PASSWORD,
   },
 });
+
+function getEmailProvider() {
+  if ((process.env.RESEND_API_KEY || '').trim()) return 'resend';
+  if ((process.env.BREVO_API_KEY || '').trim()) return 'brevo';
+  if ((process.env.ZOHO_EMAIL || '').trim() && (process.env.ZOHO_PASSWORD || '').trim()) {
+    return 'zoho-smtp';
+  }
+  return 'none';
+}
+
+function isEmailConfigured() {
+  return getEmailProvider() !== 'none';
+}
+
+function getSenderConfig() {
+  const provider = getEmailProvider();
+  const fromEnv = (process.env.EMAIL_FROM || '').trim();
+  const zohoEnv = (process.env.ZOHO_EMAIL || '').trim();
+  const fallback = provider === 'resend' ? 'onboarding@resend.dev' : zohoEnv;
+  const email = fromEnv || zohoEnv || fallback;
+  const name = 'RutaQuilla';
+  const formatted = email.includes('<') ? email : `"${name}" <${email}>`;
+  return { email, name, formatted };
+}
+
+async function sendMailPayload({ to, subject, html, text }) {
+  const provider = getEmailProvider();
+  const sender = getSenderConfig();
+
+  if (provider === 'resend') {
+    const resp = await axios.post(
+      'https://api.resend.com/emails',
+      {
+        from: sender.formatted,
+        to: [to],
+        subject,
+        html,
+        text,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.RESEND_API_KEY.trim()}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 8000,
+      }
+    );
+    return { messageId: resp.data?.id || 'resend' };
+  }
+
+  if (provider === 'brevo') {
+    const resp = await axios.post(
+      'https://api.brevo.com/v3/smtp/email',
+      {
+        sender: { name: sender.name, email: sender.email },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+        textContent: text,
+      },
+      {
+        headers: {
+          'api-key': process.env.BREVO_API_KEY.trim(),
+          'Content-Type': 'application/json',
+        },
+        timeout: 8000,
+      }
+    );
+    return { messageId: resp.data?.messageId || 'brevo' };
+  }
+
+  if (provider === 'zoho-smtp') {
+    return transporter.sendMail({
+      from: sender.formatted,
+      to,
+      subject,
+      html,
+      text,
+    });
+  }
+
+  throw new Error('Servicio de correo no configurado');
+}
 
 /**
  * Genera un código de verificación criptográficamente seguro de 6 dígitos.
@@ -147,16 +234,12 @@ function getVerificationEmailHTML(userName, code) {
 async function sendVerificationEmail(to, userName, code) {
   const safeSubjectName = sanitizeEmailHeader(userName);
   const safeSubjectCode = sanitizeEmailHeader(code);
-  const mailOptions = {
-    from: `"RutaQuilla" <${process.env.ZOHO_EMAIL}>`,
-    to,
-    subject: `🚌 Tu código de verificación: ${safeSubjectCode} — RutaQuilla`,
-    html: getVerificationEmailHTML(userName, code),
-    text: `Hola ${safeSubjectName}, tu código de verificación en RutaQuilla es: ${safeSubjectCode}. Este código expira en 15 minutos.`,
-  };
+  const subject = `🚌 Tu código de verificación: ${safeSubjectCode} — RutaQuilla`;
+  const html = getVerificationEmailHTML(userName, code);
+  const text = `Hola ${safeSubjectName}, tu código de verificación en RutaQuilla es: ${safeSubjectCode}. Este código expira en 15 minutos.`;
 
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const info = await sendMailPayload({ to, subject, html, text });
     console.log(`✉️ Email de verificación enviado a ${to} (${info.messageId})`);
     return { success: true, messageId: info.messageId };
   } catch (error) {
@@ -166,21 +249,25 @@ async function sendVerificationEmail(to, userName, code) {
 }
 
 /**
- * Verifica que la conexión SMTP funcione.
+ * Verifica que el servicio de correo configurado responda (HTTPS o SMTP).
  */
 async function verifyConnection() {
-  try {
-    if (!process.env.ZOHO_EMAIL || !process.env.ZOHO_PASSWORD) {
-      console.warn('⚠️ ZOHO_EMAIL o ZOHO_PASSWORD no configurados — verificación por email deshabilitada');
-      return false;
-    }
-    await transporter.verify();
-    console.log('✅ Conexión SMTP con Zoho Mail verificada');
-    return true;
-  } catch (error) {
-    console.warn('⚠️ No se pudo conectar a Zoho SMTP:', error.message);
+  const provider = getEmailProvider();
+  if (provider === 'none') {
+    console.warn('⚠️ Sin proveedor de correo configurado — verificación por email deshabilitada');
     return false;
   }
+  if (provider === 'resend' || provider === 'brevo') {
+    console.log(`✅ Servicio de correo HTTPS listo (${provider})`);
+    return true;
+  }
+  const status = await verifySmtpStatus({ force: true });
+  if (status.connected) {
+    console.log('✅ Conexión SMTP con Zoho Mail verificada');
+    return true;
+  }
+  console.warn(`⚠️ ${status.error}`);
+  return false;
 }
 
 /**
@@ -190,11 +277,8 @@ async function verifyConnection() {
 async function sendQuillaBuilderEmail(to, userName) {
   const safeName = escapeHtml(userName);
   const safeSubjectName = sanitizeEmailHeader(userName);
-  const mailOptions = {
-    from: `"RutaQuilla" <${process.env.ZOHO_EMAIL}>`,
-    to,
-    subject: `⚡ ¡${safeSubjectName}, alcanzaste Quilla Builder! — RutaQuilla`,
-    html: `
+  const subject = `⚡ ¡${safeSubjectName}, alcanzaste Quilla Builder! — RutaQuilla`;
+  const html = `
 <!DOCTYPE html>
 <html lang="es">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -232,12 +316,11 @@ async function sendQuillaBuilderEmail(to, userName) {
     </td></tr>
   </table>
 </body>
-</html>`,
-    text: `¡Felicidades ${userName}! Alcanzaste 500 XP en RutaQuilla y desbloqueaste la insignia Quilla Builder. Gracias por contribuir al transporte público de Barranquilla.`,
-  };
+</html>`;
+  const text = `¡Felicidades ${userName}! Alcanzaste 500 XP en RutaQuilla y desbloqueaste la insignia Quilla Builder. Gracias por contribuir al transporte público de Barranquilla.`;
 
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const info = await sendMailPayload({ to, subject, html, text });
     console.log(`⚡ Email Quilla Builder enviado a ${to} (${info.messageId})`);
     return { success: true, messageId: info.messageId };
   } catch (error) {
@@ -256,7 +339,6 @@ async function sendPasswordResetEmail(to, userName, code) {
   const safeSubjectName = sanitizeEmailHeader(userName);
 
   const mailOptions = {
-    from: `"RutaQuilla" <${process.env.ZOHO_EMAIL}>`,
     to,
     subject: `🔐 Código de recuperación: ${safeSubjectCode} — RutaQuilla`,
     html: `
@@ -298,7 +380,7 @@ async function sendPasswordResetEmail(to, userName, code) {
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const info = await sendMailPayload(mailOptions);
     console.log(`🔐 Email de recuperación enviado a ${to} (${info.messageId})`);
     return { success: true, messageId: info.messageId };
   } catch (error) {
@@ -317,7 +399,6 @@ async function sendAdminLoginOtpEmail(to, userName, code) {
   const safeSubjectName = sanitizeEmailHeader(userName);
 
   const mailOptions = {
-    from: `"RutaQuilla" <${process.env.ZOHO_EMAIL}>`,
     to,
     subject: `🛡️ Código de acceso Admin: ${safeSubjectCode} — RutaQuilla`,
     html: `
@@ -352,7 +433,7 @@ async function sendAdminLoginOtpEmail(to, userName, code) {
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const info = await sendMailPayload(mailOptions);
     console.log(`🛡️ Código 2FA Admin enviado a ${to} (${info.messageId})`);
     return { success: true, messageId: info.messageId };
   } catch (error) {
@@ -362,15 +443,26 @@ async function sendAdminLoginOtpEmail(to, userName, code) {
 }
 
 /**
- * Verifica conexión SMTP con caché breve de 60s y timeout de 4s para diagnósticos en vivo.
+ * Verifica conectividad real del servicio de correo (HTTPS inmediato o SMTP con caché).
  */
-let smtpStatusCache = { checkedAt: 0, result: null };
+let smtpStatusCache = { checkedAt: 0, provider: null, result: null };
 async function verifySmtpStatus({ force = false } = {}) {
-  const configured = Boolean(process.env.ZOHO_EMAIL && process.env.ZOHO_PASSWORD);
-  if (!configured) {
-    return { configured: false, connected: false, error: 'ZOHO_EMAIL / ZOHO_PASSWORD no configurados' };
+  const provider = getEmailProvider();
+  if (provider === 'none') {
+    return {
+      configured: false,
+      connected: false,
+      provider: 'none',
+      error: 'Sin proveedor de correo configurado',
+    };
   }
-  if (!force && smtpStatusCache.result && Date.now() - smtpStatusCache.checkedAt < 60 * 1000) {
+
+  if (provider === 'resend' || provider === 'brevo') {
+    return { configured: true, connected: true, provider, error: null };
+  }
+
+  const ttlMs = smtpStatusCache.result?.connected ? 2 * 60 * 1000 : 5 * 60 * 1000;
+  if (!force && smtpStatusCache.provider === provider && smtpStatusCache.result && Date.now() - smtpStatusCache.checkedAt < ttlMs) {
     return smtpStatusCache.result;
   }
 
@@ -383,18 +475,31 @@ async function verifySmtpStatus({ force = false } = {}) {
       }),
     ]);
     clearTimeout(timer);
-    const result = { configured: true, connected: true, error: null };
-    smtpStatusCache = { checkedAt: Date.now(), result };
+    const result = { configured: true, connected: true, provider: 'zoho-smtp', error: null };
+    smtpStatusCache = { checkedAt: Date.now(), provider, result };
     return result;
-  } catch (err) {
+  } catch (_) {
     clearTimeout(timer);
-    const result = { configured: true, connected: false, error: err?.message || 'Error conectando a Zoho SMTP' };
-    smtpStatusCache = { checkedAt: Date.now(), result };
+    const result = {
+      configured: true,
+      connected: false,
+      provider: 'zoho-smtp',
+      error: 'Zoho SMTP no responde (Render Free bloquea puertos SMTP 465/587; configura RESEND_API_KEY o BREVO_API_KEY por HTTPS)',
+    };
+    smtpStatusCache = { checkedAt: Date.now(), provider, result };
     return result;
   }
 }
 
+async function isEmailDeliveryReady() {
+  const status = await verifySmtpStatus();
+  return Boolean(status.connected);
+}
+
 module.exports = {
+  getEmailProvider,
+  isEmailConfigured,
+  isEmailDeliveryReady,
   generateVerificationCode,
   sendVerificationEmail,
   sendQuillaBuilderEmail,
