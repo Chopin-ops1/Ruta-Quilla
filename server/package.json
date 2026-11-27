@@ -21,9 +21,12 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.6.0",
     "morgan": "^1.10.0",
-    "nodemailer": "^8.0.5"
+    "nodemailer": "^10.6.1"
   },
   "devDependencies": {
     "mongodb-memory-server": "^10.0.0"
+  },
+  "overrides": {
+    "qs": "^6.16.2"
   }
 }
