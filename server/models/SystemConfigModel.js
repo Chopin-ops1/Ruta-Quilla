@@ -80,12 +80,12 @@ const SystemConfigSchema = new mongoose.Schema(
       default: [],
     },
     appRelease: {
-      versionName: { type: String, default: '2.1.0', trim: true },
-      androidVersionCode: { type: Number, default: 3 },
+      versionName: { type: String, default: '2.1.1', trim: true },
+      androidVersionCode: { type: Number, default: 4 },
       title: { type: String, default: 'Nueva versión de RutaQuilla', trim: true },
       summary: {
         type: String,
-        default: 'Interfaz más limpia en celular, accesos rápidos a Casa o Trabajo y avisos claros de mejoras y actualizaciones.',
+        default: 'Actualizaciones directas desde la app Android, barra superior más limpia y accesos rápidos.',
         trim: true,
       },
       downloadUrl: {
@@ -122,13 +122,17 @@ let cachedConfig = null;
 let cachedAt = 0;
 
 const DEFAULT_APP_RELEASE = {
-  versionName: '2.1.0',
-  androidVersionCode: 3,
-  title: 'RutaQuilla 2.1.0 ya está disponible',
-  summary: 'Interfaz más cómoda en celular, accesos rápidos a tus lugares favoritos y avisos de cada mejora.',
+  versionName: '2.1.1',
+  androidVersionCode: 4,
+  title: 'RutaQuilla 2.1.1 ya está disponible',
+  summary: 'Actualizaciones directas desde la app Android, barra superior más limpia y accesos rápidos.',
   downloadUrl: 'https://rutaquilla.me/downloads/RutaQuilla.apk',
   publishedAt: '2026-11-27',
   highlights: [
+    {
+      category: 'Mejoras',
+      text: 'Ahora puedes descargar e instalar futuras actualizaciones directamente dentro de la app Android sin abrir el navegador.',
+    },
     {
       category: 'Diseño',
       text: 'Barra superior más limpia en celulares para leer el nombre y navegar con comodidad.',
@@ -139,11 +143,7 @@ const DEFAULT_APP_RELEASE = {
     },
     {
       category: 'Seguridad',
-      text: 'Protección reforzada de cuentas y detección automática de nuevas versiones.',
-    },
-    {
-      category: 'Mejoras',
-      text: 'Aviso cuando estás sin conexión usando tus rutas guardadas.',
+      text: 'Protección reforzada de cuentas y verificación automática de nuevas versiones.',
     },
   ],
 };

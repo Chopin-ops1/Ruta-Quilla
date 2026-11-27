@@ -1,18 +1,25 @@
+import { registerPlugin } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { isNativeApp } from '../utils/platform';
 
-export const LOCAL_APP_VERSION = '2.1.0';
-export const LOCAL_ANDROID_VERSION_CODE = 3;
+const NativeUpdater = registerPlugin('NativeUpdater');
+
+export const LOCAL_APP_VERSION = '2.1.1';
+export const LOCAL_ANDROID_VERSION_CODE = 4;
 export const DEFAULT_APK_DOWNLOAD_URL = 'https://rutaquilla.me/downloads/RutaQuilla.apk';
 
 export const DEFAULT_RELEASE_NOTES = {
   versionName: LOCAL_APP_VERSION,
   androidVersionCode: LOCAL_ANDROID_VERSION_CODE,
-  title: 'RutaQuilla 2.1.0 ya está disponible',
-  summary: 'Interfaz más cómoda en celular, accesos rápidos a tus lugares favoritos y avisos claros de cada mejora.',
+  title: 'RutaQuilla 2.1.1 ya está disponible',
+  summary: 'Actualizaciones directas desde la app Android, barra superior más limpia y accesos rápidos.',
   downloadUrl: DEFAULT_APK_DOWNLOAD_URL,
   publishedAt: '2026-11-27',
   highlights: [
+    {
+      category: 'Mejoras',
+      text: 'Ahora puedes descargar e instalar futuras actualizaciones directamente dentro de la app Android sin abrir el navegador.',
+    },
     {
       category: 'Diseño',
       text: 'Barra superior más limpia en celulares para leer el nombre y navegar con comodidad.',
@@ -23,11 +30,7 @@ export const DEFAULT_RELEASE_NOTES = {
     },
     {
       category: 'Seguridad',
-      text: 'Protección reforzada de cuentas y detección automática de nuevas versiones.',
-    },
-    {
-      category: 'Mejoras',
-      text: 'Aviso discreto cuando navegas sin conexión usando tus rutas guardadas.',
+      text: 'Protección reforzada de cuentas y verificación automática de nuevas versiones.',
     },
   ],
 };
@@ -80,4 +83,37 @@ export function isAndroidUpdateAvailable(installedInfo, appRelease) {
     return compareSemver(appRelease.versionName, installedInfo?.versionName || LOCAL_APP_VERSION) > 0;
   }
   return false;
+}
+
+export async function startInAppAndroidUpdate(url, onProgress) {
+  if (!isNativeApp()) {
+    return { status: 'unsupported' };
+  }
+  let listenerHandle = null;
+  try {
+    if (typeof onProgress === 'function') {
+      listenerHandle = await NativeUpdater.addListener('updateProgress', onProgress);
+    }
+    const result = await NativeUpdater.downloadAndInstallUpdate({ url });
+    return result || { status: 'installing' };
+  } catch (err) {
+    const msg = String(err?.message || err || '');
+    if (/not implemented|UNIMPLEMENTED|does not have/i.test(msg)) {
+      return { status: 'unsupported' };
+    }
+    throw err;
+  } finally {
+    if (listenerHandle && typeof listenerHandle.remove === 'function') {
+      try {
+        await listenerHandle.remove();
+      } catch {
+        // Ignorado
+      }
+    }
+  }
+}
+
+export async function retryInstallDownloadedUpdate() {
+  if (!isNativeApp()) return { status: 'unsupported' };
+  return NativeUpdater.installDownloadedUpdate();
 }

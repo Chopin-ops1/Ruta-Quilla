@@ -9,11 +9,13 @@ import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
 
 import me.rutaquilla.app.location.NativeLocationPlugin;
+import me.rutaquilla.app.updater.NativeUpdaterPlugin;
 
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(NativeLocationPlugin.class);
+        registerPlugin(NativeUpdaterPlugin.class);
         super.onCreate(savedInstanceState);
 
         boolean isDebuggable = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
